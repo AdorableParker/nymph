@@ -8,12 +8,12 @@ android {
 
     defaultConfig {
         // 请在这里更改你的应用id
-        applicationId "com.example.MAPluginTemplate"
+        applicationId "com.navigatorTB_nymph"
         minSdkVersion 26
         targetSdkVersion 29
         // 版本设置， 低versionCode的apk不可以覆盖高版本的apk
-        versionCode 1
-        versionName "1.0"
+        versionCode 10500
+        versionName "0.5.0:Beta"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
