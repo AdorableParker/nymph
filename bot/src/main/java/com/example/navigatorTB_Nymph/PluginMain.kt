@@ -20,6 +20,7 @@ import net.mamoe.mirai.console.data.ValueDescription
 import net.mamoe.mirai.console.data.value
 import net.mamoe.mirai.console.plugin.jvm.JvmPluginDescription
 import net.mamoe.mirai.console.plugin.jvm.KotlinPlugin
+import net.mamoe.mirai.console.plugin.version
 import net.mamoe.mirai.console.util.ConsoleExperimentalApi
 import net.mamoe.mirai.contact.Contact.Companion.sendImage
 import net.mamoe.mirai.event.EventPriority
@@ -285,7 +286,7 @@ object PluginMain : KotlinPlugin(
 
                 val filterMessageList: List<Message> = message.filter { it !is At }
                 val filterMessageChain: MessageChain = filterMessageList.toMessageChain()
-                com.example.navigatorTB_Nymph.AI.dialogue(subject, filterMessageChain.content.trim(), true)
+                AI.dialogue(subject, filterMessageChain.content.trim(), true)
             }
             atBot().not().invoke {
                 if (group.botMuteRemaining > 0) return@invoke
@@ -295,11 +296,11 @@ object PluginMain : KotlinPlugin(
                 val numerator = groupInfo[0]["TriggerProbability"] as Int
                 val v = (1..100).random() <= numerator
 //                PluginMain.logger.info { "不at执行这里,$v" }
-                if (v) com.example.navigatorTB_Nymph.AI.dialogue(subject, message.content.trim())
+                if (v) AI.dialogue(subject, message.content.trim())
             }
         }
 
-        logger.info { "Hi: ${MySetting.name},启动完成" } // 输出一条日志.
+        logger.info { "Hi: ${MySetting.name},启动完成,V$version" } // 输出一条日志.
     }
 
     override fun onDisable() {

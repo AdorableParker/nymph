@@ -1,10 +1,10 @@
 plugins {
-    id("net.mamoe.mirai-console") version "2.6.3" // mirai-console version
+    id("net.mamoe.mirai-console") version "2.6.4" // mirai-console version
     id 'kotlin'
 }
 
 mirai {
-    coreVersion = "2.6.3" // mirai-core version
+    coreVersion = "2.6.4" // mirai-core version
 }
 
 repositories {
@@ -18,8 +18,8 @@ java {
 }
 
 dependencies {
-    compileOnly("net.mamoe:mirai-core:2.6.3") // mirai-core 的 API
-    compileOnly("net.mamoe:mirai-console:2.6.3") // 后端
+    compileOnly("net.mamoe:mirai-core:2.6.4") // mirai-core 的 API
+    compileOnly("net.mamoe:mirai-console:2.6.4") // 后端
 
     implementation("com.beust:klaxon:5.4")
     implementation("org.jsoup:jsoup:1.13.1")

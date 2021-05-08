@@ -73,7 +73,6 @@ object AI : CompositeCommand(
             SQLiteJDBC(PluginMain.resolveDataPath("AI.db"))
         val entryList =
             dbObject.executeStatement("""SELECT * FROM Corpus WHERE answer GLOB "*$key*" OR question GLOB "*$key*" OR keys GLOB "*$key*";""")
-                .toList()
         dbObject.closeDB()
         val r = when {
             entryList.isEmpty() -> "问答包含关键词${key}的条目不存在"
@@ -110,12 +109,15 @@ object AI : CompositeCommand(
             dbObject.executeStatement("SELECT * FROM Corpus;").toList()
         dbObject.closeDB()
         val cAll = entryList.size
-        val cSpecial = entryList.count { it["from"] == group.id }
-        val cAvailable = entryList.count { it["from"] == 0L } + cSpecial
+        val cSpecial = entryList.count { it["fromGroup"].toString().toLong() == group.id }
+        val cAvailable = entryList.count { it["fromGroup"].toString().toLong() == 0L } + cSpecial
         val r = when (cAll) {
             0 -> "统计查询失败"
             else -> {
-                "目前数据库教学数据共计${cAll}条\n本群可读教学数据${cAvailable}条\n其中本群专属教学数据${cSpecial}条\n占本群可读的${cSpecial / cAvailable * 100}%,占数据库总量的${cSpecial / cAll * 100}%"
+                "目前数据库教学数据共计${cAll}条\n" +
+                        "本群可读教学数据${cAvailable}条\n" +
+                        "其中本群专属教学数据${cSpecial}条\n" +
+                        "占本群可读的${"%.2f".format(cSpecial.toDouble() / cAvailable * 100)}%,占数据库总量的${"%.2f".format(cSpecial.toDouble() / cAll * 100)}%"
             }
         }
         sendMessage(r)
