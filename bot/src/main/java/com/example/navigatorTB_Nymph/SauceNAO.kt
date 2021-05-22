@@ -15,10 +15,12 @@ import net.mamoe.mirai.console.command.SimpleCommand
 import net.mamoe.mirai.console.util.ConsoleExperimentalApi
 import net.mamoe.mirai.message.data.Image
 import net.mamoe.mirai.message.data.Image.Key.queryUrl
+import net.mamoe.mirai.utils.MiraiExperimentalApi
 import net.mamoe.mirai.utils.info
 import org.jsoup.Jsoup
 
 
+@MiraiExperimentalApi
 @ConsoleExperimentalApi
 object SauceNAO : SimpleCommand(
     PluginMain, "SauceNAO", "搜图",
@@ -32,6 +34,7 @@ object SauceNAO : SimpleCommand(
         val jsonObjString = getJSON(image.queryUrl())
         if (jsonObjString == null) {
             sendMessage("远端服务器超时或无响应,请稍后再试")
+            sendMessage("或者访问此链接：\nhttps://saucenao.com/search.php?output_type=2&numres=1&db=999&url=${image.queryUrl()}")
             return
         }
         val jsonObj = Parser.default().parse(StringBuilder(jsonObjString)) as JsonObject
