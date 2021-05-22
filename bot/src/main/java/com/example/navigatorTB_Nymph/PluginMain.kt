@@ -69,8 +69,6 @@ object PluginMain : KotlinPlugin(
 
     override fun onEnable() {
 
-//        PluginMain.logger.info{"data:$dataFolderPath\nconfig:$configFolderPath"}
-
         MySetting.reload() // 从数据库自动读
         MyPluginData.reload()
 
@@ -87,7 +85,7 @@ object PluginMain : KotlinPlugin(
         SauceNAO.register()         // 搜图
         Request.register()          // 加群操作
         Test.register()             // 测试
-        com.example.navigatorTB_Nymph.AI.register()               // 图灵数据库增删改查
+        AI.register()               // 图灵数据库增删改查
         Tarot.register()            // 塔罗
         Birthday.register()         // 舰船下水日
         Music.register()            // 点歌姬
@@ -319,7 +317,7 @@ object PluginMain : KotlinPlugin(
         CrowdVerdict.unregister()   // 众裁
         SauceNAO.unregister()       // 搜图
         Request.unregister()        // 加群操作
-        com.example.navigatorTB_Nymph.AI.unregister()             // 图灵数据库增删改查
+        AI.unregister()             // 图灵数据库增删改查
         Tarot.unregister()          // 塔罗
         MyHelp.unregister()           // 帮助功能
         Birthday.unregister()       // 舰船下水日

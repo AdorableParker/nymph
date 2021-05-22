@@ -11,11 +11,11 @@ import net.mamoe.mirai.console.command.SimpleCommand
 import net.mamoe.mirai.console.util.ConsoleExperimentalApi
 import net.mamoe.mirai.message.data.Image
 import net.mamoe.mirai.message.data.Image.Key.queryUrl
-import net.mamoe.mirai.message.data.MusicKind
-import net.mamoe.mirai.message.data.MusicShare
+import net.mamoe.mirai.utils.MiraiExperimentalApi
 import net.mamoe.mirai.utils.info
 
 
+@MiraiExperimentalApi
 @ConsoleExperimentalApi
 object Test : SimpleCommand(
     PluginMain, "Test", "测试",
@@ -38,20 +38,25 @@ object Test : SimpleCommand(
         PluginMain.logger.info {
             "测试命令执行"
         }
-        val musicCard = MusicShare(
-            MusicKind.NeteaseCloudMusic,
-            "标题:よってS.O.S",
-            "内容:随便写一点",
-            "https://music.163.com/#/song?id=27853827",// 跳转链接
-            "http://p1.music.126.net/Yxk-7myWkzQTe91ckFxPcQ==/18751071302102707.jpg?param=130y130", // 图片链接
-            "http://music.163.com/song/media/outer/url?id=27853827.mp3",
-            "摘要:这个也随便写一点"
-        )
+        status()
+//        val musicCard = MusicShare(
+//            MusicKind.NeteaseCloudMusic,
+//            "标题:よってS.O.S",
+//            "内容:随便写一点",
+//            "https://music.163.com/#/song?id=27853827",// 跳转链接
+//            "http://p1.music.126.net/Yxk-7myWkzQTe91ckFxPcQ==/18751071302102707.jpg?param=130y130", // 图片链接
+//            "http://music.163.com/song/media/outer/url?id=27853827.mp3",
+//            "摘要:这个也随便写一点"
+//        )
 
-        sendMessage(musicCard)
+//        sendMessage(musicCard)
 //        val list = mutableSetOf<Long>()
 //        bot.groups.forEach { list.add(it.id) }
 //        PluginMain.logger.info { list.joinToString(",") }
+    }
+
+    private fun status() {
+        TODO("Not yet implemented")
     }
 
 //    @Handler
