@@ -35,7 +35,10 @@ object AssetDataAccess : CompositeCommand(
             dbObject.insert(
                 "AzurLane_construct_time",
                 arrayOf("OriginalName", "Alias", "Time", "LimitedTime"),
-                arrayOf(shipName, alias, time, limited)
+                arrayOf(
+                    "" +
+                            "\"$shipName\"", "\"$alias\"", "\"$time\"", limited
+                )
             )
             dbObject.closeDB()
             sendMessage("写入完成")
@@ -49,9 +52,9 @@ object AssetDataAccess : CompositeCommand(
         if (isUser() && user.id == MySetting.AdminID) {
             val dbObject = SQLiteJDBC(PluginMain.resolveDataPath("AssetData.db"))
             dbObject.insert(
-                "AzurLane_construct_time",
+                "Roster",
                 arrayOf("code", "name"),
-                arrayOf(shipName, alias)
+                arrayOf("\"$shipName\"", "\"$alias\"")
             )
             dbObject.closeDB()
             sendMessage("写入完成")
