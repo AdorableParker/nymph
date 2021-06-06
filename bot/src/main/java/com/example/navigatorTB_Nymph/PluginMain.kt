@@ -49,7 +49,7 @@ object PluginMain : KotlinPlugin(
     JvmPluginDescription(
         id = "MCP.navigatorTB_Nymph",
         name = "navigatorTB",
-        version = "0.5.0"
+        version = "0.6.0"
     )
 ) {
     ///*
@@ -66,7 +66,7 @@ object PluginMain : KotlinPlugin(
     //*/
     //    KeywordSummary
     val VOTES: MutableMap<Long, VoteUser> = mutableMapOf()
-
+    val GAME = mutableMapOf<Long, Minesweeper>()
     override fun onEnable() {
 
         MySetting.reload() // 从数据库自动读
@@ -90,6 +90,7 @@ object PluginMain : KotlinPlugin(
         Birthday.register()         // 舰船下水日
         Music.register()            // 点歌姬
         AssetDataAccess.register()  // 资源数据库处理
+        MinesweeperGame.register()  // 扫雷
 //        MyHelp.register()           // 帮助功能
         CommandManager.registerCommand(MyHelp, true) // 帮助功能,需要覆盖内建指令
 
@@ -304,30 +305,32 @@ object PluginMain : KotlinPlugin(
     override fun onDisable() {
 //        PluginMain.launch{ announcement("正在关闭") } // 关闭太快发不出来
         sleep(3 * 1000)
-        CalculationExp.unregister() // 经验计算器
-        WikiAzurLane.unregister()   // 碧蓝Wiki
-        Construction.unregister()   // 建造时间
-        ShipMap.unregister()        // 打捞地图
-        SendDynamic.unregister()    // 动态查询
-        GroupPolicy.unregister()    // 群策略
-        Test.unregister()           // 测试
-        Roster.unregister()         // 碧蓝和谐名
-        Calculator.unregister()     // 计算器
-        AutoBanned.unregister()     // 自助禁言
-        CrowdVerdict.unregister()   // 众裁
-        SauceNAO.unregister()       // 搜图
-        Request.unregister()        // 加群操作
-        AI.unregister()             // 图灵数据库增删改查
-        Tarot.unregister()          // 塔罗
-        MyHelp.unregister()           // 帮助功能
-        Birthday.unregister()       // 舰船下水日
-        Music.unregister()          // 点歌姬
+        CalculationExp.unregister()     // 经验计算器
+        WikiAzurLane.unregister()       // 碧蓝Wiki
+        Construction.unregister()       // 建造时间
+        ShipMap.unregister()            // 打捞地图
+        SendDynamic.unregister()        // 动态查询
+        GroupPolicy.unregister()        // 群策略
+        Test.unregister()               // 测试
+        Roster.unregister()             // 碧蓝和谐名
+        Calculator.unregister()         // 计算器
+        AutoBanned.unregister()         // 自助禁言
+        CrowdVerdict.unregister()       // 众裁
+        SauceNAO.unregister()           // 搜图
+        Request.unregister()            // 加群操作
+        AI.unregister()                 // 图灵数据库增删改查
+        Tarot.unregister()              // 塔罗
+        MyHelp.unregister()             // 帮助功能
+        Birthday.unregister()           // 舰船下水日
+        Music.unregister()              // 点歌姬
+        MinesweeperGame.unregister()    // 扫雷
         PluginMain.cancel()
     }
 }
 
 // 定义插件数据
 // 插件
+
 object MyPluginData : AutoSavePluginData("TB_Data") { // "name" 是保存的文件名 (不带后缀)
     val timeStampOfDynamic: MutableMap<Int, Long> by value(
         mutableMapOf(
@@ -388,3 +391,4 @@ object MySetting : AutoSavePluginConfig("TB_Setting") {
 //    var count by value(0)
 //    val nested by value<MyNestedData>() // 嵌套类型是支持的
 }
+

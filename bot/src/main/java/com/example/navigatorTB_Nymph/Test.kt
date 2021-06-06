@@ -34,47 +34,27 @@ object Test : SimpleCommand(
     }
 
     @Handler
-    suspend fun MemberCommandSenderOnMessage.main() {
+    fun MemberCommandSenderOnMessage.main() {
         PluginMain.logger.info {
             "测试命令执行"
         }
-        status()
-//        val musicCard = MusicShare(
-//            MusicKind.NeteaseCloudMusic,
-//            "标题:よってS.O.S",
-//            "内容:随便写一点",
-//            "https://music.163.com/#/song?id=27853827",// 跳转链接
-//            "http://p1.music.126.net/Yxk-7myWkzQTe91ckFxPcQ==/18751071302102707.jpg?param=130y130", // 图片链接
-//            "http://music.163.com/song/media/outer/url?id=27853827.mp3",
-//            "摘要:这个也随便写一点"
-//        )
 
-//        sendMessage(musicCard)
-//        val list = mutableSetOf<Long>()
-//        bot.groups.forEach { list.add(it.id) }
-//        PluginMain.logger.info { list.joinToString(",") }
+//        minesweeperGame.flag((1..10).random(), (1..10).random())
+//        subject.sendImage(minesweeperGame.getImage())
     }
 
-    private fun status() {
-        TODO("Not yet implemented")
+    @Handler
+    fun MemberCommandSenderOnMessage.main(x: Int, y: Int) {
+        PluginMain.logger.info {
+            "测试命令执行"
+        }
     }
 
-//    @Handler
-//    suspend fun MemberCommandSenderOnMessage.main(seed: Int) {
-//        PluginMain.logger.info { "测试命令执行" }
-//        val today = LocalDateTime.now()
-//        var i = 1
-//        while (user.id / 10 * i <= 0) i *= 10
-//        val seeds = (today.year * 1000L + today.dayOfYear) * i + seed
-//        val listA = listOf(
-//            "愚者",
-//            "魔术师", "女祭司", "女皇", "皇帝", "教皇",
-//            "恋人", "战车", "力量", "隐者", "命运之轮",
-//            "正义", "倒吊人", "死神", "节制", "恶魔",
-//            "塔", "星星", "月亮", "太阳", "审判",
-//            "世界"
-//        )
-//        sendMessage(listA.random(Random(seeds)))
-//    }
+    @Handler
+    fun MemberCommandSenderOnMessage.main(x: Int, y: Int, flag: Int) {
+        PluginMain.logger.info {
+            "测试命令执行"
+        }
+    }
 }
 
