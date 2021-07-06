@@ -8,6 +8,7 @@ package com.example.navigatorTB_Nymph
 
 import kotlinx.coroutines.delay
 import net.mamoe.mirai.console.util.ConsoleExperimentalApi
+import net.mamoe.mirai.utils.MiraiExperimentalApi
 import net.mamoe.mirai.utils.info
 import net.mamoe.mirai.utils.warning
 import java.time.LocalDateTime
@@ -38,6 +39,7 @@ class CronJob(private val jobExplain: String, private val calibration: Int) {
     private var calibrationCountdown = 0
     private var jobList = mutableListOf<suspend () -> Unit>()
 
+    @MiraiExperimentalApi
     @ConsoleExperimentalApi
     suspend fun start(period: MyTime) {
         val startTime = MyTime(
@@ -74,6 +76,7 @@ class CronJob(private val jobExplain: String, private val calibration: Int) {
         }
     }
 
+    @MiraiExperimentalApi
     @ConsoleExperimentalApi
     suspend fun start(period: MyTime, starting: MyTime) {
         val startTime = MyTime(

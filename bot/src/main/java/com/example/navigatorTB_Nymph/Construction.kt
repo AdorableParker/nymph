@@ -26,7 +26,7 @@ object Construction : SimpleCommand(
     suspend fun MemberCommandSenderOnMessage.main(uncheckedIndex: String) {
         val pretreatmentIndex = uncheckedIndex.replace('：', ':').toCharArray()
         pretreatmentIndex.forEachIndexed { index, char ->
-            if (char.isLowerCase()) pretreatmentIndex[index] = char.toUpperCase()
+            if (char.isLowerCase()) pretreatmentIndex[index] = char.uppercaseChar()
         }
         val treatedIndex = String(pretreatmentIndex)
         val index = Regex("\\d:\\d\\d").find(treatedIndex)?.value

@@ -10,7 +10,9 @@ import net.mamoe.mirai.console.command.CommandManager
 import net.mamoe.mirai.console.command.MemberCommandSenderOnMessage
 import net.mamoe.mirai.console.command.SimpleCommand
 import net.mamoe.mirai.console.util.ConsoleExperimentalApi
+import net.mamoe.mirai.utils.MiraiExperimentalApi
 
+@MiraiExperimentalApi
 @ConsoleExperimentalApi
 object Roster : SimpleCommand(
     PluginMain, "Roster", "船名查询", "和谐名",
@@ -28,7 +30,7 @@ object Roster : SimpleCommand(
     suspend fun MemberCommandSenderOnMessage.main(shipName: String) {
         val i = shipName.toCharArray()
         i.forEachIndexed { index, char ->
-            if (char.isLowerCase()) i[index] = char.toUpperCase()
+            if (char.isLowerCase()) i[index] = char.uppercaseChar()
         }
         val treated = String(i)
         val dbObject = SQLiteJDBC(dataDir)

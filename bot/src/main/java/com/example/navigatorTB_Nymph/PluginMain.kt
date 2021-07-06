@@ -53,7 +53,7 @@ object PluginMain : KotlinPlugin(
     JvmPluginDescription(
         id = "MCP.navigatorTB_Nymph",
         name = "navigatorTB",
-        version = "0.7.0"
+        version = "0.9.0"
     )
 ) {
     ///*

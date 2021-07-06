@@ -11,11 +11,13 @@ import net.mamoe.mirai.console.command.CompositeCommand
 import net.mamoe.mirai.console.command.MemberCommandSenderOnMessage
 import net.mamoe.mirai.console.util.ConsoleExperimentalApi
 import net.mamoe.mirai.contact.Contact.Companion.sendImage
+import net.mamoe.mirai.utils.MiraiExperimentalApi
 import org.jsoup.Jsoup
 import java.io.InputStream
 import java.net.URL
 
 // 碧蓝几大基本榜单查询
+@MiraiExperimentalApi
 @ConsoleExperimentalApi
 object WikiAzurLane : CompositeCommand(
     PluginMain, "WikiAzurLane", "碧蓝wiki", // "primaryName" 是主指令名
