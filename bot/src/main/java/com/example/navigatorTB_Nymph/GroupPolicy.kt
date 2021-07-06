@@ -252,4 +252,83 @@ object GroupPolicy : CompositeCommand(
             """.trimIndent()
         )
     }
+
+    @SubCommand("继承到群")
+    suspend fun MemberCommandSenderOnMessage.succeed(ancestor: Long, inheritor: Long) {
+        if (group.botMuteRemaining > 0) return
+
+        val dbObject = SQLiteJDBC(PluginMain.resolveDataPath("User.db"))
+        val rpl = dbObject.selectOne("Responsible", "group_id", ancestor, 1)
+        dbObject.closeDB()
+
+        val nowPR = rpl["principal_ID"].toString().toLong()
+        if (nowPR == user.id) {
+            if (MyPluginData.pactList.contains(ancestor)) {
+                sendMessage("群${ancestor}已有继承协议,请撤销后重新签署")
+                return
+            }
+            MyPluginData.groupIdList[inheritor] = GroupCertificate(nowPR, true, ancestor)
+            MyPluginData.pactList.add(ancestor)
+            sendMessage(PlainText("继承协议已建立\n被继承群：$ancestor\n受继承群：$inheritor\n继承协议签署人：") + At(nowPR))
+        } else {
+            sendMessage("你不是该群责任人,无法继承")
+        }
+    }
+
+    @SubCommand("继承到群")
+    suspend fun MemberCommandSenderOnMessage.succeed(inheritor: Long) {
+        succeed(group.id, inheritor)
+    }
+
+
+    @SubCommand("继承到群")
+    suspend fun MemberCommandSenderOnMessage.succeed() {
+        sendMessage(
+            """
+            无效参数，设定失败,请参考以下示范命令
+            继承到群 [被继承群] [受继承群]
+            ——————————
+            参数[被继承群] 若是当前群可省略
+            本功能仅绑定[被继承群]的责任人有权执行
+            执行本命令后，直接邀请至目标群，同意申请后[被继承群]将自动退群
+            """.trimIndent()
+        )
+    }
+
+    @SubCommand("撤销继承协议")
+    suspend fun MemberCommandSenderOnMessage.revokePact(ancestor: Long, inheritor: Long) {
+        if (group.botMuteRemaining > 0) return
+
+        val dbObject = SQLiteJDBC(PluginMain.resolveDataPath("User.db"))
+        val rpl = dbObject.selectOne("Responsible", "group_id", ancestor, 1)
+        dbObject.closeDB()
+        val nowPR = rpl["principal_ID"].toString().toLong()
+        if (nowPR == user.id) {
+            MyPluginData.groupIdList.remove(inheritor)
+            MyPluginData.pactList.remove(ancestor)
+            sendMessage("继承协议已作废")
+        } else {
+            sendMessage("你不是该群责任人,无法撤销继承协议")
+        }
+    }
+
+    @SubCommand("撤销继承协议")
+    suspend fun MemberCommandSenderOnMessage.revokePact(inheritor: Long) {
+        revokePact(group.id, inheritor)
+    }
+
+    @SubCommand("撤销继承协议")
+    suspend fun MemberCommandSenderOnMessage.revokePact() {
+        sendMessage(
+            """
+            无效参数，设定失败,请参考以下示范命令
+            撤销继承协议 [被继承群] [受继承群]
+            ——————————
+            参数[被继承群] 若是当前群可省略
+            本功能仅绑定[被继承群]的责任人有权执行
+            执行本命令后，撤销[被继承群]与[受继承群]的继承协议
+            """.trimIndent()
+        )
+    }
+
 }

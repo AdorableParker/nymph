@@ -10,7 +10,9 @@ import net.mamoe.mirai.console.command.CommandManager
 import net.mamoe.mirai.console.command.MemberCommandSenderOnMessage
 import net.mamoe.mirai.console.command.SimpleCommand
 import net.mamoe.mirai.console.util.ConsoleExperimentalApi
+import net.mamoe.mirai.utils.MiraiExperimentalApi
 
+@MiraiExperimentalApi
 @ConsoleExperimentalApi
 object MyHelp : SimpleCommand(
     PluginMain, "help", "帮助", "菜单",

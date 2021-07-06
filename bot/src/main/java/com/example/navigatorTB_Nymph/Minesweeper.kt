@@ -5,6 +5,7 @@ import net.mamoe.mirai.console.command.MemberCommandSenderOnMessage
 import net.mamoe.mirai.console.util.ConsoleExperimentalApi
 import net.mamoe.mirai.contact.Contact.Companion.sendImage
 import net.mamoe.mirai.utils.MiraiExperimentalApi
+import net.mamoe.mirai.utils.debug
 import java.awt.Color
 import java.awt.Font
 import java.awt.image.BufferedImage
@@ -183,7 +184,7 @@ class Minesweeper(type: Int, w: Int = 0, h: Int = 0, mine: Int = 0) {
         val graphics = image.createGraphics()
         graphics.color = Color.decode("#F9F9F9")
 
-        graphics.fillRect(0, (line - 1) * 40, width * 42 + 1, 40)
+        graphics.fillRect(0, (line - 1) * 40, width * 42 + 43, 40)
         graphics.color = Color.decode("#465563")
         graphics.font = Font("Aa花瓣", Font.PLAIN, 35)
 
@@ -192,7 +193,7 @@ class Minesweeper(type: Int, w: Int = 0, h: Int = 0, mine: Int = 0) {
     }
 
     private fun generate(w: Int, h: Int, mine: Int): Array<Array<Boolean>> {
-        val game = Array(h * w) { it <= mine }
+        val game = Array(h * w) { it < mine }
         game.shuffle()
         return Array(h) {
             game.sliceArray((it * w) until (it + 1) * w)
@@ -230,7 +231,7 @@ class Minesweeper(type: Int, w: Int = 0, h: Int = 0, mine: Int = 0) {
     private fun downFlag(x: Int, y: Int) {
         val graphics = image.createGraphics()
         graphics.color = Color.decode("#6A9FBF")
-        graphics.fillRect((x - 1) * 43, (y - 1) * 43 + 120, 40, 40)
+        graphics.fillRect((y - 1) * 43, (x - 1) * 43 + 120, 40, 40)
         graphics.dispose()
     }
 
@@ -241,7 +242,8 @@ class Minesweeper(type: Int, w: Int = 0, h: Int = 0, mine: Int = 0) {
     }
 
     private fun printLook(): Boolean {
-        if (remainingPlots - remainingMines == 0) {
+        PluginMain.logger.debug { "$remainingMines,$remainingPlots" }
+        if (remainingPlots == remainingMines) {
             printString(1, "Victory")
             return true
         }
@@ -278,6 +280,7 @@ class Minesweeper(type: Int, w: Int = 0, h: Int = 0, mine: Int = 0) {
                 printMineNum(x, y, 0)
                 userMap[x - 1][y - 1] = 0
                 remainingMines--
+                remainingPlots--
                 printLook()
 
             }
@@ -285,6 +288,7 @@ class Minesweeper(type: Int, w: Int = 0, h: Int = 0, mine: Int = 0) {
                 downFlag(x, y)
                 userMap[x - 1][y - 1] = -2
                 remainingMines++
+                remainingPlots++
                 printLook()
             }
         }

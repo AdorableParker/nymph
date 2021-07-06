@@ -16,10 +16,12 @@ import net.mamoe.mirai.message.data.Message
 import net.mamoe.mirai.message.data.MusicKind
 import net.mamoe.mirai.message.data.MusicShare
 import net.mamoe.mirai.message.data.PlainText
+import net.mamoe.mirai.utils.MiraiExperimentalApi
 import net.mamoe.mirai.utils.debug
 import net.mamoe.mirai.utils.warning
 import org.jsoup.Jsoup
 
+@MiraiExperimentalApi
 @ConsoleExperimentalApi
 object Music : SimpleCommand(
     PluginMain, "music", "点歌",

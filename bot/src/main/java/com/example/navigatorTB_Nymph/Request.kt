@@ -22,9 +22,9 @@ object Request : SimpleCommand(
     description = "加群申请处理"
 ) {
     @Handler
-    suspend fun CommandSenderOnMessage<MessageEvent>.main(groupID: Long, principal: Long) {
+    suspend fun CommandSenderOnMessage<MessageEvent>.main(groupID: Long) {
         if (isUser() && user.id == MySetting.AdminID) {
-            MyPluginData.groupIdList[groupID] = principal
+            MyPluginData.groupIdList[groupID] = GroupCertificate()
             sendMessage("OK")
             PluginMain.logger.info { MyPluginData.groupIdList.toString() }
         } else {

@@ -10,6 +10,7 @@ import com.mayabot.nlp.module.summary.KeywordSummary
 import com.mayabot.nlp.segment.Lexers.coreBuilder
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
+import kotlinx.serialization.Serializable
 import net.mamoe.mirai.Bot
 import net.mamoe.mirai.console.command.CommandManager
 import net.mamoe.mirai.console.command.CommandManager.INSTANCE.register
@@ -43,13 +44,16 @@ import java.util.*
 
 data class Dynamic(val timestamp: Long?, val text: String?, val imageStream: InputStream?)
 
+@Serializable
+class GroupCertificate(val principal_ID: Long = 0L, val flag: Boolean = false, val from: Long = 0L)
+
 @MiraiExperimentalApi
 @ConsoleExperimentalApi
 object PluginMain : KotlinPlugin(
     JvmPluginDescription(
         id = "MCP.navigatorTB_Nymph",
         name = "navigatorTB",
-        version = "0.6.0"
+        version = "0.7.0"
     )
 ) {
     ///*
@@ -225,19 +229,29 @@ object PluginMain : KotlinPlugin(
         this.globalEventChannel().subscribeAlways<BotInvitedJoinGroupRequestEvent> {
             PluginMain.logger.info { "\nGroupName:${it.groupName}\nGroupID：${it.groupId}\nList:${MyPluginData.groupIdList}" }
             if (MyPluginData.groupIdList.contains(it.groupId)) {
+                val gc = MyPluginData.groupIdList[it.groupId]!! // 获取群证书
                 it.accept()
                 val dbObject = SQLiteJDBC(resolveDataPath("User.db"))
-                dbObject.insert("Policy", arrayOf("group_id"), arrayOf("${it.groupId}"))
-                dbObject.insert("SubscribeInfo", arrayOf("group_id"), arrayOf("${it.groupId}"))
-                dbObject.insert(
-                    "Responsible", arrayOf("group_id", "principal_ID"), arrayOf(
-                        "${it.groupId}", "${
-                            MyPluginData.groupIdList.remove(
-                                it.groupId
-                            )
-                        }"
+                if (gc.flag) {
+                    dbObject.update("Policy", "group_id", "${gc.from}", "group_id", "${it.groupId}")
+                    dbObject.update("SubscribeInfo", "group_id", "${gc.from}", "group_id", "${it.groupId}")
+                    dbObject.update("Responsible", "group_id", "${gc.from}", "group_id", "${it.groupId}")
+                    val ancestor = Bot.getInstance(MySetting.BotID).getGroup(gc.from)
+                    if (ancestor != null) {
+                        ancestor.sendMessage("受继承群已接受继承，即将退出本群")
+                        MyPluginData.pactList.remove(gc.from)
+                        ancestor.quit()
+                    }
+                } else {
+                    dbObject.insert("Policy", arrayOf("group_id"), arrayOf("${it.groupId}"))
+                    dbObject.insert("SubscribeInfo", arrayOf("group_id"), arrayOf("${it.groupId}"))
+                    dbObject.insert(
+                        "Responsible",
+                        arrayOf("group_id", "principal_ID"),
+                        arrayOf("${it.groupId}", "${gc.principal_ID}")
                     )
-                )
+                }
+                MyPluginData.groupIdList.remove(it.groupId)
                 dbObject.closeDB()
                 PluginMain.logger.info { "PASS" }
             } else {
@@ -331,6 +345,7 @@ object PluginMain : KotlinPlugin(
 // 定义插件数据
 // 插件
 
+
 object MyPluginData : AutoSavePluginData("TB_Data") { // "name" 是保存的文件名 (不带后缀)
     val timeStampOfDynamic: MutableMap<Int, Long> by value(
         mutableMapOf(
@@ -357,8 +372,12 @@ object MyPluginData : AutoSavePluginData("TB_Data") { // "name" 是保存的文�
             4 to "千恋*万花-音频(芳乃/茉子/丛雨/蕾娜)-音频"
         )
     )
-    val groupIdList: MutableMap<Long, Long> by value(
+    val groupIdList: MutableMap<Long, GroupCertificate> by value(
         mutableMapOf()
+    )
+
+    val pactList: MutableList<Long> by value(
+        mutableListOf()
     )
 //    var long: Long by value(0L) // 允许 var
 //    var int by value(0) // 可以使用类型推断, 但更推荐使用 `var long: Long by value(0)` 这种定义方式.
