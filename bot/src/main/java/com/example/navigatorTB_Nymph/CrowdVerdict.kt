@@ -10,6 +10,7 @@ import net.mamoe.mirai.console.command.MemberCommandSenderOnMessage
 import net.mamoe.mirai.console.command.SimpleCommand
 import net.mamoe.mirai.console.util.ConsoleExperimentalApi
 import net.mamoe.mirai.contact.Member
+import net.mamoe.mirai.contact.isOperator
 import net.mamoe.mirai.contact.nameCardOrNick
 import net.mamoe.mirai.utils.MiraiExperimentalApi
 import net.mamoe.mirai.utils.info
@@ -32,6 +33,10 @@ object CrowdVerdict : SimpleCommand(
 ) {
     @Handler
     suspend fun MemberCommandSenderOnMessage.main(target: Member) {
+        if (!group.botPermission.isOperator()) {
+            sendMessage("TB在本群没有管理员权限，无法使用本功能")
+            return
+        }
         val targetName = target.nameCardOrNick
         val userName = user.nameCardOrNick
         val t = LocalDateTime.now().toEpochSecond(ZoneOffset.UTC)
@@ -68,6 +73,10 @@ object CrowdVerdict : SimpleCommand(
 
     @Handler
     suspend fun MemberCommandSenderOnMessage.main(target: Member, vote: Int) {
+        if (!group.botPermission.isOperator()) {
+            sendMessage("TB在本群没有管理员权限，无法使用本功能")
+            return
+        }
         if (vote <= 0) {
             sendMessage("反对无效")
             return

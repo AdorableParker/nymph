@@ -24,6 +24,7 @@ import net.mamoe.mirai.console.plugin.jvm.KotlinPlugin
 import net.mamoe.mirai.console.plugin.version
 import net.mamoe.mirai.console.util.ConsoleExperimentalApi
 import net.mamoe.mirai.contact.Contact.Companion.sendImage
+import net.mamoe.mirai.contact.Member
 import net.mamoe.mirai.event.EventPriority
 import net.mamoe.mirai.event.events.BotInvitedJoinGroupRequestEvent
 import net.mamoe.mirai.event.events.BotLeaveEvent
@@ -37,7 +38,6 @@ import net.mamoe.mirai.utils.info
 import net.mamoe.mirai.utils.warning
 import java.io.File
 import java.io.InputStream
-import java.lang.Thread.sleep
 import java.text.SimpleDateFormat
 import java.time.LocalDateTime
 import java.util.*
@@ -53,7 +53,7 @@ object PluginMain : KotlinPlugin(
     JvmPluginDescription(
         id = "MCP.navigatorTB_Nymph",
         name = "navigatorTB",
-        version = "0.9.0"
+        version = "0.9.7"
     )
 ) {
     ///*
@@ -71,6 +71,7 @@ object PluginMain : KotlinPlugin(
     //    KeywordSummary
     val VOTES: MutableMap<Long, VoteUser> = mutableMapOf()
     val GAME = mutableMapOf<Long, Minesweeper>()
+    val BothSidesDuel = mutableMapOf<Member, Gun>()
     override fun onEnable() {
 
         MySetting.reload() // 从数据库自动读
@@ -95,6 +96,7 @@ object PluginMain : KotlinPlugin(
         Music.register()            // 点歌姬
         AssetDataAccess.register()  // 资源数据库处理
         MinesweeperGame.register()  // 扫雷
+        Duel.register()             // 禁言决斗
 //        MyHelp.register()           // 帮助功能
         CommandManager.registerCommand(MyHelp, true) // 帮助功能,需要覆盖内建指令
 
@@ -269,7 +271,8 @@ object PluginMain : KotlinPlugin(
             dbObject.closeDB()
             PluginMain.logger.warning { "###\n事件—被移出群:\n- 群ID：${it.groupId}\n- 相关群负责人：${pR["principal_ID"]}\n###" }
         }
-//        BotNudgedEvent
+
+        // 戳一戳
         this.globalEventChannel().subscribeAlways<NudgeEvent> {
             if (this.target == bot && this.from != bot) {
                 if ((1..5).random() <= 4) {
@@ -318,7 +321,6 @@ object PluginMain : KotlinPlugin(
 
     override fun onDisable() {
 //        PluginMain.launch{ announcement("正在关闭") } // 关闭太快发不出来
-        sleep(3 * 1000)
         CalculationExp.unregister()     // 经验计算器
         WikiAzurLane.unregister()       // 碧蓝Wiki
         Construction.unregister()       // 建造时间
@@ -338,6 +340,8 @@ object PluginMain : KotlinPlugin(
         Birthday.unregister()           // 舰船下水日
         Music.unregister()              // 点歌姬
         MinesweeperGame.unregister()    // 扫雷
+        Duel.register()                 // 禁言决斗
+
         PluginMain.cancel()
     }
 }
