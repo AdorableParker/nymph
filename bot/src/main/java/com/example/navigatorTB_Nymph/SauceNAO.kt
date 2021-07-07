@@ -34,7 +34,12 @@ object SauceNAO : SimpleCommand(
         val jsonObjString = getJSON(image.queryUrl())
         if (jsonObjString == null) {
             sendMessage("远端服务器超时或无响应,请稍后再试")
-            sendMessage("或者访问此链接：\nhttps://saucenao.com/search.php?output_type=2&numres=1&db=999&url=${image.queryUrl()}")
+            sendMessage(
+                "或者尝试访问以下链接：\n" +
+                        "https://ascii2d.net/search/url/${image.queryUrl()}?type=colo\n" +
+                        "https://ascii2d.net/search/url/${image.queryUrl()}?type=bovw\n" +
+                        "https://saucenao.com/search.php?db=999&dbmaski=32768&url=${image.queryUrl()}"
+            )
             return
         }
         val jsonObj = Parser.default().parse(StringBuilder(jsonObjString)) as JsonObject
@@ -118,7 +123,7 @@ object SauceNAO : SimpleCommand(
 
     @ConsoleExperimentalApi
     private fun getJSON(img: String): String? {
-        val url = if (SauceNAOKey == "你的Key") "https://saucenao.com/search.php?output_type=2&numres=1&db=999&url=$img"
+        val url = if (SauceNAOKey == "你的Key") "https://saucenao.com/search.php?db=999&dbmaski=32768&url=$img"
         else "https://saucenao.com/search.php?output_type=2&numres=1&db=999&api_key=$SauceNAOKey&url=$img"
         runCatching {
             Jsoup.connect(url)
