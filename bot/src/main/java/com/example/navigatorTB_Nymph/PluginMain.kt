@@ -53,7 +53,7 @@ object PluginMain : KotlinPlugin(
     JvmPluginDescription(
         id = "MCP.navigatorTB_Nymph",
         name = "navigatorTB",
-        version = "0.9.7"
+        version = "0.9.12"
     )
 ) {
     ///*
@@ -73,7 +73,6 @@ object PluginMain : KotlinPlugin(
     val GAME = mutableMapOf<Long, Minesweeper>()
     val BothSidesDuel = mutableMapOf<Member, Gun>()
     override fun onEnable() {
-
         MySetting.reload() // 从数据库自动读
         MyPluginData.reload()
 
@@ -99,7 +98,6 @@ object PluginMain : KotlinPlugin(
         Duel.register()             // 禁言决斗
 //        MyHelp.register()           // 帮助功能
         CommandManager.registerCommand(MyHelp, true) // 帮助功能,需要覆盖内建指令
-
         // 动态更新
         PluginMain.launch {
             val job1 = CronJob("动态更新", 120)
@@ -226,7 +224,6 @@ object PluginMain : KotlinPlugin(
             job3.start(MyTime(24, 0), MyTime(21, 0))
 //            job3.start(MyTime(0, 3))
         }
-
         // 入群审核
         this.globalEventChannel().subscribeAlways<BotInvitedJoinGroupRequestEvent> {
             PluginMain.logger.info { "\nGroupName:${it.groupName}\nGroupID：${it.groupId}\nList:${MyPluginData.groupIdList}" }
@@ -261,8 +258,7 @@ object PluginMain : KotlinPlugin(
                 PluginMain.logger.info { "FAIL" }
             }
         }
-
-        // 退群处理
+        // 退群清理
         this.globalEventChannel().subscribeAlways<BotLeaveEvent.Kick> {
             val dbObject = SQLiteJDBC(resolveDataPath("User.db"))
             val pR = dbObject.selectOne("Responsible", "group_id", it.groupId, 1)
@@ -271,30 +267,33 @@ object PluginMain : KotlinPlugin(
             dbObject.closeDB()
             PluginMain.logger.warning { "###\n事件—被移出群:\n- 群ID：${it.groupId}\n- 相关群负责人：${pR["principal_ID"]}\n###" }
         }
-
         // 戳一戳
         this.globalEventChannel().subscribeAlways<NudgeEvent> {
             if (this.target == bot && this.from != bot) {
                 if ((1..5).random() <= 4) {
-                    subject.sendMessage(
-                        arrayOf(
-                            "指挥官，请不要做出这种行为",
-                            "这只是全息交互界面",
-                            "指挥官，请专心于工作",
-                            "全息投影是不会被接触到的",
-                            "指挥官，我一直陪着你哦",
-                            "可望不可及",
-                            "请不要试图干扰全息投影",
-                            "传输...信.号...数据...干扰..."
-                        ).random()
-                    )
+                    runCatching {
+                        subject.sendMessage(
+                            arrayOf(
+                                "指挥官，请不要做出这种行为",
+                                "这只是全息交互界面",
+                                "指挥官，请专心于工作",
+                                "全息投影是不会被接触到的",
+                                "指挥官，我一直陪着你哦",
+                                "可望不可及",
+                                "请不要试图干扰全息投影",
+                                "传输...信.号...数据...干扰..."
+                            ).random()
+                        )
+                    }.onFailure {
+                        PluginMain.logger.info("发送消息失败，在该群被禁言")
+                    }
+
                 } else {
                     this.from.nudge().sendTo(subject)
                     subject.sendMessage("戳回去")
                 }
             }
         }
-
         // 聊天触发
         this.globalEventChannel().subscribeGroupMessages(priority = EventPriority.LOWEST) {
             atBot {
@@ -316,7 +315,7 @@ object PluginMain : KotlinPlugin(
             }
         }
 
-        logger.info { "Hi: ${MySetting.name},启动完成,V$version" } // 输出一条日志.
+        logger.info { "Hi: ${MySetting.name},启动完成,V$version" } // 发送回执.
     }
 
     override fun onDisable() {

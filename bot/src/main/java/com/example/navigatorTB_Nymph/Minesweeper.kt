@@ -4,6 +4,7 @@ import net.mamoe.mirai.console.command.CompositeCommand
 import net.mamoe.mirai.console.command.MemberCommandSenderOnMessage
 import net.mamoe.mirai.console.util.ConsoleExperimentalApi
 import net.mamoe.mirai.contact.Contact.Companion.sendImage
+import net.mamoe.mirai.contact.isOperator
 import net.mamoe.mirai.utils.MiraiExperimentalApi
 import net.mamoe.mirai.utils.debug
 import java.awt.Color
@@ -22,31 +23,41 @@ object MinesweeperGame : CompositeCommand(
 //    override val usage: String = ""
 
     @SubCommand("开始", "新游戏")
-    suspend fun MemberCommandSenderOnMessage.start(level: Int) {
+    suspend fun MemberCommandSenderOnMessage.start(level: Int, punishment: Boolean = false) {
+        if (punishment) if (!group.botPermission.isOperator()) {
+            sendMessage("TB在本群没有管理员权限，无法创建带有禁言惩罚的游戏")
+            return
+        } else sendMessage("警告！本局游戏开启失败禁言惩罚")
+
         val minesweeperGame = Minesweeper(
             when {
                 level > 3 -> 3
                 level < 1 -> 1
                 else -> level
-            }
+            }, punishment = punishment
         )
         PluginMain.GAME[group.id] = minesweeperGame
         subject.sendImage(minesweeperGame.getImage())
     }
 
     @SubCommand("开始", "新游戏")
-    suspend fun MemberCommandSenderOnMessage.start(width: Int, high: Int, mine: Int) {
+    suspend fun MemberCommandSenderOnMessage.start(width: Int, high: Int, mine: Int, punishment: Boolean = false) {
+        if (punishment) if (!group.botPermission.isOperator()) {
+            sendMessage("TB在本群没有管理员权限，无法创建带有禁言惩罚的游戏")
+            return
+        } else sendMessage("警告！本局游戏开启失败禁言惩罚")
+
         if (width >= 40 || high >= 60 || mine >= width * high) {
             sendMessage("创建自定义游戏失败,请检查：\n1、棋盘宽不能大于40;\n2、高不能大于60;\n3、雷数不应超出地块总数;")
         } else {
-            val minesweeperGame = Minesweeper(0, width, high, mine)
+            val minesweeperGame = Minesweeper(0, width, high, mine, punishment)
             PluginMain.GAME[group.id] = minesweeperGame
             subject.sendImage(minesweeperGame.getImage())
         }
     }
 
     @SubCommand("踩")
-    suspend fun MemberCommandSenderOnMessage.uncover(x: Int, y: Int) {
+    suspend fun MemberCommandSenderOnMessage.dig(x: Int, y: Int) {
         val minesweeperGame = PluginMain.GAME[group.id]
         if (minesweeperGame != null) {
             if (minesweeperGame.validation(x, y)) {
@@ -57,6 +68,11 @@ object MinesweeperGame : CompositeCommand(
             val gameOver = minesweeperGame.uncover(x, y)
             group.sendImage(minesweeperGame.getImage())
             if (gameOver) {
+                if (minesweeperGame.punishment) runCatching {
+                    user.mute(minesweeperGame.getOperationsCounter() * 30 - minesweeperGame.getRemainingPlots())
+                }.onFailure {
+                    group.sendMessage("嘤嘤嘤，TB在本群权限不足")
+                }
                 PluginMain.GAME.remove(group.id)
                 sendMessage("本局游戏结束")
             }
@@ -85,7 +101,7 @@ object MinesweeperGame : CompositeCommand(
 
 @ConsoleExperimentalApi
 @MiraiExperimentalApi
-class Minesweeper(type: Int, w: Int = 0, h: Int = 0, mine: Int = 0) {
+class Minesweeper(type: Int, w: Int = 0, h: Int = 0, mine: Int = 0, val punishment: Boolean = false) {
     private val width: Int
     private val high: Int
     private val gameMap: Array<Array<Boolean>>
@@ -155,6 +171,9 @@ class Minesweeper(type: Int, w: Int = 0, h: Int = 0, mine: Int = 0) {
         graphics.dispose()
     }
 
+    fun getRemainingPlots(): Int = remainingPlots
+    fun getOperationsCounter(): Int = operationsCounter
+
     private fun printMineNum(x: Int, y: Int, num: Int) {
         val graphics = image.createGraphics()
         graphics.color = Color.decode("#F9F9F9")
@@ -202,10 +221,10 @@ class Minesweeper(type: Int, w: Int = 0, h: Int = 0, mine: Int = 0) {
 
     private fun censor(x: Int, y: Int) {
         var count = 0
-        val minX = if (x > 1) x - 1 else x
-        val minY = if (y > 1) y - 1 else y
-        val maxX = if (x < width) x + 1 else x
-        val maxY = if (y < high) y + 1 else y
+        val minX = if (x > 1) x - 1 else 1
+        val minY = if (y > 1) y - 1 else 1
+        val maxX = if (x < high) x + 1 else high
+        val maxY = if (y < width) y + 1 else width
 
         for (i in minX..maxX) {
             for (j in minY..maxY) {
@@ -253,7 +272,7 @@ class Minesweeper(type: Int, w: Int = 0, h: Int = 0, mine: Int = 0) {
     }
 
     fun validation(x: Int, y: Int): Boolean =
-        x > width || y > high || userMap[x - 1][y - 1] != -2 && userMap[x - 1][y - 1] != 0
+        x > high || y > width || userMap[x - 1][y - 1] != -2 && userMap[x - 1][y - 1] != 0
 
     fun uncover(x: Int, y: Int): Boolean {
         if (gameMap[x - 1][y - 1]) {
