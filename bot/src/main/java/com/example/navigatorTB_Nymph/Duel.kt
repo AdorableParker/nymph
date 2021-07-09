@@ -10,6 +10,7 @@ import net.mamoe.mirai.contact.nameCardOrNick
 import net.mamoe.mirai.message.data.At
 import net.mamoe.mirai.message.data.PlainText
 import net.mamoe.mirai.utils.MiraiExperimentalApi
+import java.time.Instant
 
 @MiraiExperimentalApi
 @ConsoleExperimentalApi
@@ -29,7 +30,6 @@ class Gun(val adversary: Member) {
         magazine = ammunition.toMutableList()
     }
 
-
     suspend fun shot(group: Group): Boolean {
         if (magazine.isNotEmpty()) {
             if (magazine[0] == 0) {
@@ -39,6 +39,7 @@ class Gun(val adversary: Member) {
                     tracer++
                     group.sendMessage("未命中！")
                 } else {
+                    // 命中 执行禁言
                     runCatching {
                         val bonusModifier = if (magazine.size == 6) {
                             group.sendMessage("首发!")
@@ -80,7 +81,7 @@ class Gun(val adversary: Member) {
 @ConsoleExperimentalApi
 object Duel : CompositeCommand(
     PluginMain, "Duel", "决斗",
-    description = "禁言决斗"
+    description = "禁言决斗，用于普通群员与普通群员之间解决冲突"
 ) {
     @SubCommand("发起")
     suspend fun MemberCommandSenderOnMessage.main(target: Member) {
@@ -98,6 +99,17 @@ object Duel : CompositeCommand(
             sendMessage("你或对方正在决斗中，不能发起新的决斗")
             return
         }
+
+        val dbObject = SQLiteJDBC(PluginMain.resolveDataPath("User.db"))
+        val lastDuelTime = dbObject.selectOne("Policy", "group_id", group.id, 1)["LastDuelTime"].toString().toLong()
+        val coolDownTime = Instant.now().epochSecond - lastDuelTime
+        if (coolDownTime <= 300L) {
+            sendMessage("正在打扫战场，请等待${300 - coolDownTime}秒")
+            return
+        }
+        dbObject.update("Policy", "group_id", group.id, "LastDuelTime", Instant.now().epochSecond)
+        dbObject.closeDB()
+
 
         sendMessage("${user.nameCardOrNick}发起了对${target.nameCardOrNick}的决斗")
 

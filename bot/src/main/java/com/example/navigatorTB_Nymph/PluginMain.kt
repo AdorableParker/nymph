@@ -264,6 +264,7 @@ object PluginMain : KotlinPlugin(
             val pR = dbObject.selectOne("Responsible", "group_id", it.groupId, 1)
             dbObject.delete("Policy", "group_id", it.groupId.toString())
             dbObject.delete("SubscribeInfo", "group_id", it.groupId.toString())
+            dbObject.delete("Responsible", "group_id", it.groupId.toString())
             dbObject.closeDB()
             PluginMain.logger.warning { "###\n事件—被移出群:\n- 群ID：${it.groupId}\n- 相关群负责人：${pR["principal_ID"]}\n###" }
         }
