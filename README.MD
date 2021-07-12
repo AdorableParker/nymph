@@ -29,6 +29,9 @@
   >> 原计划添加QQ音乐和咪咕音乐，但是懒得动了
 * [X] 历史今日 - 军舰下水日期 ![`已完成`](https://img.shields.io/badge/_Achieved-green)
 * [X] 扫雷 ![`已完成`](https://img.shields.io/badge/_Achieved-green)
+* [X] 禁言决斗 ![`已完成`](https://img.shields.io/badge/_Achieved-green)
+* [X] 以图搜番 ![`不完美`](https://img.shields.io/badge/-NotPerfect-purple)
+  > 使用堵塞式操作发送结果预览图片
 
 | **说明** | **图标**                                                     |
 | -------: | :----------------------------------------------------------- |
