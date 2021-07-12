@@ -53,7 +53,7 @@ object PluginMain : KotlinPlugin(
     JvmPluginDescription(
         id = "MCP.navigatorTB_Nymph",
         name = "navigatorTB",
-        version = "0.9.12"
+        version = "0.9.14"
     )
 ) {
     ///*
@@ -96,6 +96,7 @@ object PluginMain : KotlinPlugin(
         AssetDataAccess.register()  // 资源数据库处理
         MinesweeperGame.register()  // 扫雷
         Duel.register()             // 禁言决斗
+        TraceMoe.register()         // 以图搜番
 //        MyHelp.register()           // 帮助功能
         CommandManager.registerCommand(MyHelp, true) // 帮助功能,需要覆盖内建指令
         // 动态更新
@@ -341,7 +342,7 @@ object PluginMain : KotlinPlugin(
         Music.unregister()              // 点歌姬
         MinesweeperGame.unregister()    // 扫雷
         Duel.register()                 // 禁言决斗
-
+        TraceMoe.register()             // 以图搜番
         PluginMain.cancel()
     }
 }
