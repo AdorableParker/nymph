@@ -1,5 +1,6 @@
 package com.example.navigatorTB_Nymph
 
+import com.example.navigatorTB_Nymph.MyPluginData.duelTime
 import net.mamoe.mirai.console.command.CompositeCommand
 import net.mamoe.mirai.console.command.MemberCommandSenderOnMessage
 import net.mamoe.mirai.console.util.ConsoleExperimentalApi
@@ -100,17 +101,14 @@ object Duel : CompositeCommand(
             return
         }
 
-        val dbObject = SQLiteJDBC(PluginMain.resolveDataPath("User.db"))
-        val lastDuelTime = dbObject.selectOne("Policy", "group_id", group.id, 1)["LastDuelTime"].toString().toLong()
-        val coolDownTime = Instant.now().epochSecond - lastDuelTime
+        SQLiteJDBC(PluginMain.resolveDataPath("User.db"))
+
+        val coolDownTime = Instant.now().epochSecond - duelTime.getOrDefault(group.id, 0)
         if (coolDownTime <= 300L) {
-            sendMessage("正在打扫战场，请等待${300 - coolDownTime}秒")
+            sendMessage("决斗场占用中，请等待${300 - coolDownTime}秒")
             return
         }
-        dbObject.update("Policy", "group_id", group.id, "LastDuelTime", Instant.now().epochSecond)
-        dbObject.closeDB()
-
-
+        duelTime[group.id] = Instant.now().epochSecond
         sendMessage("${user.nameCardOrNick}发起了对${target.nameCardOrNick}的决斗")
 
         PluginMain.BothSidesDuel[user] = Gun(target)
@@ -130,11 +128,7 @@ object Duel : CompositeCommand(
             sendMessage("TB在本群没有管理员权限，无法使用本功能")
             return
         }
-//        for (i in PluginMain.BothSidesDuel) {
-//            PluginMain.logger.warning {
-//                "${i.key},${i.value.adversary}"
-//            }
-//        }
+
         if (PluginMain.BothSidesDuel.containsKey(user)) { // 判断有无进行中的决斗
             if (PluginMain.BothSidesDuel[user]?.shot(group) == true) {  // 进行射击 判断射击是否命中
                 PluginMain.BothSidesDuel[user]?.let { PluginMain.BothSidesDuel.remove(it.adversary) }

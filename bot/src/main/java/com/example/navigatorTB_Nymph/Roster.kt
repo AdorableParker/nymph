@@ -18,7 +18,7 @@ object Roster : SimpleCommand(
     PluginMain, "Roster", "船名查询", "和谐名",
     description = "碧蓝航线船名查询"
 ) {
-    override val usage: String = "${CommandManager.commandPrefix}船名查询 <船名>"
+    override val usage: String = "${CommandManager.commandPrefix}船名查询 [船名]"
     private val dataDir = PluginMain.resolveDataPath("AssetData.db")
 
     @Handler

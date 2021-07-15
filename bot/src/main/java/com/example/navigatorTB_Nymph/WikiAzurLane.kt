@@ -24,7 +24,7 @@ object WikiAzurLane : CompositeCommand(
     description = "碧蓝几大基本榜单查询"
 ) {
     override val usage: String =
-        "${CommandManager.commandPrefix}碧蓝wiki <榜单ID>\n" +
+        "${CommandManager.commandPrefix}碧蓝wiki [榜单ID]\n" +
                 "榜单ID列表：\n" +
                 "*1* 强度榜,强度主榜\n" +
                 "*2* 强度副榜\n" +

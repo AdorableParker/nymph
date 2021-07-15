@@ -24,7 +24,7 @@ object GroupPolicy : CompositeCommand(
     description = "群功能个性化配置"
 ) {
     override val usage: String = """
-        ${CommandManager.commandPrefix}群策略 <目标ID> [设定值]
+        ${CommandManager.commandPrefix}群策略 [目标ID] [设定值]
         目标ID列表：
         *1* 报时模式
         *2* 订阅模式

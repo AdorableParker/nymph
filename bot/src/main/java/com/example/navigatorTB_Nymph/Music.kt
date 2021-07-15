@@ -27,7 +27,7 @@ object Music : SimpleCommand(
     PluginMain, "music", "点歌",
     description = "点歌姬"
 ) {
-    override val usage: String = "${CommandManager.commandPrefix}$primaryName [平台值:默认网易云]\n1\t网易云\n2\tQQ\n3\t咪咕"
+    override val usage: String = "${CommandManager.commandPrefix}$primaryName <平台值>\n1\t网易云\n2\tQQ\n3\t咪咕"
 
     @Handler
     suspend fun MemberCommandSenderOnMessage.main(musicName: String) {

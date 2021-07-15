@@ -6,7 +6,7 @@ plugins {
 }
 
 mirai {
-    coreVersion = "2.7-M1" // mirai-core version
+    coreVersion = "2.7-M2" // mirai-core version
 }
 
 repositories {
@@ -20,10 +20,10 @@ java {
 }
 
 dependencies {
-    compileOnly("net.mamoe:mirai-core:2.7-M1") // mirai-core 的 API
-    compileOnly("net.mamoe:mirai-console:2.7-M1") // 后端
+    compileOnly("net.mamoe:mirai-core:2.7-M2") // mirai-core 的 API
+    compileOnly("net.mamoe:mirai-console:2.7-M2") // 后端
 
-    implementation("org.jetbrains.kotlin:kotlin-serialization:1.5.0")
+    implementation("org.jetbrains.kotlin:kotlin-serialization:1.5.10")
     implementation("com.beust:klaxon:5.4")
     implementation("org.jsoup:jsoup:1.13.1")
     implementation("org.xerial:sqlite-jdbc:3.34.0")

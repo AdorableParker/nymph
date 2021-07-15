@@ -19,72 +19,28 @@ object CalculationExp : SimpleCommand(
     PluginMain, "calculationExp", "舰船经验", "经验计算",
     description = "舰船经验计算器"
 ) {
-    override val usage: String = "${commandPrefix}舰船经验 <当前等级> <目标等级> <是否为决战方案> <已有经验>\n <是否决战方案> 参数只接受“true”及其大小写变体"
+    override val usage: String = "${commandPrefix}舰船经验 [当前等级] [目标等级|已有经验] <是否为决战方案>\n <是否决战方案> 参数只接受“true”及其大小写变体"
 
-    /**
-     * 完整功能
-     * 返回从 当前等级[current_level]到 目标等级[target_level]所需要的经验值报告。
-     * 决战方案[special]和 已有经验[existingExp]因素影响计入报告 */
     @Handler
     suspend fun MemberCommandSenderOnMessage.main(
         current_level: Int,
-        target_level: Int,
-        special: Boolean,
-        existingExp: Int
+        lvOrExp: Int,
+        special: Boolean = false
     ) {
-        val balance = (current_level until target_level).fold(0, { accExp: Int, level: Int ->
-            val result = accExp + calculateParts(level, special)
-            result
-        }) - existingExp
-        sendMessage("当前等级:$current_level,目标等级:$target_level\n是否为决战方案:$special\n已有经验:$existingExp\n最终计算结果: ${if (balance <= 0) "达成目标等级后将溢出 ${0 - balance} EXP" else "还需 $balance EXP 可以达成目标等级"}")
-    }
-
-    /**
-     * 仅计算已有经验影响
-     * 返回从 当前等级[current_level]到 目标等级[target_level]所需要的经验值报告。
-     * 已有经验[existingExp] 因素影响计入报告 */
-    @Handler
-    suspend fun MemberCommandSenderOnMessage.main(current_level: Int, target_level: Int, existingExp: Int) {
-        val balance = (current_level until target_level).fold(0, { accExp: Int, level: Int ->
-            val result = accExp + calculateParts(level, false)
-            result
-        }) - existingExp
-
-        if (balance <= 0) {
-            sendMessage("当前等级:$current_level,目标等级:$target_level\n已有经验:$existingExp\n最终计算结果: 达成目标等级后将溢出 ${0 - balance} EXP")
+        if (lvOrExp <= 120) {
+            val balance = (current_level until lvOrExp).fold(0) { accExp: Int, level: Int ->
+                val result = accExp + calculateParts(level, special)
+                result
+            }
+            sendMessage("当前等级:$current_level,目标等级:$lvOrExp\n是否为决战方案:$special\n最终计算结果: 需${balance}EXP可以达成目标等级")
         } else {
-            sendMessage("当前等级:$current_level,目标等级:$target_level\n已有经验:$existingExp\n最终计算结果: 还需 $balance EXP 可以达成目标等级")
+            var level = current_level
+            var exp = lvOrExp
+            while (exp > 0) {
+                exp -= calculateParts(++level, special)
+            }
+            sendMessage("当前等级:$current_level\n已有经验:$lvOrExp\n是否为决战方案:$special\n最终计算结果:当前已有经验最高可到Lv.${level - 1}")
         }
-    }
-//    此类重载未能实现支持
-//    /**
-//     * 仅计算决战方案影响
-//     * 返回从 当前等级[current_level]到 目标等级[target_level]所需要的经验值报告。
-//     * 决战方案[special] 因素影响计入报告 */
-//    @Handler
-//    suspend fun MemberCommandSenderOnMessage.main(current_level:Int, target_level:Int, special:Boolean) {
-//        val balance = (current_level until target_level).fold(0, {
-//            accExp:Int ,level:Int -> val result = accExp + calculateParts(level,special)
-//            result
-//        })
-//        if (balance <= 0){
-//            sendMessage("当前等级:$current_level,目标等级:$target_level\n是否为决战方案:$special\n最终计算结果: 达成目标等级后将溢出 $balance EXP")
-//        }else{
-//            sendMessage("当前等级:$current_level,目标等级:$target_level\n是否为决战方案:$special\n最终计算结果: 还需 $balance EXP 可以达成目标等级")
-//        }
-//    }
-    /**
-     * 仅基础计算
-     * 返回从 当前等级[current_level]到 目标等级[target_level]所需要的经验值报告。
-     * 决战方案 默认为 否
-     * 已有经验 默认为 0 */
-    @Handler // 基础计算
-    suspend fun MemberCommandSenderOnMessage.main(current_level: Int, target_level: Int) {
-        val balance = (current_level until target_level).fold(0, { accExp: Int, level: Int ->
-            val result = accExp + calculateParts(level, false)
-            result
-        })
-        sendMessage("当前等级:$current_level,目标等级:$target_level\n最终计算结果: 需 $balance EXP 可以达成目标等级")
     }
 
     /**参数不匹配时输出提示 */
@@ -126,5 +82,4 @@ object CalculationExp : SimpleCommand(
             totalExp * 10
         }
     }
-
 }

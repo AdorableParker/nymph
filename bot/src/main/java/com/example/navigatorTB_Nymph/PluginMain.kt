@@ -53,7 +53,7 @@ object PluginMain : KotlinPlugin(
     JvmPluginDescription(
         id = "MCP.navigatorTB_Nymph",
         name = "navigatorTB",
-        version = "0.9.14"
+        version = "0.9.18"
     )
 ) {
     ///*
@@ -104,7 +104,7 @@ object PluginMain : KotlinPlugin(
             val job1 = CronJob("动态更新", 120)
             job1.addJob {
                 for (list in MyPluginData.timeStampOfDynamic) {
-                    val (i, j, k) = SendDynamic.getDynamic(list.key, flag = true)
+                    val (i, j, k) = SendDynamic.getDynamic(list.key, 0, flag = true)
                     if (i != null) {
                         val time = SimpleDateFormat("yy-MM-dd HH:mm", Locale.CHINA).format(i)
                         val dbObject = SQLiteJDBC(resolveDataPath("User.db"))
@@ -383,6 +383,10 @@ object MyPluginData : AutoSavePluginData("TB_Data") { // "name" 是保存的文�
 
     val pactList: MutableList<Long> by value(
         mutableListOf()
+    )
+
+    val duelTime: MutableMap<Long, Long> by value(
+        mutableMapOf()
     )
 //    var long: Long by value(0L) // 允许 var
 //    var int by value(0) // 可以使用类型推断, 但更推荐使用 `var long: Long by value(0)` 这种定义方式.

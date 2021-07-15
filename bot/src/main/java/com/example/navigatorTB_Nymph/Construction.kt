@@ -19,7 +19,7 @@ object Construction : SimpleCommand(
     PluginMain, "Construction", "建造时间",
     description = "碧蓝航线建造时间查询"
 ) {
-    override val usage: String = "${CommandManager.commandPrefix}建造时间 <时间|船名>"
+    override val usage: String = "${CommandManager.commandPrefix}建造时间 [时间|船名]"
     private val dataDir = PluginMain.resolveDataPath("AssetData.db")
 
     @Handler

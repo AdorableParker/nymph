@@ -22,7 +22,7 @@ object Calculator : SimpleCommand(
     PluginMain, "Calculator", "计算器", "计算",
     description = "计算器"
 ) {
-    override val usage = "${CommandManager.commandPrefix}计算 <中缀表达式>"
+    override val usage = "${CommandManager.commandPrefix}计算 [中缀表达式]"
 
     @Handler
     suspend fun MemberCommandSenderOnMessage.main(express: String) {

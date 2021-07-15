@@ -6,14 +6,14 @@ import net.mamoe.mirai.console.command.CommandManager
 import net.mamoe.mirai.console.command.MemberCommandSenderOnMessage
 import net.mamoe.mirai.console.command.SimpleCommand
 import net.mamoe.mirai.console.util.ConsoleExperimentalApi
-import net.mamoe.mirai.contact.Contact.Companion.uploadImage
 import net.mamoe.mirai.contact.Group
 import net.mamoe.mirai.message.data.Image
 import net.mamoe.mirai.message.data.Image.Key.queryUrl
 import net.mamoe.mirai.message.data.Message
 import net.mamoe.mirai.message.data.PlainText
+import net.mamoe.mirai.utils.ExternalResource.Companion.toExternalResource
 import net.mamoe.mirai.utils.MiraiExperimentalApi
-import net.mamoe.mirai.utils.info
+import net.mamoe.mirai.utils.warning
 import org.jsoup.Jsoup
 import java.net.URL
 
@@ -55,7 +55,7 @@ object TraceMoe : SimpleCommand(
         }.onSuccess {
             return it
         }.onFailure {
-            PluginMain.logger.info { "$it" }
+            PluginMain.logger.warning { "$it" }
             return null
         }
         return null
@@ -68,28 +68,33 @@ object TraceMoe : SimpleCommand(
             val native = title?.string("native")
             val romaji = title?.string("romaji")
             val english = title?.string("english")
-            val episode = result.get("episode")
+
+            val episode = result["episode"]
             val from = result.int("from")
             val to = result.int("to")
             val similarity = result.float("similarity")
-            // mark： 堵塞式调用
-            val image = URL(result.string("image")).openConnection().getInputStream()
-            return if (episode == null) {
-                PlainText(
-                    "原名:$native\n罗马音:$romaji\n英文名:$english\n匹配结果位于第${episode}集${from?.div(60)}分${from?.rem(60)}秒至${
-                        to?.div(60)
-                    }分${to?.rem(60)}秒\n结果相似度：${similarity}\n结果样图："
-                ) + group.uploadImage(image)
-            } else {
+
+            val image = result.string("image")?.getImgMessage()?.let { group.uploadImage(it) }
+
+            val r = if (episode == null) {
                 val filename = result.string("filename")
                 PlainText(
                     "原名:$native\n罗马音:$romaji\n英文名:$english\n匹配结果位于\n$filename\n${from?.div(60)}分${from?.rem(60)}秒至${
                         to?.div(60)
                     }分${to?.rem(60)}秒\n结果相似度：${similarity}\n结果样图："
-                ) + group.uploadImage(image)
+                )
+            } else {
+                PlainText(
+                    "原名:$native\n罗马音:$romaji\n英文名:$english\n匹配结果位于第${episode}集${from?.div(60)}分${from?.rem(60)}秒至${
+                        to?.div(60)
+                    }分${to?.rem(60)}秒\n结果相似度：${similarity}\n结果样图："
+                )
             }
+            return image?.let { r.plus(it) } ?: r
         }
         return PlainText("结果解析异常")
     }
+
+    private fun String.getImgMessage() = URL(this).openConnection().getInputStream().toExternalResource()
 }
 
