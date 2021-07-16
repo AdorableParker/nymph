@@ -43,22 +43,22 @@ object SendDynamic : CompositeCommand(
     }
 
     @SubCommand("阿米娅", "方舟公告")
-    suspend fun MemberCommandSenderOnMessage.arKnights(index: Int) {
+    suspend fun MemberCommandSenderOnMessage.arKnights(index: Int = 0) {
         sendMessage(main(group, 161775300, index))
     }
 
     @SubCommand("呆毛王", "FGO公告")
-    suspend fun MemberCommandSenderOnMessage.fateGrandOrder(index: Int) {
+    suspend fun MemberCommandSenderOnMessage.fateGrandOrder(index: Int = 0) {
         sendMessage(main(group, 233108841, index))
     }
 
     @SubCommand("派蒙", "原神公告")
-    suspend fun MemberCommandSenderOnMessage.genShin(index: Int) {
+    suspend fun MemberCommandSenderOnMessage.genShin(index: Int = 0) {
         sendMessage(main(group, 401742377, index))
     }
 
     @SubCommand("UID", "其他")
-    suspend fun MemberCommandSenderOnMessage.other(uid: Int, index: Int) {
+    suspend fun MemberCommandSenderOnMessage.other(uid: Int, index: Int = 0) {
         sendMessage(main(group, uid, index))
     }
 
