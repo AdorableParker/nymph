@@ -420,3 +420,15 @@ object MySetting : AutoSavePluginConfig("TB_Setting") {
 //    val nested by value<MyNestedData>() // 嵌套类型是支持的
 }
 
+object UsageStatistics : AutoSavePluginData("TB_UsageStatistics") {
+    private val tellTimeMode: MutableMap<Int, MutableMap<String, Int>> by value(
+        mutableMapOf()
+    )
+
+    fun record(name: String) {
+        val v = tellTimeMode.getOrPut(LocalDateTime.now().dayOfYear / 7) {
+            mutableMapOf()
+        }
+        v[name] = v.getOrDefault(name, 0) + 1
+    }
+}

@@ -7,6 +7,7 @@
 package com.example.navigatorTB_Nymph
 
 import com.example.navigatorTB_Nymph.MyPluginData.tellTimeMode
+import com.example.navigatorTB_Nymph.UsageStatistics.record
 import net.mamoe.mirai.console.command.CommandManager
 import net.mamoe.mirai.console.command.CompositeCommand
 import net.mamoe.mirai.console.command.MemberCommandSenderOnMessage
@@ -207,6 +208,7 @@ object GroupPolicy : CompositeCommand(
     }
 
     private fun permissionCheck(user: Member): Boolean {
+        record(primaryName)
         return user.permission.isOperator().not()
     }
 

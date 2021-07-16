@@ -8,6 +8,7 @@ package com.example.navigatorTB_Nymph
 
 import com.beust.klaxon.JsonObject
 import com.beust.klaxon.Parser
+import com.example.navigatorTB_Nymph.UsageStatistics.record
 import net.mamoe.mirai.console.command.CommandManager
 import net.mamoe.mirai.console.command.CompositeCommand
 import net.mamoe.mirai.console.command.MemberCommandSenderOnMessage
@@ -63,6 +64,7 @@ object SendDynamic : CompositeCommand(
     }
 
     suspend fun main(subject: Group, uid: Int, index: Int): Message {
+        record(primaryName)
         if (index >= 10) {
             return PlainText("最多只能往前10条哦\n(￣﹃￣)")
         } else if (index < 0) {

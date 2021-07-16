@@ -6,6 +6,7 @@
 
 package com.example.navigatorTB_Nymph
 
+import com.example.navigatorTB_Nymph.UsageStatistics.record
 import net.mamoe.mirai.console.command.CommandManager
 import net.mamoe.mirai.console.command.MemberCommandSenderOnMessage
 import net.mamoe.mirai.console.command.SimpleCommand
@@ -28,6 +29,7 @@ object Roster : SimpleCommand(
 
     @Handler
     suspend fun MemberCommandSenderOnMessage.main(shipName: String) {
+        record(primaryName)
         val i = shipName.toCharArray()
         i.forEachIndexed { index, char ->
             if (char.isLowerCase()) i[index] = char.uppercaseChar()

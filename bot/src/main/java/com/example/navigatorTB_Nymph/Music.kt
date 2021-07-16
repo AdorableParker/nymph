@@ -8,6 +8,7 @@ package com.example.navigatorTB_Nymph
 
 import com.beust.klaxon.JsonObject
 import com.beust.klaxon.Parser
+import com.example.navigatorTB_Nymph.UsageStatistics.record
 import net.mamoe.mirai.console.command.CommandManager
 import net.mamoe.mirai.console.command.MemberCommandSenderOnMessage
 import net.mamoe.mirai.console.command.SimpleCommand
@@ -31,6 +32,7 @@ object Music : SimpleCommand(
 
     @Handler
     suspend fun MemberCommandSenderOnMessage.main(musicName: String) {
+        record(primaryName)
         runCatching {
             val rMessage = get163MusicCard(musicName)
             sendMessage(rMessage)

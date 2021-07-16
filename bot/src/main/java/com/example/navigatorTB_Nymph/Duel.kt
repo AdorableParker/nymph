@@ -1,6 +1,7 @@
 package com.example.navigatorTB_Nymph
 
 import com.example.navigatorTB_Nymph.MyPluginData.duelTime
+import com.example.navigatorTB_Nymph.UsageStatistics.record
 import net.mamoe.mirai.console.command.CompositeCommand
 import net.mamoe.mirai.console.command.MemberCommandSenderOnMessage
 import net.mamoe.mirai.console.util.ConsoleExperimentalApi
@@ -86,6 +87,7 @@ object Duel : CompositeCommand(
 ) {
     @SubCommand("发起")
     suspend fun MemberCommandSenderOnMessage.main(target: Member) {
+        record(primaryName)
 //        bot.eventChannel.subscribeAlways<> {  }
         if (!group.botPermission.isOperator()) {
             sendMessage("TB在本群没有管理员权限，无法使用本功能")

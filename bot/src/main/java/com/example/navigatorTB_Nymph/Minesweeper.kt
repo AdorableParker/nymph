@@ -1,5 +1,6 @@
 package com.example.navigatorTB_Nymph
 
+import com.example.navigatorTB_Nymph.UsageStatistics.record
 import net.mamoe.mirai.console.command.CompositeCommand
 import net.mamoe.mirai.console.command.MemberCommandSenderOnMessage
 import net.mamoe.mirai.console.util.ConsoleExperimentalApi
@@ -114,6 +115,7 @@ class Minesweeper(type: Int, w: Int = 0, h: Int = 0, mine: Int = 0, val punishme
     private var image: BufferedImage
 
     init {
+        record(Birthday.primaryName)
         when (type) {
             1 -> {
                 width = 10

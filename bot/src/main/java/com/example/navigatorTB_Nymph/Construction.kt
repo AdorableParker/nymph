@@ -7,6 +7,7 @@
 package com.example.navigatorTB_Nymph
 
 
+import com.example.navigatorTB_Nymph.UsageStatistics.record
 import net.mamoe.mirai.console.command.CommandManager
 import net.mamoe.mirai.console.command.MemberCommandSenderOnMessage
 import net.mamoe.mirai.console.command.SimpleCommand
@@ -24,6 +25,7 @@ object Construction : SimpleCommand(
 
     @Handler
     suspend fun MemberCommandSenderOnMessage.main(uncheckedIndex: String) {
+        record(primaryName)
         val pretreatmentIndex = uncheckedIndex.replace('：', ':').toCharArray()
         pretreatmentIndex.forEachIndexed { index, char ->
             if (char.isLowerCase()) pretreatmentIndex[index] = char.uppercaseChar()

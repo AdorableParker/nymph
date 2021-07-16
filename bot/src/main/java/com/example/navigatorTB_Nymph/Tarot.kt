@@ -6,6 +6,7 @@
 
 package com.example.navigatorTB_Nymph
 
+import com.example.navigatorTB_Nymph.UsageStatistics.record
 import net.mamoe.mirai.console.command.CommandManager
 import net.mamoe.mirai.console.command.MemberCommandSenderOnMessage
 import net.mamoe.mirai.console.command.SimpleCommand
@@ -29,9 +30,9 @@ object Tarot : SimpleCommand(
     @Handler
     @MiraiExperimentalApi
     suspend fun MemberCommandSenderOnMessage.main() {
+        record(primaryName)
         if (group.botMuteRemaining > 0) return
 
-//        PluginMain.logger.info { "测试命令执行" }
         val today = LocalDateTime.now()
         var i = 1
         while (user.id / 10 * i <= 0) i *= 10

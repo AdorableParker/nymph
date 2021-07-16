@@ -6,6 +6,7 @@
 
 package com.example.navigatorTB_Nymph
 
+import com.example.navigatorTB_Nymph.UsageStatistics.record
 import net.mamoe.mirai.console.command.CommandManager
 import net.mamoe.mirai.console.command.MemberCommandSenderOnMessage
 import net.mamoe.mirai.console.command.SimpleCommand
@@ -26,6 +27,7 @@ object Calculator : SimpleCommand(
 
     @Handler
     suspend fun MemberCommandSenderOnMessage.main(express: String) {
+        record(primaryName)
         sendMessage(analysis(express))
     }
 

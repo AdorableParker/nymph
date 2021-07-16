@@ -9,6 +9,7 @@ package com.example.navigatorTB_Nymph
 import com.beust.klaxon.JsonObject
 import com.beust.klaxon.Parser
 import com.example.navigatorTB_Nymph.MySetting.SauceNAOKey
+import com.example.navigatorTB_Nymph.UsageStatistics.record
 import net.mamoe.mirai.console.command.CommandManager
 import net.mamoe.mirai.console.command.MemberCommandSenderOnMessage
 import net.mamoe.mirai.console.command.SimpleCommand
@@ -30,6 +31,7 @@ object SauceNAO : SimpleCommand(
 
     @Handler
     suspend fun MemberCommandSenderOnMessage.main(image: Image) {
+        record(primaryName)
         sendMessage("开始查询，请稍后...")
         val jsonObjString = getJSON(image.queryUrl())
         if (jsonObjString == null) {

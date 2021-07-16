@@ -18,7 +18,7 @@ object AI : CompositeCommand(
     PluginMain, "AI",
     description = "AI功能"
 ) {
-    //    /**
+
     @SubCommand("教学")
     suspend fun MemberCommandSenderOnMessage.main(question: String, answer: String) {
         val userDBObject =
@@ -66,7 +66,6 @@ object AI : CompositeCommand(
         sendMessage("问题:$question\n回答:$answer\n条目已添加，条目ID:$entryID")
     }
 
-    //**/
     @SubCommand("查询")
     suspend fun MemberCommandSenderOnMessage.main(key: String) {
         val dbObject =

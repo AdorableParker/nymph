@@ -7,6 +7,7 @@
 package com.example.navigatorTB_Nymph
 
 
+import com.example.navigatorTB_Nymph.UsageStatistics.record
 import net.mamoe.mirai.console.command.CommandManager
 import net.mamoe.mirai.console.command.MemberCommandSenderOnMessage
 import net.mamoe.mirai.console.command.SimpleCommand
@@ -26,14 +27,11 @@ object Birthday : SimpleCommand(
     @MiraiExperimentalApi
     @Handler
     suspend fun MemberCommandSenderOnMessage.main() {
+        record(primaryName)
         if (group.botMuteRemaining > 0) return
 
-//        PluginMain.logger.info { "测试命令执行" }
         val today = LocalDateTime.now().format(DateTimeFormatter.ofPattern("M月d日"))
-//        val today = "2月25日"
-//        PluginMain.logger.debug {
-//            today
-//        }
+
         val dbObject = SQLiteJDBC(PluginMain.resolveDataPath("AssetData.db"))
         val r = dbObject.select("ShipBirthday", "LaunchDay", today)
         dbObject.closeDB()
@@ -48,14 +46,5 @@ object Birthday : SimpleCommand(
                 sendMessage("${i["LaunchYear"]}年的今天,${i["Nationality"]}${i["ShipType"]}${i["Name"]}下水")
             }
         }
-//        if ((0..100).random(Random(seeds)) >= 50) {
-//            File(PluginMain.resolveDataPath(r["uprightImg"].toString()).toString()).toExternalResource().use {
-//                sendMessage(PlainText("判定！顺位-$brand\n牌面含义关键词:${r["Upright"]}") + group.uploadImage(it))
-//            }
-//        } else {
-//            File(PluginMain.resolveDataPath(r["invertImg"].toString()).toString()).toExternalResource().use {
-//                sendMessage(PlainText("判定！逆位-$brand\n牌面含义关键词:${r["Reversed"]}") + group.uploadImage(it))
-//            }
-//        }
     }
 }

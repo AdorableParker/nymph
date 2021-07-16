@@ -6,6 +6,7 @@
 
 package com.example.navigatorTB_Nymph
 
+import com.example.navigatorTB_Nymph.UsageStatistics.record
 import net.mamoe.mirai.console.command.CommandManager
 import net.mamoe.mirai.console.command.CompositeCommand
 import net.mamoe.mirai.console.command.MemberCommandSenderOnMessage
@@ -33,7 +34,6 @@ object WikiAzurLane : CompositeCommand(
 
     @SubCommand("强度榜", "强度主榜")
     suspend fun MemberCommandSenderOnMessage.strengthRanking() {
-//        TB.logger.info { "获取图片" }
         getWikiImg("PVE用舰船综合性能强度榜", 1).use {
             if (it != null) {
                 subject.sendImage(it)
@@ -78,6 +78,7 @@ object WikiAzurLane : CompositeCommand(
     }
 
     private fun getWikiImg(index: String, sub: Int): InputStream? {
+        record(primaryName)
         val doc = Jsoup.connect("https://wiki.biligame.com/blhx/$index").get()
         val links = doc.select("div#mw-content-text").select(".mw-parser-output").select("img[src]")
         val url = URL(links[sub].attr("abs:src"))

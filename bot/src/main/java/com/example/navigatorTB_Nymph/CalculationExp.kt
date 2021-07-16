@@ -6,6 +6,7 @@
 
 package com.example.navigatorTB_Nymph
 
+import com.example.navigatorTB_Nymph.UsageStatistics.record
 import net.mamoe.mirai.console.command.CommandManager.INSTANCE.commandPrefix
 import net.mamoe.mirai.console.command.MemberCommandSenderOnMessage
 import net.mamoe.mirai.console.command.SimpleCommand
@@ -22,11 +23,8 @@ object CalculationExp : SimpleCommand(
     override val usage: String = "${commandPrefix}舰船经验 [当前等级] [目标等级|已有经验] <是否为决战方案>\n <是否决战方案> 参数只接受“true”及其大小写变体"
 
     @Handler
-    suspend fun MemberCommandSenderOnMessage.main(
-        current_level: Int,
-        lvOrExp: Int,
-        special: Boolean = false
-    ) {
+    suspend fun MemberCommandSenderOnMessage.main(current_level: Int, lvOrExp: Int, special: Boolean = false) {
+        record(primaryName)
         if (lvOrExp <= 120) {
             val balance = (current_level until lvOrExp).fold(0) { accExp: Int, level: Int ->
                 val result = accExp + calculateParts(level, special)
