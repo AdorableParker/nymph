@@ -33,6 +33,8 @@ object GroupPolicy : CompositeCommand(
         *4* 教学许可
         *5* 对话概率
         *6* 责任人绑定
+        *7* 继承到群
+        *8* 撤销继承协议
         """.trimIndent()
 
     @SubCommand("报时模式")
@@ -207,11 +209,45 @@ object GroupPolicy : CompositeCommand(
         )
     }
 
+    @SubCommand("色图许可")
+    suspend fun MemberCommandSenderOnMessage.acgImage(token: String) {
+        if (permissionCheck(user)) {
+            sendMessage("权限不足")
+            return
+        }
+        val dbObject = SQLiteJDBC(PluginMain.resolveDataPath("User.db"))
+        when (token) {
+            "无内鬼" -> {
+                dbObject.update("Policy", "group_id", group.id, "ACGImgAllowed", 1)
+                sendMessage("无内鬼,可以交易")
+            }
+            "有内鬼" -> {
+                dbObject.update("Policy", "group_id", group.id, "ACGImgAllowed", 0)
+                sendMessage("有内鬼!终止交易!")
+            }
+            else -> sendMessage("口令错误!你就是内鬼?!")
+        }
+        dbObject.closeDB()
+    }
+
+    @SubCommand("色图许可")
+    suspend fun MemberCommandSenderOnMessage.acgImage() {
+        sendMessage(
+            """
+            无效模式参数，设定失败,请参考以下示范命令
+            群策略 色图许可 [模式值]
+            ——————————
+            模式值 | 说明
+            无内鬼      开启随机图片功能
+            有内鬼      关闭随机图片功能
+            """.trimIndent()
+        )
+    }
+
     private fun permissionCheck(user: Member): Boolean {
         record(primaryName)
         return user.permission.isOperator().not()
     }
-
 
     @SubCommand("责任人绑定")
     suspend fun MemberCommandSenderOnMessage.bindingOwnership(string: String) {
@@ -240,7 +276,6 @@ object GroupPolicy : CompositeCommand(
         }
         dbObject.closeDB()
     }
-
 
     @SubCommand("责任人绑定")
     suspend fun MemberCommandSenderOnMessage.bindingOwnership() {
@@ -281,7 +316,6 @@ object GroupPolicy : CompositeCommand(
     suspend fun MemberCommandSenderOnMessage.succeed(inheritor: Long) {
         succeed(group.id, inheritor)
     }
-
 
     @SubCommand("继承到群")
     suspend fun MemberCommandSenderOnMessage.succeed() {

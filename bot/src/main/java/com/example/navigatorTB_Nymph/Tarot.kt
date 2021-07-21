@@ -47,7 +47,7 @@ object Tarot : SimpleCommand(
         ).random(Random(seeds))
 //        PluginMain.logger.info{brand}
         val dbObject = SQLiteJDBC(PluginMain.resolveDataPath("AssetData.db"))
-        val r = dbObject.select("Tarot", "Brand", brand)[0]
+        val r = dbObject.selectOne("Tarot", "Brand", brand)
         dbObject.closeDB()
         if ((0..100).random(Random(seeds)) >= 50) {
             File(PluginMain.resolveDataPath(r["uprightImg"].toString()).toString()).toExternalResource().use {

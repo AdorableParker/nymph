@@ -26,6 +26,8 @@ dependencies {
     implementation("org.jetbrains.kotlin:kotlin-serialization:1.5.10")
     implementation("com.beust:klaxon:5.4")
     implementation("org.jsoup:jsoup:1.13.1")
+    implementation("net.sourceforge.htmlunit:htmlunit:2.51.0")
+
     implementation("org.xerial:sqlite-jdbc:3.34.0")
     implementation("com.mayabot.mynlp:mynlp-all:3.2.1")
     implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"

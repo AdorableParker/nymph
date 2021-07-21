@@ -53,7 +53,7 @@ object PluginMain : KotlinPlugin(
     JvmPluginDescription(
         id = "MCP.navigatorTB_Nymph",
         name = "navigatorTB",
-        version = "0.9.20"
+        version = "0.10.3"
     )
 ) {
     ///*
@@ -75,6 +75,7 @@ object PluginMain : KotlinPlugin(
     override fun onEnable() {
         MySetting.reload() // 从数据库自动读
         MyPluginData.reload()
+        UsageStatistics.reload()
 
         CalculationExp.register()   // 经验计算器
         WikiAzurLane.register()     // 碧蓝Wiki
@@ -97,6 +98,7 @@ object PluginMain : KotlinPlugin(
         MinesweeperGame.register()  // 扫雷
         Duel.register()             // 禁言决斗
         TraceMoe.register()         // 以图搜番
+        AcgImage.register()         // 随机图片
 //        MyHelp.register()           // 帮助功能
         CommandManager.registerCommand(MyHelp, true) // 帮助功能,需要覆盖内建指令
         // 动态更新
@@ -236,6 +238,7 @@ object PluginMain : KotlinPlugin(
                     dbObject.update("Policy", "group_id", "${gc.from}", "group_id", "${it.groupId}")
                     dbObject.update("SubscribeInfo", "group_id", "${gc.from}", "group_id", "${it.groupId}")
                     dbObject.update("Responsible", "group_id", "${gc.from}", "group_id", "${it.groupId}")
+                    dbObject.update("ACGImg", "group_id", "${gc.from}", "group_id", "${it.groupId}")
                     val ancestor = Bot.getInstance(MySetting.BotID).getGroup(gc.from)
                     if (ancestor != null) {
                         ancestor.sendMessage("受继承群已接受继承，即将退出本群")
@@ -245,6 +248,7 @@ object PluginMain : KotlinPlugin(
                 } else {
                     dbObject.insert("Policy", arrayOf("group_id"), arrayOf("${it.groupId}"))
                     dbObject.insert("SubscribeInfo", arrayOf("group_id"), arrayOf("${it.groupId}"))
+                    dbObject.insert("ACGImg", arrayOf("group_id"), arrayOf("${it.groupId}"))
                     dbObject.insert(
                         "Responsible",
                         arrayOf("group_id", "principal_ID"),
@@ -266,6 +270,7 @@ object PluginMain : KotlinPlugin(
             dbObject.delete("Policy", "group_id", it.groupId.toString())
             dbObject.delete("SubscribeInfo", "group_id", it.groupId.toString())
             dbObject.delete("Responsible", "group_id", it.groupId.toString())
+            dbObject.delete("ACGImg", "group_id", it.groupId.toString())
             dbObject.closeDB()
             PluginMain.logger.warning { "###\n事件—被移出群:\n- 群ID：${it.groupId}\n- 相关群负责人：${pR["principal_ID"]}\n###" }
         }
@@ -308,12 +313,25 @@ object PluginMain : KotlinPlugin(
             atBot().not().invoke {
                 if (group.botMuteRemaining > 0) return@invoke
                 val dbObject = SQLiteJDBC(resolveDataPath("User.db"))
-                val groupInfo = dbObject.select("Policy", "group_id", group.id, 1)
+                val groupInfo = dbObject.selectOne("Policy", "group_id", group.id, 1)
                 dbObject.closeDB()
-                val numerator = groupInfo[0]["TriggerProbability"] as Int
-                val v = (1..100).random() <= numerator
+                val numerator = groupInfo["TriggerProbability"] as Int
+                val v1 = (1..100).random()
+                val v2 = if (groupInfo["ACGImgAllowed"] == 1) (1..100).random() else 0
 //                PluginMain.logger.info { "不at执行这里,$v" }
-                if (v) AI.dialogue(subject, message.content.trim())
+                if (v1 <= numerator) AI.dialogue(subject, message.content.trim())
+                if (v1 != v2) return@invoke
+
+                val supply = when (v1) {
+                    in 1..7 -> 10
+                    in 8..19 -> 4
+                    in 20..46 -> 1
+                    else -> 0
+                }
+                if (supply > 0) {
+                    subject.sendMessage("是司令部的补给！配给+$supply")
+                    AcgImage.getReplenishment(subject.id, supply)
+                }
             }
         }
 
@@ -341,8 +359,9 @@ object PluginMain : KotlinPlugin(
         Birthday.unregister()           // 舰船下水日
         Music.unregister()              // 点歌姬
         MinesweeperGame.unregister()    // 扫雷
-        Duel.register()                 // 禁言决斗
-        TraceMoe.register()             // 以图搜番
+        Duel.unregister()                 // 禁言决斗
+        TraceMoe.unregister()             // 以图搜番
+        AcgImage.unregister()         // 随机图片
         PluginMain.cancel()
     }
 }
@@ -388,6 +407,10 @@ object MyPluginData : AutoSavePluginData("TB_Data") { // "name" 是保存的文�
     val duelTime: MutableMap<Long, Long> by value(
         mutableMapOf()
     )
+
+    val AcgImageRun: MutableSet<Long> by value(
+        mutableSetOf()
+    )
 //    var long: Long by value(0L) // 允许 var
 //    var int by value(0) // 可以使用类型推断, 但更推荐使用 `var long: Long by value(0)` 这种定义方式.
 
@@ -414,6 +437,10 @@ object MySetting : AutoSavePluginConfig("TB_Setting") {
 
     @ValueDescription("超级管理员账号")
     val AdminID by value(123456L)
+
+    @ValueDescription("图床API")
+    val ImageHostingService by value("")
+//    https://adorableparker.github.io/PACGPRL/
 
     //    @ValueDescription("数量") // 注释写法, 将会保存在 MySetting.yml 文件中.
 //    var count by value(0)

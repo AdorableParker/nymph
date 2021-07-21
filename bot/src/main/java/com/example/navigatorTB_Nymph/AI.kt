@@ -23,8 +23,8 @@ object AI : CompositeCommand(
     suspend fun MemberCommandSenderOnMessage.main(question: String, answer: String) {
         val userDBObject =
             SQLiteJDBC(PluginMain.resolveDataPath("User.db"))
-        val info = userDBObject.select("Policy", "group_id", group.id, 1)
-        if (info[0]["Teaching"] == 0.0) {
+        val info = userDBObject.selectOne("Policy", "group_id", group.id, 1)
+        if (info["Teaching"] == 0.0) {
             userDBObject.closeDB()
             sendMessage("本群禁止教学,请联系管理员开启")
             return
