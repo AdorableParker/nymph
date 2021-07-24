@@ -53,7 +53,7 @@ object PluginMain : KotlinPlugin(
     JvmPluginDescription(
         id = "MCP.navigatorTB_Nymph",
         name = "navigatorTB",
-        version = "0.10.3"
+        version = "0.10.4"
     )
 ) {
     ///*
@@ -317,19 +317,19 @@ object PluginMain : KotlinPlugin(
                 dbObject.closeDB()
                 val numerator = groupInfo["TriggerProbability"] as Int
                 val v1 = (1..100).random()
-                val v2 = if (groupInfo["ACGImgAllowed"] == 1) (1..100).random() else 0
+                val v2 = if (groupInfo["ACGImgAllowed"] as Int == 1) (1..100).random() else 0
 //                PluginMain.logger.info { "不at执行这里,$v" }
                 if (v1 <= numerator) AI.dialogue(subject, message.content.trim())
-                if (v1 != v2) return@invoke
+                if (v1 != 100) return@invoke
 
-                val supply = when (v1) {
+                val supply = when (v2) {
                     in 1..7 -> 10
                     in 8..19 -> 4
                     in 20..46 -> 1
                     else -> 0
                 }
                 if (supply > 0) {
-                    subject.sendMessage("是司令部的补给！配给+$supply")
+                    subject.sendMessage("是司令部的补给！色图配给+$supply")
                     AcgImage.getReplenishment(subject.id, supply)
                 }
             }
@@ -429,9 +429,6 @@ object MySetting : AutoSavePluginConfig("TB_Setting") {
     @ValueDescription("Bot 账号")
     val BotID by value(123456L)
 
-//    @ValueDescription("公告群群号")
-//    val AnnouncementGroupID by value(123456L)
-
     @ValueDescription("SauceNAO 的 API Key")
     val SauceNAOKey by value("")
 
@@ -440,7 +437,6 @@ object MySetting : AutoSavePluginConfig("TB_Setting") {
 
     @ValueDescription("图床API")
     val ImageHostingService by value("")
-//    https://adorableparker.github.io/PACGPRL/
 
     //    @ValueDescription("数量") // 注释写法, 将会保存在 MySetting.yml 文件中.
 //    var count by value(0)

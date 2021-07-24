@@ -65,7 +65,7 @@ object AcgImage : SimpleCommand(
                 arrayOf("${score - 1}", "${Instant.now().epochSecond}")
             )
             if (score - 1 < 10) {
-                sendMessage("ℹ本群剩余份额已经不足10点了")
+                sendMessage("ℹ本群剩余配给已经不足10点了")
             }
         } ?: sendMessage("数据传输失败...嗯.一定是塞壬的问题..")
 
@@ -81,7 +81,18 @@ object AcgImage : SimpleCommand(
             webClient.waitForBackgroundJavaScript(1000) //异步JS执行需要耗时,所以这里线程要阻塞30秒,等待异步JS执行结束
             webClient.close()
             val link = Jsoup.parse(page.asXml()).select("img[src]").attr("src")
+
+//            val image =
             return URL(link).openConnection().getInputStream()
+
+//            Bitmap().compress(Bitmap.CompressFormat.JPEG, 80, fos)
+//            val b = BitMap(10)
+
+//            getInputStream()
+
+//            ImageIO.write(image, "bmp", File("a.bmp"))
+
+//            return
         }.onFailure {
             PluginMain.logger.warning(it.cause)
         }
@@ -91,9 +102,11 @@ object AcgImage : SimpleCommand(
 
     fun getReplenishment(group: Long, supply: Int) {
         val dbObject = SQLiteJDBC(PluginMain.resolveDataPath("User.db"))
-        val quota = dbObject.selectOne("ACGImg", "group_id", group, 1)["quota"] as Int
-        dbObject.update("ACGImg", "group_id", group, "quota", quota + supply)
+        val quota = dbObject.selectOne("ACGImg", "group_id", group, 1)["score"] as Int
+        dbObject.update("ACGImg", "group_id", group, "score", quota + supply)
         dbObject.closeDB()
     }
+
+
 }
 
