@@ -81,11 +81,12 @@ object WikiAzurLane : CompositeCommand(
         record(primaryName)
         val doc = Jsoup.connect("https://wiki.biligame.com/blhx/$index").get()
         val links = doc.select("div#mw-content-text").select(".mw-parser-output").select("img[src]")
-        val url = URL(links[sub].attr("abs:src"))
-//        return try {  // 等发现确实有可能异常了再说
-        return url.openConnection().getInputStream()
-//        }catch(err:java.io.IOException){
-//            null
-//        }
+        runCatching {
+            val url = URL(links[sub].attr("abs:src"))
+            return url.openConnection().getInputStream()
+        }.onFailure {
+            PluginMain.logger.warning(it.cause)
+        }
+        return null
     }
 }

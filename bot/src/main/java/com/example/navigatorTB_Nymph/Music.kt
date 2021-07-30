@@ -93,6 +93,7 @@ object Music : SimpleCommand(
     @Suppress("UNREACHABLE_CODE") // Mark： 有无法到达的代码
     private fun getQQMusicCard(musicName: String): Message {
         return PlainText("你搜索的内容是“$musicName”，但是这个引擎还没做好")
+
         val doc = Jsoup.connect("https://c.y.qq.com/soso/fcgi-bin/client_search_cp?format=json&w=$musicName")
             .ignoreContentType(true)
             .execute().body().toString()

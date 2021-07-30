@@ -14,7 +14,7 @@ import net.mamoe.mirai.message.data.Image.Key.queryUrl
 import net.mamoe.mirai.utils.MiraiExperimentalApi
 import net.mamoe.mirai.utils.info
 
-
+@Suppress("UNUSED_PARAMETER") // 忽略未使用的参数警告
 @MiraiExperimentalApi
 @ConsoleExperimentalApi
 object Test : SimpleCommand(

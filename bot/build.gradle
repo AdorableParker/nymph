@@ -27,8 +27,10 @@ dependencies {
     implementation("com.beust:klaxon:5.4")
     implementation("org.jsoup:jsoup:1.13.1")
     implementation("net.sourceforge.htmlunit:htmlunit:2.51.0")
-
+//    implementation("com.sksamuel.scrimage:scrimage-webp:4.0.21")
+//    implementation("com.sksamuel.scrimage:scrimage-core:4.0.21")
     implementation("org.xerial:sqlite-jdbc:3.34.0")
     implementation("com.mayabot.mynlp:mynlp-all:3.2.1")
     implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
 }
+

@@ -77,24 +77,14 @@ object AcgImage : SimpleCommand(
         val webClient = WebClient(BrowserVersion.EDGE) //新建一个浏览器客户端对象 指定内核
         webClient.options.isCssEnabled = false //是否启用CSS, 因为不需要展现页面, 所以不需要启用
         runCatching {
-            val page: HtmlPage = webClient.getPage(MySetting.ImageHostingService) //尝试加载上面图片例子给出的网页
-            webClient.waitForBackgroundJavaScript(1000) //异步JS执行需要耗时,所以这里线程要阻塞30秒,等待异步JS执行结束
+            val page: HtmlPage = webClient.getPage(MySetting.ImageHostingService) //尝试加载给出的网页
             webClient.close()
-            val link = Jsoup.parse(page.asXml()).select("img[src]").attr("src")
-
-//            val image =
-            return URL(link).openConnection().getInputStream()
-
-//            Bitmap().compress(Bitmap.CompressFormat.JPEG, 80, fos)
-//            val b = BitMap(10)
-
-//            getInputStream()
-
-//            ImageIO.write(image, "bmp", File("a.bmp"))
-
-//            return
+            val link = Jsoup.parse(page.asXml()).text()
+            val inputStream = URL(link).openConnection().getInputStream()
+//            return ImmutableImageleImage.loader().fromStream(inputStream).bytes(PngWriter.MaxCompression).inputStream() // com.sksamuel.scrimage.ImageParseException 原因不详
+            return inputStream
         }.onFailure {
-            PluginMain.logger.warning(it.cause)
+            PluginMain.logger.warning(it)
         }
         webClient.close()
         return null
