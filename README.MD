@@ -17,7 +17,8 @@
   > 个别句子处理有缺陷
 * [X] 半自动化同意入群邀请 ![`不完美`](https://img.shields.io/badge/-NotPerfect-purple)
   > 有源于Mirai本身的问题
-* [ ] 随机色图 ![`正在推进`](https://img.shields.io/badge/-Underway-blue)
+* [X] 随机色图 ![`不完美`](https://img.shields.io/badge/-NotPerfect-purple)
+  > 一顿操作下来还是没有解决Webp格式转换的问题，就直接发了
 * [ ] 碧蓝航线的活动计算器 ![`暂时搁置`](https://img.shields.io/badge/-Shelved-yellow)
 * [X] 整点报时 - 舰C语音版本 ![`已完成`](https://img.shields.io/badge/_Achieved-green)
   > 额外增加了`千恋*万花`的语音报时
@@ -30,8 +31,7 @@
 * [X] 历史今日 - 军舰下水日期 ![`已完成`](https://img.shields.io/badge/_Achieved-green)
 * [X] 扫雷 ![`已完成`](https://img.shields.io/badge/_Achieved-green)
 * [X] 禁言决斗 ![`已完成`](https://img.shields.io/badge/_Achieved-green)
-* [X] 以图搜番 ![`不完美`](https://img.shields.io/badge/-NotPerfect-purple)
-  > 使用堵塞式操作发送结果预览图片
+* [X] 以图搜番 ![`已完成`](https://img.shields.io/badge/_Achieved-green)
 
 | **说明** | **图标**                                                     |
 | -------: | :----------------------------------------------------------- |
