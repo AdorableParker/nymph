@@ -78,11 +78,10 @@ object AcgImage : SimpleCommand(
         webClient.options.isCssEnabled = false //是否启用CSS, 因为不需要展现页面, 所以不需要启用
         runCatching {
             val page: HtmlPage = webClient.getPage(MySetting.ImageHostingService) //尝试加载给出的网页
-            webClient.close()
             val link = Jsoup.parse(page.asXml()).text()
-            val inputStream = URL(link).openConnection().getInputStream()
-//            return ImmutableImageleImage.loader().fromStream(inputStream).bytes(PngWriter.MaxCompression).inputStream() // com.sksamuel.scrimage.ImageParseException 原因不详
-            return inputStream
+            webClient.close()
+            //            return ImmutableImageleImage.loader().fromStream(inputStream).bytes(PngWriter.MaxCompression).inputStream() // com.sksamuel.scrimage.ImageParseException 原因不详
+            return URL(link).openConnection().getInputStream()
         }.onFailure {
             PluginMain.logger.warning(it)
         }
