@@ -53,7 +53,7 @@ object PluginMain : KotlinPlugin(
     JvmPluginDescription(
         id = "MCP.navigatorTB_Nymph",
         name = "navigatorTB",
-        version = "0.10.7"
+        version = "0.10.10"
     )
 ) {
     ///*
@@ -72,10 +72,16 @@ object PluginMain : KotlinPlugin(
     val VOTES: MutableMap<Long, VoteUser> = mutableMapOf()
     val GAME = mutableMapOf<Long, Minesweeper>()
     val BothSidesDuel = mutableMapOf<Member, Gun>()
+
     override fun onEnable() {
         MySetting.reload() // 从数据库自动读
         MyPluginData.reload()
         UsageStatistics.reload()
+
+        if (MyPluginData.initialization) {
+            dataBastInit()
+            MyPluginData.initialization = false
+        }
 
         CalculationExp.register()   // 经验计算器
         WikiAzurLane.register()     // 碧蓝Wiki
@@ -220,7 +226,7 @@ object PluginMain : KotlinPlugin(
                             script[1]?.get(LocalDateTime.now().dayOfWeek.value - 1)?.let { group.sendMessage(it) }
                             script[2]?.get(LocalDateTime.now().dayOfWeek.value - 1)?.let { group.sendMessage(it) }
                         }
-                        else -> PluginMain.logger.warning { "未知的模式" }
+                        else -> logger.warning { "未知的模式" }
                     }
                 }
             }
@@ -229,7 +235,10 @@ object PluginMain : KotlinPlugin(
         }
         // 入群审核
         this.globalEventChannel().subscribeAlways<BotInvitedJoinGroupRequestEvent> {
-            PluginMain.logger.info { "\nGroupName:${it.groupName}\nGroupID：${it.groupId}\nList:${MyPluginData.groupIdList}" }
+            logger.info { "\nGroupName:${it.groupName}\nGroupID：${it.groupId}" }
+            MyPluginData.groupIdList.forEach { (groupID, user) ->
+                logger.info { "GroupID:$groupID\tUserID：${user.principal_ID}\tFrom：${user.from}" }
+            }
             if (MyPluginData.groupIdList.contains(it.groupId)) {
                 val gc = MyPluginData.groupIdList[it.groupId]!! // 获取群证书
                 it.accept()
@@ -257,10 +266,10 @@ object PluginMain : KotlinPlugin(
                 }
                 MyPluginData.groupIdList.remove(it.groupId)
                 dbObject.closeDB()
-                PluginMain.logger.info { "PASS" }
+                logger.info { "PASS" }
             } else {
                 it.ignore()
-                PluginMain.logger.info { "FAIL" }
+                logger.info { "FAIL" }
             }
         }
         // 退群清理
@@ -272,7 +281,7 @@ object PluginMain : KotlinPlugin(
             dbObject.delete("Responsible", "group_id", it.groupId.toString())
             dbObject.delete("ACGImg", "group_id", it.groupId.toString())
             dbObject.closeDB()
-            PluginMain.logger.warning { "###\n事件—被移出群:\n- 群ID：${it.groupId}\n- 相关群负责人：${pR["principal_ID"]}\n###" }
+            logger.warning { "###\n事件—被移出群:\n- 群ID：${it.groupId}\n- 相关群负责人：${pR["principal_ID"]}\n###" }
         }
         // 戳一戳
         this.globalEventChannel().subscribeAlways<NudgeEvent> {
@@ -292,7 +301,7 @@ object PluginMain : KotlinPlugin(
                             ).random()
                         )
                     }.onFailure {
-                        PluginMain.logger.info("发送消息失败，在该群被禁言")
+                        logger.info("发送消息失败，在该群被禁言")
                     }
 
                 } else {
@@ -320,7 +329,7 @@ object PluginMain : KotlinPlugin(
                 val v2 = if (groupInfo["ACGImgAllowed"] as Int == 1) (1..100).random() else 0
 //                PluginMain.logger.info { "不at执行这里,$v" }
                 if (v1 <= numerator) AI.dialogue(subject, message.content.trim())
-                if (v1 != 100) return@invoke
+                if (v1 <= 98) return@invoke
 
                 val supply = when (v2) {
                     in 1..7 -> 10
@@ -336,6 +345,68 @@ object PluginMain : KotlinPlugin(
         }
 
         logger.info { "Hi: ${MySetting.name},启动完成,V$version" } // 发送回执.
+    }
+
+    private fun dataBastInit() {
+        val userDB = SQLiteJDBC(resolveDataPath("User.db"))
+        userDB.createTable(
+            """
+                CREATE TABLE "ACGImg" (
+                	"group_id"	INTEGER NOT NULL UNIQUE,
+                	"score"	INTEGER NOT NULL DEFAULT 0,
+                	"date"	INTEGER NOT NULL DEFAULT 0,
+                	PRIMARY KEY("group_id")
+                );
+            """.trimIndent()
+        )
+        userDB.createTable(
+            """
+                CREATE TABLE "Policy" (
+                	"group_id"	NUMERIC NOT NULL UNIQUE,
+                	"TellTimeMode"	INTEGER NOT NULL DEFAULT 0,
+                	"DailyReminderMode"	INTEGER NOT NULL DEFAULT 0,
+                	"Teaching"	REAL NOT NULL DEFAULT 0,
+                	"TriggerProbability"	INTEGER NOT NULL DEFAULT 33,
+                	"ACGImgAllowed"	INTEGER NOT NULL DEFAULT 0
+                );
+            """.trimIndent()
+        )
+        userDB.createTable(
+            """
+                CREATE TABLE "Responsible" (
+                	"group_id"	INTEGER NOT NULL UNIQUE,
+                	"principal_ID"	INTEGER NOT NULL
+                );
+            """.trimIndent()
+        )
+        userDB.createTable(
+            """
+                CREATE TABLE "SubscribeInfo" (
+                	"group_id"	NUMERIC NOT NULL UNIQUE,
+                	"AzurLane"	REAL DEFAULT 0.0,
+                	"ArKnights"	REAL DEFAULT 0.0,
+                	"FateGrandOrder"	REAL DEFAULT 0.0,
+                	"GenShin"	REAL DEFAULT 0.0
+                );
+            """.trimIndent()
+        )
+        userDB.closeDB()
+        val aiDB = SQLiteJDBC(resolveDataPath("AI.db"))
+        aiDB.createTable(
+            """
+            CREATE TABLE "Corpus" (
+            	"ID"	INTEGER NOT NULL,
+            	"answer"	TEXT NOT NULL,
+            	"question"	TEXT NOT NULL,
+            	"keys"	TEXT NOT NULL,
+            	"fromGroup"	INTEGER NOT NULL,
+            	PRIMARY KEY("ID" AUTOINCREMENT)
+            );
+        """.trimIndent()
+        )
+        aiDB.closeDB()
+        logger.info("初始化基础数据库完成")
+        logger.warning("请自行检查 AssetData.db 是否存在于 Data 目录")
     }
 
     override fun onDisable() {
@@ -371,6 +442,7 @@ object PluginMain : KotlinPlugin(
 
 
 object MyPluginData : AutoSavePluginData("TB_Data") { // "name" 是保存的文件名 (不带后缀)
+    var initialization: Boolean by value(true)
     val timeStampOfDynamic: MutableMap<Int, Long> by value(
         mutableMapOf(
             233114659 to 1L,

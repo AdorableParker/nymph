@@ -31,16 +31,18 @@ object GroupPolicy : CompositeCommand(
         *2* 订阅模式
         *3* 每日提醒模式
         *4* 教学许可
-        *5* 对话概率
-        *6* 责任人绑定
-        *7* 继承到群
-        *8* 撤销继承协议
+        *5* 色图许可
+        *6* 对话概率
+        *7* 责任人绑定
+        *8* 继承到群
+        *9* 撤销继承协议
         """.trimIndent()
 
     @SubCommand("报时模式")
     suspend fun MemberCommandSenderOnMessage.tellTime(mode: Int) {
         if (permissionCheck(user)) {
             sendMessage("权限不足")
+            sendMessage("hi")
             return
         }
         val dbObject = SQLiteJDBC(PluginMain.resolveDataPath("User.db"))
