@@ -11,7 +11,7 @@ buildscript {
         // 在这里选择合适的插件版本
         // idea 用户请使用4.0
         // android studio用户请使用 4.1.0
-        classpath 'com.android.tools.build:gradle:4.1.1'
+        classpath 'com.android.tools.build:gradle:4.2.0'
 
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
 

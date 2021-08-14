@@ -1,12 +1,11 @@
 plugins {
     id("net.mamoe.mirai-console") version "2.7-M1" // mirai-console version
     id 'kotlin'
-//    id 'org.jetbrains.kotlin.multiplatform' version '1.5.0'
-    id 'org.jetbrains.kotlin.plugin.serialization' version '1.5.0'
+    id 'org.jetbrains.kotlin.plugin.serialization' version '1.5.10'
 }
 
 mirai {
-    coreVersion = "2.7-M2" // mirai-core version
+    coreVersion = "2.7-RC" // mirai-core version
 }
 
 repositories {
@@ -20,17 +19,15 @@ java {
 }
 
 dependencies {
-    compileOnly("net.mamoe:mirai-core:2.7-M2") // mirai-core 的 API
-    compileOnly("net.mamoe:mirai-console:2.7-M2") // 后端
+    compileOnly("net.mamoe:mirai-core:2.7-RC") // mirai-core 的 API
+    compileOnly("net.mamoe:mirai-console:2.7-RC") // 后端
 
-    implementation("org.jetbrains.kotlin:kotlin-serialization:1.5.10")
-    implementation("com.beust:klaxon:5.4")
-    implementation("org.jsoup:jsoup:1.13.1")
-    implementation("net.sourceforge.htmlunit:htmlunit:2.51.0")
-//    implementation("com.sksamuel.scrimage:scrimage-webp:4.0.21")
-//    implementation("com.sksamuel.scrimage:scrimage-core:4.0.21")
-    implementation("org.xerial:sqlite-jdbc:3.34.0")
-    implementation("com.mayabot.mynlp:mynlp-all:3.2.1")
-    implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version"
+    implementation('org.jetbrains.kotlin:kotlin-serialization:1.5.21')
+    implementation('com.beust:klaxon:5.5')
+    implementation('org.jsoup:jsoup:1.14.1')
+    implementation('net.sourceforge.htmlunit:htmlunit:2.52.0')
+    implementation('org.xerial:sqlite-jdbc:3.36.0.1')
+    implementation('com.mayabot.mynlp:mynlp-all:3.2.1')
+    implementation("org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version")
 }
 

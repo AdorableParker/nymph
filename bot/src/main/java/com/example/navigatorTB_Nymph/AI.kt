@@ -10,7 +10,9 @@ import net.mamoe.mirai.console.command.CompositeCommand
 import net.mamoe.mirai.console.command.MemberCommandSenderOnMessage
 import net.mamoe.mirai.console.util.ConsoleExperimentalApi
 import net.mamoe.mirai.contact.Group
+import net.mamoe.mirai.utils.ExternalResource.Companion.toExternalResource
 import net.mamoe.mirai.utils.MiraiExperimentalApi
+import java.io.File
 
 @MiraiExperimentalApi
 @ConsoleExperimentalApi
@@ -32,13 +34,11 @@ object AI : CompositeCommand(
         userDBObject.closeDB()
         val keyWord = PluginMain.KEYWORD_SUMMARY.keyword(question, 1).let { if (it.size <= 0) question else it[0] }
 //        PluginMain.logger.debug { "*$question*\n$keyWord" }
-
-        val dbObject =
-            SQLiteJDBC(PluginMain.resolveDataPath("AI.db"))
+        val dbObject = SQLiteJDBC(PluginMain.resolveDataPath("AI.db"))
         val entry = dbObject.select(
             "Corpus",
-            listOf("answer", "question", "keys", "fromGroup"),
-            listOf(answer, question, keyWord, "${group.id}"),
+            listOf("answer", "question", "keys", "fromGroup", "answer", "question", "keys"),
+            listOf(answer, question, keyWord, "${group.id}' OR fromGroup = '0", answer, question, keyWord),
             "AND",
             0
         )
@@ -63,6 +63,12 @@ object AI : CompositeCommand(
         )[0]["ID"]
 
         dbObject.closeDB()
+        if ((1..10).random() <= 1) {
+            val audio = File("${PluginMain.resolveDataPath("./雷-原来如此.amr")}").toExternalResource().use {
+                group.uploadAudio(it)
+            }
+            sendMessage(audio)
+        }
         sendMessage("问题:$question\n回答:$answer\n条目已添加，条目ID:$entryID")
     }
 
@@ -76,9 +82,14 @@ object AI : CompositeCommand(
         val r = when {
             entryList.isEmpty() -> "问答包含关键词${key}的条目不存在"
             entryList.size >= 10 -> {
-                val report = mutableListOf("问答包含关键词${key}的条目过多(超过十条)，仅提供本群关键词，控制权限:完全控制")
+                val report = mutableListOf("问答包含关键词${key}的条目过多(超过十条)，仅提供前十条，本群关键词优先显示，控制权限:完全控制")
                 for (row in entryList) {
-                    if (row["fromGroup"].toString().toLong() == group.id) {
+                    if (row["fromGroup"].toString().toLong() == group.id && report.size <= 10) {
+                        report.add("问题:${row["question"]}\n回答:${row["answer"]}\n条目ID:${row["ID"]}")
+                    }
+                }
+                for (row in entryList) {
+                    if (row["fromGroup"].toString().toLong() == 0L && report.size <= 10) {
                         report.add("问题:${row["question"]}\n回答:${row["answer"]}\n条目ID:${row["ID"]}")
                     }
                 }
@@ -89,9 +100,9 @@ object AI : CompositeCommand(
                 val report = mutableListOf("条目清单:")
                 for (row in entryList) {
                     when (row["fromGroup"].toString().toLong()) {
-                        group.id -> report.add("问题:${row["question"]}\n回答:${row["answer"]}\n条目ID:${row["ID"]}\n控制权限:完全控制")
-                        0L -> report.add("问题:${row["question"]}\n回答:${row["answer"]}\n条目ID:${row["ID"]}\n控制权限:只读权限")
-                        else -> report.add("问题:隐藏\t回答:隐藏\n条目ID:${row["ID"]}\n控制权限:不可操作")
+                        group.id -> report.add("问题:${row["question"]}\n回答:${row["answer"]}\n条目ID:${row["ID"]}\n控制权限:完全控制\n")
+                        0L -> report.add("问题:${row["question"]}\n回答:${row["answer"]}\n条目ID:${row["ID"]}\n控制权限:只读权限\n")
+                        else -> report.add("问题:隐藏\t回答:隐藏\n条目ID:${row["ID"]}\n控制权限:不可操作\n")
                     }
                 }
                 report.joinToString("\n")

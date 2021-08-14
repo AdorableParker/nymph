@@ -56,7 +56,7 @@ object PluginMain : KotlinPlugin(
         version = "0.10.12"
     )
 ) {
-    ///*
+
     // 分词功能
     val LEXER = coreBuilder()
         .withPos() //词性标注功能
@@ -67,8 +67,6 @@ object PluginMain : KotlinPlugin(
     // 关键词提取
     val KEYWORD_SUMMARY = KeywordSummary()
 
-    //*/
-    //    KeywordSummary
     val VOTES: MutableMap<Long, VoteUser> = mutableMapOf()
     val GAME = mutableMapOf<Long, Minesweeper>()
     val BothSidesDuel = mutableMapOf<Member, Gun>()
@@ -154,8 +152,6 @@ object PluginMain : KotlinPlugin(
                 userDbObject.closeDB()
                 val script = mutableMapOf<Int, List<MutableMap<String?, Any?>>>()
 
-                logger.info("执行到此处，157 line")
-
                 for (groupPolicy in groupList) {
                     val groupID = groupPolicy["group_id"] as Int
                     val group = Bot.getInstance(MySetting.BotID).getGroup(groupID.toLong())
@@ -163,8 +159,6 @@ object PluginMain : KotlinPlugin(
 
                     val groupMode = groupPolicy["TellTimeMode"] as Int
                     if (groupMode == -1) {
-
-
                         group.sendMessage("现在${time}点咯")
                         continue
                     }
@@ -177,10 +171,10 @@ object PluginMain : KotlinPlugin(
 
                     if (groupMode % 2 == 0) {      //偶数
                         val path = PluginMain.resolveDataPath("./报时语音/$outScript")
-                        val voice = File("$path").toExternalResource().use {
-                            group.uploadVoice(it)
+                        val audio = File("$path").toExternalResource().use {
+                            group.uploadAudio(it)
                         }
-                        voice.let { group.sendMessage(it) }
+                        audio.let { group.sendMessage(it) }
                     } else {                      //奇数
                         group.sendMessage(outScript)
                     }
