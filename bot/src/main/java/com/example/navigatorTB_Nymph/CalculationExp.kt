@@ -38,7 +38,7 @@ object CalculationExp : SimpleCommand(
                 exp -= calculateParts(level, special)
                 level++
             }
-            sendMessage("当前等级:$current_level\n已有经验:$lvOrExp\n是否为决战方案:$special\n最终计算结果:当前已有经验最高可到Lv.${level - 1}")
+            sendMessage("当前等级:$current_level\n已有经验:$lvOrExp\n是否为决战方案:$special\n最终计算结果:当前已有经验最高可到Lv.$level")
         }
     }
 

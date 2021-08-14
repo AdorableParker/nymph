@@ -152,8 +152,10 @@ object PluginMain : KotlinPlugin(
                 val userDbObject = SQLiteJDBC(resolveDataPath("User.db"))
                 val groupList = userDbObject.select("Policy", "TellTimeMode", 0, 5)
                 userDbObject.closeDB()
-
                 val script = mutableMapOf<Int, List<MutableMap<String?, Any?>>>()
+
+                logger.info("执行到此处，157 line")
+
                 for (groupPolicy in groupList) {
                     val groupID = groupPolicy["group_id"] as Int
                     val group = Bot.getInstance(MySetting.BotID).getGroup(groupID.toLong())
@@ -161,6 +163,8 @@ object PluginMain : KotlinPlugin(
 
                     val groupMode = groupPolicy["TellTimeMode"] as Int
                     if (groupMode == -1) {
+
+
                         group.sendMessage("现在${time}点咯")
                         continue
                     }
