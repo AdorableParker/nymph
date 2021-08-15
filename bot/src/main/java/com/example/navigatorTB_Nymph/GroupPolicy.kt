@@ -42,7 +42,6 @@ object GroupPolicy : CompositeCommand(
     suspend fun MemberCommandSenderOnMessage.tellTime(mode: Int) {
         if (permissionCheck(user)) {
             sendMessage("权限不足")
-            sendMessage("hi")
             return
         }
         val dbObject = SQLiteJDBC(PluginMain.resolveDataPath("User.db"))

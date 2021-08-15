@@ -53,7 +53,7 @@ object PluginMain : KotlinPlugin(
     JvmPluginDescription(
         id = "MCP.navigatorTB_Nymph",
         name = "navigatorTB",
-        version = "0.10.12"
+        version = "0.10.13"
     )
 ) {
 
@@ -144,7 +144,7 @@ object PluginMain : KotlinPlugin(
             job2.addJob {
                 val time = LocalDateTime.now().hour
                 val dbObject = SQLiteJDBC(resolveDataPath("AssetData.db"))
-                val scriptList = dbObject.select("script", "House", time, 1)
+                val scriptList = dbObject.select("script", "Hour", time, 1)
                 dbObject.closeDB()
 
                 val userDbObject = SQLiteJDBC(resolveDataPath("User.db"))
@@ -284,8 +284,8 @@ object PluginMain : KotlinPlugin(
         // 戳一戳
         this.globalEventChannel().subscribeAlways<NudgeEvent> {
             if (this.target == bot && this.from != bot) {
-                if ((1..5).random() <= 4) {
-                    runCatching {
+                runCatching {
+                    if ((1..5).random() <= 4) {
                         subject.sendMessage(
                             arrayOf(
                                 "指挥官，请不要做出这种行为",
@@ -298,13 +298,12 @@ object PluginMain : KotlinPlugin(
                                 "传输...信.号...数据...干扰..."
                             ).random()
                         )
-                    }.onFailure {
-                        logger.info("发送消息失败，在该群被禁言")
+                    } else {
+                        this.from.nudge().sendTo(subject)
+                        subject.sendMessage("戳回去")
                     }
-
-                } else {
-                    this.from.nudge().sendTo(subject)
-                    subject.sendMessage("戳回去")
+                }.onFailure {
+                    logger.info("发送消息失败，在该群被禁言")
                 }
             }
         }

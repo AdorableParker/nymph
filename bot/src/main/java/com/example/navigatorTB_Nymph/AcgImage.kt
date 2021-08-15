@@ -67,11 +67,14 @@ object AcgImage : SimpleCommand(
             if (score - 1 < 10) {
                 sendMessage("ℹ本群剩余配给已经不足10点了")
             }
+            close(it)
         } ?: sendMessage("数据传输失败...嗯.一定是塞壬的问题..")
 
         dbObject.closeDB()
         MyPluginData.AcgImageRun.remove(group.id)
     }
+
+    private fun close(it: InputStream) = it.close()
 
     private fun getRandomImg(): InputStream? {
         val webClient = WebClient(BrowserVersion.EDGE) //新建一个浏览器客户端对象 指定内核
