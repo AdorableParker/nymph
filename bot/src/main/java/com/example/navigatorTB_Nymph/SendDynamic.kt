@@ -159,7 +159,7 @@ object SendDynamic : CompositeCommand(
             }
             // 未知类型
             else -> {
-                PluginMain.logger.warning("File:SendDynamic.kt\tLine:144\n错误信息:未知的类型码 $typeCode ")
+                PluginMain.logger.warning("File:SendDynamic.kt\tLine:162\n错误信息:未知的类型码 $typeCode ")
                 return Dynamic(timestamp, "是未知的动态类型,无法解析", null)
             }
         }

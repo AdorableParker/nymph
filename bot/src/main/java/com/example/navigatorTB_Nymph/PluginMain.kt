@@ -239,7 +239,7 @@ object PluginMain : KotlinPlugin(
                             script[1]?.get(LocalDateTime.now().dayOfWeek.value - 1)?.let { group.sendMessage(it) }
                             script[2]?.get(LocalDateTime.now().dayOfWeek.value - 1)?.let { group.sendMessage(it) }
                         }
-                        else -> logger.warning { "File:PluginMain.kt\tLine:228\n未知的模式" }
+                        else -> logger.warning { "File:PluginMain.kt\tLine:242\n未知的模式" }
                     }
                 }
             }
@@ -319,7 +319,7 @@ object PluginMain : KotlinPlugin(
                         subject.sendMessage("戳回去")
                     }
                 }.onFailure {
-                    logger.info { "File:PluginMain.kt\tLine:309\n发送消息失败，在该群被禁言" }
+                    logger.info { "File:PluginMain.kt\tLine:322\n发送消息失败，在该群被禁言" }
                 }
             }
         }
