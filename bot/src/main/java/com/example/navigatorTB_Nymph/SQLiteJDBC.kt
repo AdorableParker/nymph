@@ -29,7 +29,7 @@ class SQLiteJDBC(DbPath: Path) {
             c = DriverManager.getConnection("jdbc:sqlite:$DbPath")
             c?.autoCommit = false
         } catch (e: Exception) {
-            PluginMain.logger.warning(e.javaClass.name + ": " + e.message)
+            PluginMain.logger.warning { "File:SQLiteJBDC.kt\tLine:32\n${e.javaClass.name}:${e.message}" }
             exitProcess(0)
         }
     }
@@ -42,7 +42,7 @@ class SQLiteJDBC(DbPath: Path) {
      */
     fun createTable(sql: String) {
         if (executeSQL(sql) < 0) {
-            PluginMain.logger.warning { "执行SQL创建表操作异常" }
+            PluginMain.logger.warning { "File:SQLiteJBDC.kt\tLine:45\n执行SQL创建表操作异常" }
         }
     }
 
@@ -54,9 +54,9 @@ class SQLiteJDBC(DbPath: Path) {
         val sql = "INSERT INTO $table " +
                 "${column.joinToString(",", "(", ")")} VALUES " +
                 "${value.joinToString(",", "(", ")")};"
-        PluginMain.logger.debug { sql }
+        PluginMain.logger.debug { "File:SQLiteJBDC.kt\tLine:57\n$sql" }
         if (executeSQL(sql) < 0) {
-            PluginMain.logger.warning { "执行SQL插入操作异常" }
+            PluginMain.logger.warning { "File:SQLiteJBDC.kt\tLine:59\n执行SQL插入操作异常" }
         }
     }
 
@@ -73,7 +73,7 @@ class SQLiteJDBC(DbPath: Path) {
                 "${data.joinToString(",", "(", ")")} WHERE " +
                 "$column = $value;"
         if (executeSQL(sql) < 0) {
-            PluginMain.logger.warning { "执行SQL更改操作异常" }
+            PluginMain.logger.warning { "File:SQLiteJBDC.kt\tLine:76\n执行SQL更改操作异常" }
         }
     }
 
@@ -86,7 +86,7 @@ class SQLiteJDBC(DbPath: Path) {
     fun update(table: String, column: String, value: Any, key: String, data: Any) {
         val sql = "UPDATE $table SET $key = $data WHERE $column = $value;"
         if (executeSQL(sql) < 0) {
-            PluginMain.logger.warning { "执行SQL更改操作异常" }
+            PluginMain.logger.warning { "File:SQLiteJBDC.kt\tLine:89\n执行SQL更改操作异常" }
         }
     }
 
@@ -97,7 +97,7 @@ class SQLiteJDBC(DbPath: Path) {
     fun delete(table: String, column: String, value: String) {
         val sql = "DELETE FROM $table WHERE $column = $value;"
         if (executeSQL(sql) < 0) {
-            PluginMain.logger.warning { "执行SQL删除操作异常" }
+            PluginMain.logger.warning { "File:SQLiteJBDC.kt\tLine:100\n执行SQL删除操作异常" }
         }
     }
 
@@ -107,7 +107,7 @@ class SQLiteJDBC(DbPath: Path) {
         column.forEach { determiner.add("$it = ${valueIterator.next()}") }
         val sql = "DELETE FROM $table WHERE ${determiner.joinToString(" $conjunction ")};"
         if (executeSQL(sql) < 0) {
-            PluginMain.logger.warning { "执行SQL删除操作异常" }
+            PluginMain.logger.warning { "File:SQLiteJBDC.kt\tLine:110\n执行SQL删除操作异常" }
         }
     }
 
@@ -145,7 +145,7 @@ class SQLiteJDBC(DbPath: Path) {
             }
             stmt?.close()
         } catch (e: java.lang.Exception) {
-            PluginMain.logger.warning { e.javaClass.name + ": " + e.message }
+            PluginMain.logger.warning { "File:SQLiteJBDC.kt\tLine:148\n${e.javaClass.name}:${e.message}" }
             exitProcess(0)
         }
         return row
@@ -196,7 +196,7 @@ class SQLiteJDBC(DbPath: Path) {
             }
             stmt?.close()
         } catch (e: java.lang.Exception) {
-            PluginMain.logger.warning { e.javaClass.name + ": " + e.message }
+            PluginMain.logger.warning { "File:SQLiteJBDC.kt\tLine:199\n${e.javaClass.name}:${e.message}" }
             exitProcess(0)
         }
         return resultList
@@ -249,7 +249,7 @@ class SQLiteJDBC(DbPath: Path) {
             }
             stmt?.close()
         } catch (e: java.lang.Exception) {
-            PluginMain.logger.warning { e.javaClass.name + ": " + e.message }
+            PluginMain.logger.warning { "File:SQLiteJBDC.kt\tLine:252\n${e.javaClass.name}:${e.message}" }
             exitProcess(0)
         }
         return resultList
@@ -274,7 +274,7 @@ class SQLiteJDBC(DbPath: Path) {
             }
             stmt?.close()
         } catch (e: java.lang.Exception) {
-            PluginMain.logger.warning { e.javaClass.name + ": " + e.message }
+            PluginMain.logger.warning { "File:SQLiteJBDC.kt\tLine:277\n${e.javaClass.name}:${e.message}" }
             exitProcess(0)
         }
         return resultList
@@ -299,7 +299,7 @@ class SQLiteJDBC(DbPath: Path) {
             c?.commit()
             r ?: -1
         } catch (e: java.lang.Exception) {
-            PluginMain.logger.warning { e.javaClass.name + ": " + e.message }
+            PluginMain.logger.warning { "File:SQLiteJBDC.kt\tLine:302\n${e.javaClass.name}:${e.message}" }
             -1
         }
     }

@@ -6,6 +6,8 @@
 
 package com.example.navigatorTB_Nymph
 
+
+import com.example.navigatorTB_Nymph.MySetting.prohibitedWord
 import com.mayabot.nlp.module.summary.KeywordSummary
 import com.mayabot.nlp.segment.Lexers.coreBuilder
 import kotlinx.coroutines.cancel
@@ -23,7 +25,7 @@ import net.mamoe.mirai.console.plugin.jvm.JvmPluginDescription
 import net.mamoe.mirai.console.plugin.jvm.KotlinPlugin
 import net.mamoe.mirai.console.plugin.version
 import net.mamoe.mirai.console.util.ConsoleExperimentalApi
-import net.mamoe.mirai.contact.Contact.Companion.sendImage
+import net.mamoe.mirai.contact.Contact
 import net.mamoe.mirai.contact.Member
 import net.mamoe.mirai.event.EventPriority
 import net.mamoe.mirai.event.events.BotInvitedJoinGroupRequestEvent
@@ -33,7 +35,9 @@ import net.mamoe.mirai.event.globalEventChannel
 import net.mamoe.mirai.event.subscribeGroupMessages
 import net.mamoe.mirai.message.data.*
 import net.mamoe.mirai.utils.ExternalResource.Companion.toExternalResource
+import net.mamoe.mirai.utils.ExternalResource.Companion.uploadAsImage
 import net.mamoe.mirai.utils.MiraiExperimentalApi
+import net.mamoe.mirai.utils.debug
 import net.mamoe.mirai.utils.info
 import net.mamoe.mirai.utils.warning
 import java.io.File
@@ -42,7 +46,14 @@ import java.text.SimpleDateFormat
 import java.time.LocalDateTime
 import java.util.*
 
-data class Dynamic(val timestamp: Long?, val text: String?, val imageStream: InputStream?)
+data class Dynamic(val timestamp: Long?, val text: String?, val imageStream: List<InputStream>?) {
+    suspend fun getMessage(contact: Contact): MessageChain =
+        if (imageStream != null) {
+            val message = mutableListOf<Message>(PlainText("$text"))
+            imageStream.forEach { message.add(it.uploadAsImage(contact)) }
+            message.toMessageChain()
+        } else buildMessageChain { +PlainText("$text") }
+}
 
 @Serializable
 class GroupCertificate(val principal_ID: Long = 0L, val flag: Boolean = false, val from: Long = 0L)
@@ -53,7 +64,7 @@ object PluginMain : KotlinPlugin(
     JvmPluginDescription(
         id = "MCP.navigatorTB_Nymph",
         name = "navigatorTB",
-        version = "0.10.13"
+        version = "0.10.19"
     )
 ) {
 
@@ -81,28 +92,28 @@ object PluginMain : KotlinPlugin(
             MyPluginData.initialization = false
         }
 
-        CalculationExp.register()   // 经验计算器
-        WikiAzurLane.register()     // 碧蓝Wiki
-        Construction.register()     // 建造时间
-        ShipMap.register()          // 打捞地图
-        SendDynamic.register()      // 动态查询
-        GroupPolicy.register()      // 群策略
-        Roster.register()           // 碧蓝和谐名
-        Calculator.register()       // 计算器
-        AutoBanned.register()       // 自助禁言
+        Tarot.register()            // 塔罗
         CrowdVerdict.register()     // 众裁
         SauceNAO.register()         // 搜图
-        Request.register()          // 加群操作
-        Test.register()             // 测试
-        AI.register()               // 图灵数据库增删改查
-        Tarot.register()            // 塔罗
-        Birthday.register()         // 舰船下水日
-        Music.register()            // 点歌姬
-        AssetDataAccess.register()  // 资源数据库处理
         MinesweeperGame.register()  // 扫雷
+        Calculator.register()       // 计算器
+        Music.register()            // 点歌姬
+        GroupPolicy.register()      // 群策略
+        AutoBanned.register()       // 自助禁言
         Duel.register()             // 禁言决斗
         TraceMoe.register()         // 以图搜番
         AcgImage.register()         // 随机图片
+        Construction.register()     // 建造时间
+        ShipMap.register()          // 打捞地图
+        SendDynamic.register()      // 动态查询
+        WikiAzurLane.register()     // 碧蓝Wiki
+        CalculationExp.register()   // 经验计算器
+        Birthday.register()         // 舰船下水日
+        Roster.register()           // 碧蓝和谐名
+        Test.register()             // 测试
+        AI.register()               // 图灵数据库增删改查
+        Request.register()          // 加群操作
+        AssetDataAccess.register()  // 资源数据库处理
 //        MyHelp.register()           // 帮助功能
         CommandManager.registerCommand(MyHelp, true) // 帮助功能,需要覆盖内建指令
         // 动态更新
@@ -110,15 +121,17 @@ object PluginMain : KotlinPlugin(
             val job1 = CronJob("动态更新", 120)
             job1.addJob {
                 for (list in MyPluginData.timeStampOfDynamic) {
-                    val (i, j, k) = SendDynamic.getDynamic(list.key, 0, flag = true)
-                    if (i != null) {
-                        val time = SimpleDateFormat("yy-MM-dd HH:mm", Locale.CHINA).format(i)
+                    val dynamic = SendDynamic.getDynamic(list.key, 0, flag = true)
+                    if (dynamic.timestamp != null) {
+                        val time = SimpleDateFormat("yy-MM-dd HH:mm", Locale.CHINA).format(dynamic.timestamp)
                         val dbObject = SQLiteJDBC(resolveDataPath("User.db"))
                         val groupList =
                             MyPluginData.nameOfDynamic[list.key]?.let { dbObject.select("SubscribeInfo", it, 1.0, 1) }
                         dbObject.closeDB()
                         if (groupList != null) {
-                            val img = k?.toExternalResource()
+                            val me = Bot.getInstance(MySetting.BotID)
+                            val message = dynamic.getMessage(me.asFriend) + PlainText("\n发布时间:$time")
+//                            val img = dynamic.imageStream?.toExternalResource()
                             for (groupInfo in groupList) {
 //                                PluginMain.logger.info { "开始推送至群:${groupInfo["group_id"]}" }
                                 val groupID = groupInfo["group_id"] as Int
@@ -126,11 +139,13 @@ object PluginMain : KotlinPlugin(
                                 if (group == null || group.botMuteRemaining > 0) {
                                     continue
                                 }
-                                img?.let { group.sendImage(it) }
-                                j.let { group.sendMessage(PlainText("$it\n发布时间:$time")) }
+                                group.runCatching {
+                                    this.sendMessage(message)
+                                }.onFailure {
+                                    logger.warning { "File:PluginMain.kt\tLine:152\n${it.message}" }
+                                }
                             }
-                            img.use { } // PluginMain.logger.debug("关闭图片资源") }
-                        } else k.use { }
+                        }
                     }
                 }
 
@@ -224,7 +239,7 @@ object PluginMain : KotlinPlugin(
                             script[1]?.get(LocalDateTime.now().dayOfWeek.value - 1)?.let { group.sendMessage(it) }
                             script[2]?.get(LocalDateTime.now().dayOfWeek.value - 1)?.let { group.sendMessage(it) }
                         }
-                        else -> logger.warning { "未知的模式" }
+                        else -> logger.warning { "File:PluginMain.kt\tLine:228\n未知的模式" }
                     }
                 }
             }
@@ -233,9 +248,9 @@ object PluginMain : KotlinPlugin(
         }
         // 入群审核
         this.globalEventChannel().subscribeAlways<BotInvitedJoinGroupRequestEvent> {
-            logger.info { "\nGroupName:${it.groupName}\nGroupID：${it.groupId}" }
+            logger.debug { "File:PluginMain.kt\tLine:237\nGroupName:${it.groupName}\nGroupID：${it.groupId}" }
             MyPluginData.groupIdList.forEach { (groupID, user) ->
-                logger.info { "GroupID:$groupID\tUserID：${user.principal_ID}\tFrom：${user.from}" }
+                logger.debug { "GroupID:$groupID\tUserID：${user.principal_ID}\tFrom：${user.from}" }
             }
             if (MyPluginData.groupIdList.contains(it.groupId)) {
                 val gc = MyPluginData.groupIdList[it.groupId]!! // 获取群证书
@@ -265,6 +280,7 @@ object PluginMain : KotlinPlugin(
                 MyPluginData.groupIdList.remove(it.groupId)
                 dbObject.closeDB()
                 logger.info { "PASS" }
+                bot.getFriend(MySetting.AdminID)?.sendMessage("GroupName:${it.groupName}\nGroupID：${it.groupId}\nPASS")
             } else {
                 it.ignore()
                 logger.info { "FAIL" }
@@ -279,7 +295,7 @@ object PluginMain : KotlinPlugin(
             dbObject.delete("Responsible", "group_id", it.groupId.toString())
             dbObject.delete("ACGImg", "group_id", it.groupId.toString())
             dbObject.closeDB()
-            logger.warning { "###\n事件—被移出群:\n- 群ID：${it.groupId}\n- 相关群负责人：${pR["principal_ID"]}\n###" }
+            logger.info { "###\n事件—被移出群:\n- 群ID：${it.groupId}\n- 相关群负责人：${pR["principal_ID"]}\n###" }
         }
         // 戳一戳
         this.globalEventChannel().subscribeAlways<NudgeEvent> {
@@ -303,7 +319,7 @@ object PluginMain : KotlinPlugin(
                         subject.sendMessage("戳回去")
                     }
                 }.onFailure {
-                    logger.info("发送消息失败，在该群被禁言")
+                    logger.info { "File:PluginMain.kt\tLine:309\n发送消息失败，在该群被禁言" }
                 }
             }
         }
@@ -311,9 +327,27 @@ object PluginMain : KotlinPlugin(
         this.globalEventChannel().subscribeGroupMessages(priority = EventPriority.LOWEST) {
             atBot {
                 if (group.botMuteRemaining > 0) return@atBot
-
                 val filterMessageList: List<Message> = message.filter { it !is At }
                 val filterMessageChain: MessageChain = filterMessageList.toMessageChain()
+                if ((1..5).random() <= 2) {
+                    if (filterMessageChain.content.trim()
+                            .contains(prohibitedWord.toRegex()) && group.botPermission > this.sender.permission
+                    ) {
+                        this.sender.mute((300..900).random())
+                        group.sendMessage(
+                            arrayOf(
+                                "给爷爬╰（‵□′）╯",
+                                "爬远点(ノ｀Д)ノ",
+                                "再您妈的见(#◠‿◠)",
+                                "给大佬递口球~(￣▽￣)~*",
+                                "可是，这值得吗(⊙o⊙)？",
+                                "一条指令，一切都索然无味┑(￣Д ￣)┍",
+                                "￣へ￣"
+                            ).random()
+                        )
+                        return@atBot
+                    }
+                }
                 AI.dialogue(subject, filterMessageChain.content.trim(), true)
             }
             atBot().not().invoke {
@@ -507,6 +541,8 @@ object MySetting : AutoSavePluginConfig("TB_Setting") {
     @ValueDescription("图床API")
     val ImageHostingService by value("")
 
+    @ValueDescription("违禁词")
+    val prohibitedWord by value("")
     //    @ValueDescription("数量") // 注释写法, 将会保存在 MySetting.yml 文件中.
 //    var count by value(0)
 //    val nested by value<MyNestedData>() // 嵌套类型是支持的

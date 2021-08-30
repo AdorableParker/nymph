@@ -136,7 +136,7 @@ object SauceNAO : SimpleCommand(
         }.onSuccess {
             return it
         }.onFailure {
-            PluginMain.logger.info { "$it" }
+            PluginMain.logger.info { "File:SauceNAO.kt\tLine:139\n$it" }
             return null
         }
         return null

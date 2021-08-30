@@ -23,8 +23,7 @@ object AI : CompositeCommand(
 
     @SubCommand("教学")
     suspend fun MemberCommandSenderOnMessage.main(question: String, answer: String) {
-        val userDBObject =
-            SQLiteJDBC(PluginMain.resolveDataPath("User.db"))
+        val userDBObject = SQLiteJDBC(PluginMain.resolveDataPath("User.db"))
         val info = userDBObject.selectOne("Policy", "group_id", group.id, 1)
         if (info["Teaching"] == 0.0) {
             userDBObject.closeDB()
@@ -82,15 +81,15 @@ object AI : CompositeCommand(
         val r = when {
             entryList.isEmpty() -> "问答包含关键词${key}的条目不存在"
             entryList.size >= 10 -> {
-                val report = mutableListOf("问答包含关键词${key}的条目过多(超过十条)，仅提供前十条，本群关键词优先显示，控制权限:完全控制")
+                val report = mutableListOf("问答包含关键词${key}的条目过多(超过十条)，仅提供前十条，本群关键词优先显示")
                 for (row in entryList) {
                     if (row["fromGroup"].toString().toLong() == group.id && report.size <= 10) {
-                        report.add("问题:${row["question"]}\n回答:${row["answer"]}\n条目ID:${row["ID"]}")
+                        report.add("问题:${row["question"]}\n回答:${row["answer"]}\n条目ID:${row["ID"]}\n控制权限:完全控制\n")
                     }
                 }
                 for (row in entryList) {
                     if (row["fromGroup"].toString().toLong() == 0L && report.size <= 10) {
-                        report.add("问题:${row["question"]}\n回答:${row["answer"]}\n条目ID:${row["ID"]}")
+                        report.add("问题:${row["question"]}\n回答:${row["answer"]}\n条目ID:${row["ID"]}\n控制权限:只读权限\n")
                     }
                 }
                 report.joinToString("\n")

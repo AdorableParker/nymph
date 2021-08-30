@@ -85,7 +85,7 @@ object WikiAzurLane : CompositeCommand(
             val url = URL(links[sub].attr("abs:src"))
             return url.openConnection().getInputStream()
         }.onFailure {
-            PluginMain.logger.warning(it.cause)
+            PluginMain.logger.warning("File:WikiAzurLane.kt\tLine:88\n$it.cause")
         }
         return null
     }

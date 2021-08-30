@@ -8,6 +8,7 @@ import net.mamoe.mirai.console.command.MemberCommandSenderOnMessage
 import net.mamoe.mirai.console.command.SimpleCommand
 import net.mamoe.mirai.console.util.ConsoleExperimentalApi
 import net.mamoe.mirai.contact.Contact.Companion.sendImage
+import net.mamoe.mirai.utils.ExternalResource.Companion.toExternalResource
 import net.mamoe.mirai.utils.MiraiExperimentalApi
 import org.jsoup.Jsoup
 import java.io.InputStream
@@ -24,7 +25,7 @@ object AcgImage : SimpleCommand(
     @Handler
     suspend fun MemberCommandSenderOnMessage.main() {
         record(primaryName)
-
+        if (group.botMuteRemaining > 0) return
         if (MyPluginData.AcgImageRun.contains(group.id)) {
             sendMessage("功能运行中，请等待")
             return
@@ -55,8 +56,10 @@ object AcgImage : SimpleCommand(
             MyPluginData.AcgImageRun.remove(group.id)
             return
         }
-        getRandomImg()?.let {
-            group.sendImage(it)
+        getRandomImg()?.let { inputStream ->
+            inputStream.toExternalResource().use {
+                group.sendImage(it)
+            }
             dbObject.update(
                 "ACGImg",
                 "group_id",
@@ -67,14 +70,11 @@ object AcgImage : SimpleCommand(
             if (score - 1 < 10) {
                 sendMessage("ℹ本群剩余配给已经不足10点了")
             }
-            close(it)
         } ?: sendMessage("数据传输失败...嗯.一定是塞壬的问题..")
 
         dbObject.closeDB()
         MyPluginData.AcgImageRun.remove(group.id)
     }
-
-    private fun close(it: InputStream) = it.close()
 
     private fun getRandomImg(): InputStream? {
         val webClient = WebClient(BrowserVersion.EDGE) //新建一个浏览器客户端对象 指定内核
@@ -86,7 +86,7 @@ object AcgImage : SimpleCommand(
             //            return ImmutableImageleImage.loader().fromStream(inputStream).bytes(PngWriter.MaxCompression).inputStream() // com.sksamuel.scrimage.ImageParseException 原因不详
             return URL(link).openConnection().getInputStream()
         }.onFailure {
-            PluginMain.logger.warning(it)
+            PluginMain.logger.warning("File:AcgImage.kt\tLine:89\n$it")
         }
         webClient.close()
         return null

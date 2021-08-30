@@ -58,7 +58,7 @@ class CronJob(private val jobExplain: String, private val calibration: Int) {
             }.onSuccess {
                 PluginMain.logger.info { "$jobExplain 执行完毕" }
             }.onFailure {
-                PluginMain.logger.warning { "$jobExplain 执行异常" }
+                PluginMain.logger.warning { "$jobExplain 执行异常\n${it.message}\n${it.cause}" }
             }
             if (calibrationCountdown >= calibration) {
                 PluginMain.logger.info { "$jobExplain 执行校准" }

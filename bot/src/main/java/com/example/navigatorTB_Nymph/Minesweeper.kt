@@ -263,7 +263,7 @@ class Minesweeper(type: Int, w: Int = 0, h: Int = 0, mine: Int = 0, val punishme
     }
 
     private fun printLook(): Boolean {
-        PluginMain.logger.debug { "$remainingMines,$remainingPlots" }
+        PluginMain.logger.debug { "File:Minesweeper.kt\tLine:266\n$remainingMines,$remainingPlots" }
         if (remainingPlots == remainingMines) {
             printString(1, "Victory")
             return true

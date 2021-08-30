@@ -57,7 +57,7 @@ object TraceMoe : SimpleCommand(
         }.onSuccess {
             return it
         }.onFailure {
-            PluginMain.logger.warning { "$it" }
+            PluginMain.logger.warning { "File:TraceMoe.kt\tLine:60\n$it" }
             return null
         }
         return null

@@ -18,9 +18,21 @@ import net.mamoe.mirai.message.data.MusicKind
 import net.mamoe.mirai.message.data.MusicShare
 import net.mamoe.mirai.message.data.PlainText
 import net.mamoe.mirai.utils.MiraiExperimentalApi
-import net.mamoe.mirai.utils.debug
 import net.mamoe.mirai.utils.warning
 import org.jsoup.Jsoup
+import java.net.HttpURLConnection
+import java.net.URL
+
+data class MusicInfo(val type: MusicKind, val songName: String, val musicURL: String, val jumpUrl: String) {
+    fun constructorMusicCard(pictureUrl: String) = MusicShare(
+        type,
+        songName,
+        "歌曲信息 来源于 领航员-TB 智障搜索",                // 内容:会显示在title下面
+        jumpUrl,
+        pictureUrl,
+        musicURL
+    )
+}
 
 @MiraiExperimentalApi
 @ConsoleExperimentalApi
@@ -28,41 +40,39 @@ object Music : SimpleCommand(
     PluginMain, "music", "点歌",
     description = "点歌姬"
 ) {
-    override val usage: String = "${CommandManager.commandPrefix}$primaryName <平台值>\n1\t网易云\n2\tQQ\n3\t咪咕"
+
+
+    override val usage: String = "${CommandManager.commandPrefix}$primaryName <平台值>\n1\t网易云\n2\tQQ"
 
     @Handler
-    suspend fun MemberCommandSenderOnMessage.main(musicName: String) {
+    suspend fun MemberCommandSenderOnMessage.main(musicName: String, type: Int = 1) {
         record(primaryName)
-        runCatching {
-            val rMessage = get163MusicCard(musicName)
-            sendMessage(rMessage)
-        }.onFailure {
-            PluginMain.logger.warning { it.toString() }
-            sendMessage("点歌失败，未知的失败原因")
-        }
-    }
+        if (group.botMuteRemaining > 0) return
 
-    @Handler
-    suspend fun MemberCommandSenderOnMessage.main(musicName: String, type: Int) {
         runCatching {
             val rMessage = when (type) {
-                1 -> get163MusicCard(musicName)
-                2 -> getQQMusicCard(musicName)
-                3 -> getMGMusicCard(musicName)
+                1 -> get136Music(musicName, user.avatarUrl)
+                2 -> getQQMusic(musicName, user.avatarUrl)
                 else -> PlainText("不认识的搜索源")
             }
             sendMessage(rMessage)
         }.onFailure {
-            PluginMain.logger.warning { it.toString() }
+            PluginMain.logger.warning { "File:Music.kt\tLine:60\n$it" }
             sendMessage("点歌失败，未知的失败原因")
         }
     }
 
-    private fun get163MusicCard(musicName: String): Message {
-        val doc = Jsoup.connect("https://music.163.com/api/search/get/web?type=1&s=$musicName")
-            .ignoreContentType(true)
-            .execute().body().toString()
+
+    private fun get136Music(musicName: String, pictureUrl: String): Message {
+        val doc = Jsoup.connect("https://music.163.com/api/search/get/web").data(
+            mapOf(
+                "type" to "1",
+                "s" to musicName
+            )
+        ).ignoreContentType(true).execute().body().toString()
+
         val jsonObj = Parser.default().parse(StringBuilder(doc)) as JsonObject
+
         if (jsonObj.int("code") != 200)
             return PlainText("搜索歌曲异常\nHTTP状态码：${jsonObj.int("code")}")
 
@@ -73,113 +83,99 @@ object Music : SimpleCommand(
         val musicInfo = musicList.array<JsonObject>("songs")?.get(0)
         if (musicInfo.isNullOrEmpty()) return PlainText("获取歌曲信息失败")
 
-        val title = musicInfo.string("name")!!
+        val name = musicInfo.string("name")!!
         val musicID = musicInfo.long("id")
-        val pictureUrl = get163PIUrl("https://music.163.com/api/search/get/web?type=1000&s=$musicName").let {
-            if (it.isNullOrBlank()) "https://p2.music.126.net/6y-UleORITEDbvrOLV0Q8A==/5639395138885805.jpg" else it
-        }
-
-        return MusicShare(
+        return MusicInfo(
             MusicKind.NeteaseCloudMusic,
-            title,
-            "歌曲信息 来源于 领航员-TB 智障搜索",                // 内容:会显示在title下面
-            "https://music.163.com/#/song?id=$musicID",
-            pictureUrl,                                             // 图片链接
+            name,
             "http://music.163.com/song/media/outer/url?id=$musicID.mp3",
-            ""                                              // 摘要:不知道有什么用
-        )
+            "https://music.163.com/#/song?id=$musicID"
+        ).constructorMusicCard(pictureUrl)
     }
 
-    @Suppress("UNREACHABLE_CODE") // Mark： 有无法到达的代码
-    private fun getQQMusicCard(musicName: String): Message {
-        return PlainText("你搜索的内容是“$musicName”，但是这个引擎还没做好")
+    private fun getQQMusic(musicName: String, pictureUrl: String): Message {
+        val doc = Jsoup.connect("https://c.y.qq.com/soso/fcgi-bin/client_search_cp").data(
+            mapOf(
+                "p" to "1",
+                "cr" to "1",
+                "aggr" to "1",
+                "flag_qc" to "0",
+                "n" to "3",
+                "w" to musicName,
+                "format" to "json"
+            )
+        )
+            .userAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/92.0.4515.131 Safari/537.36 Edg/92.0.902.73")
+            .ignoreContentType(true).execute().body().toString()
 
-        val doc = Jsoup.connect("https://c.y.qq.com/soso/fcgi-bin/client_search_cp?format=json&w=$musicName")
-            .ignoreContentType(true)
-            .execute().body().toString()
         val jsonObj = Parser.default().parse(StringBuilder(doc)) as JsonObject
-        if (jsonObj.int("code") != 0)
-            return PlainText("搜索歌曲异常\n状态码：${jsonObj.int("code")}")
 
-        val song = jsonObj.obj("data")?.obj("song")
-        if (song.isNullOrEmpty() || song.int("curnum")!! <= 0)
-            return PlainText("搜索结果列表为空")
+        val songList = jsonObj.obj("data")?.obj("song")?.array<JsonObject>("list")
+        if (songList.isNullOrEmpty()) return PlainText("搜索结果列表为空")
+        var song = songList[0]
+        var mid = song.string("songmid")  // 获取歌曲MID
 
-        val musicInfo = song.array<JsonObject>("list")?.get(0)
-        if (musicInfo.isNullOrEmpty()) return PlainText("获取歌曲信息失败")
+        var musicURL = queryRealUrl(mid)    // 获取歌曲URL
 
-        val title = musicInfo.string("songname")!!
-        val musicID = musicInfo.long("songid")
-        val jumpUrl = musicInfo.string("songurl")!!
-        val pictureUrl =
-            getQQPIUrl("https://c.y.qq.com/soso/fcgi-bin/client_search_cp?format=json&t=8&w=$musicName").let {
-                if (it.isNullOrBlank()) "https://p2.music.126.net/6y-UleORITEDbvrOLV0Q8A==/5639395138885805.jpg" else it
-            }
+        var i = 0
+        while (isExistent(musicURL).not()) {  // 若该歌曲url无效
+            song = songList[i]                // 获取列表内下一首
+            mid = song.string("songmid")
+            musicURL = queryRealUrl(mid)
+            i++
+            if (i >= songList.size) return PlainText("获取歌曲信息失败，此歌曲概为付费或会员歌曲")
+        }
 
-        return MusicShare(
+        val songname = song.string("songname")!!
+        val songid = song.int("songid")!!
+
+        return MusicInfo(
             MusicKind.QQMusic,
-            title,
-            "歌曲信息 来源于 领航员-TB 智障搜索",                // 内容:会显示在title下面
-            jumpUrl,
-            pictureUrl,                                             // 图片链接
-            "http://music.163.com/song/media/outer/url?id=$musicID.mp3",
-            ""                                              // 摘要:不知道有什么用
-        )
+            songname,
+            musicURL!!,
+            "https://i.y.qq.com/v8/playsong.html?_wv=1&songid=$songid&source=qqshare&ADTAG=qqshare"
+        ).constructorMusicCard(pictureUrl)
     }
 
-    private fun getMGMusicCard(musicName: String): Message {
-        val doc = Jsoup.connect("https://m.music.migu.cn/v3/search?type=song&keyword=$musicName")
-            .ignoreContentType(true)
-            .execute().body().toString()
-        val jsonObj = Parser.default().parse(StringBuilder(doc)) as JsonObject
-        PluginMain.logger.debug { "执行到这里" }
-        if (jsonObj.boolean("success") != true)
-            return PlainText("搜索歌曲失败")
-
-        val musicInfo = jsonObj.array<JsonObject>("musics")?.get(0)
-        if (musicInfo.isNullOrEmpty()) return PlainText("获取歌曲信息失败")
-
-        val title = musicInfo.string("singerName")!!
-        val musicUrl = musicInfo.string("mp3")!!
-        val pictureUrl = musicInfo.string("cover")!!
-        val musicID = musicInfo.long("id")
-
-        return MusicShare(
-            MusicKind.MiguMusic,
-            title,
-            "歌曲信息 来源于 领航员-TB 智障搜索",                // 内容:会显示在title下面
-            "https://m.music.migu.cn/v3/music/song/$musicID",
-            pictureUrl,                                             // 图片链接
-            musicUrl,
-            ""                                              // 摘要:不知道有什么用
-        )
-    }
-
-    private fun get163PIUrl(url: String): String? {
-        kotlin.runCatching {
-            val jsonObj = Parser.default().parse(
-                StringBuilder(
-                    Jsoup.connect(url).ignoreContentType(true).execute().body().toString()
-                )
-            ) as JsonObject
-            return jsonObj.obj("result")?.array<JsonObject>("playlists")?.get(0)?.string("coverImgUrl")
-        }.onFailure {
-            PluginMain.logger.warning { "获取图片时异常\n$it" }
+    private fun isExistent(url: String?): Boolean {
+        if (url.isNullOrEmpty()) return false
+        return try {
+            val huc: HttpURLConnection = URL(url).openConnection() as HttpURLConnection
+            huc.setRequestProperty(
+                "User-Agent",
+                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.149 Safari/537.36"
+            )
+            huc.requestMethod = "HEAD"
+            huc.connect()
+            huc.responseCode == 200
+        } catch (ex: java.lang.Exception) {
+            false
         }
-        return "https://p2.music.126.net/6y-UleORITEDbvrOLV0Q8A==/5639395138885805.jpg"
     }
 
-    private fun getQQPIUrl(url: String): String? {
-        kotlin.runCatching {
-            val jsonObj = Parser.default().parse(
-                StringBuilder(
-                    Jsoup.connect(url).ignoreContentType(true).execute().body().toString()
+    private fun queryRealUrl(songMID: String?): String? {
+        try {
+            val doc = Jsoup.connect("https://u.y.qq.com/cgi-bin/musicu.fcg").data(
+                mapOf(
+                    "format" to "json",
+                    "data" to """{"req_0":{"module":"vkey.GetVkeyServer","method":"CgiGetVkey","param":{"guid":"0","songmid":["$songMID"],"songtype":[0],"loginflag":1,"platform":"20"}},"comm":{"uin":"18585073516","format":"json","ct":24,"cv":0}}"""
                 )
-            ) as JsonObject
-            return jsonObj.obj("result")?.array<JsonObject>("playlists")?.get(0)?.string("coverImgUrl")
-        }.onFailure {
-            PluginMain.logger.warning { "获取图片时异常\n$it" }
+            )
+                .userAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/92.0.4515.131 Safari/537.36 Edg/92.0.902.73")
+                .header("Host", "u.y.qq.com")
+                .ignoreContentType(true).execute().body().toString()
+
+            val jsonObj = Parser.default().parse(StringBuilder(doc)) as JsonObject
+            if (jsonObj.int("code") != 0) return null
+
+            return jsonObj.obj("req_0")?.obj("data")?.array<String>("sip")?.get(0) +
+                    jsonObj.obj("req_0")?.obj("data")?.array<JsonObject>("midurlinfo")?.get(0)?.string("purl")
+
+        } catch (e: Throwable) {
+            e.printStackTrace()
         }
-        return "https://p2.music.126.net/6y-UleORITEDbvrOLV0Q8A==/5639395138885805.jpg"
+
+        return null
     }
+
 }
