@@ -1,6 +1,5 @@
 # 自用QQ机器人的Mirai版本![(Beta)](https://img.shields.io/badge/_Beta-gray)
 
-##[常见问题](help.md)
 
 ## 已有功能
 * [X] 碧蓝航线的舰船经验计算器 ![`已完成`](https://img.shields.io/badge/_Achieved-green)
