@@ -1,5 +1,7 @@
 # 自用QQ机器人的Mirai版本![(Beta)](https://img.shields.io/badge/_Beta-gray)
 
+##[常见问题](help.md)
+
 ## 已有功能
 * [X] 碧蓝航线的舰船经验计算器 ![`已完成`](https://img.shields.io/badge/_Achieved-green)
 * [X] 碧蓝航线的Wiki榜单图片爬取 ![`已完成`](https://img.shields.io/badge/_Achieved-green)
@@ -41,7 +43,3 @@
 | 暂时搁置 | ![`暂时搁置`](https://img.shields.io/badge/-Shelved-yellow)  |
 |   未测试 | ![`未测试`](https://img.shields.io/badge/-NotTested-red)     |
 | 不会实现 | ![`不会实现`](https://img.shields.io/badge/-Invalid-inactive) |
-
-
-[nymph]: https://github.com/AdorableParker/nymph "项目模板更换"
-[Ikaros_Golang]:https://github.com/AdorableParker/Ikaros_Golang
