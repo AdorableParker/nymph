@@ -12,7 +12,8 @@ import net.mamoe.mirai.message.data.Image
 import net.mamoe.mirai.message.data.Image.Key.queryUrl
 import net.mamoe.mirai.message.data.Message
 import net.mamoe.mirai.message.data.PlainText
-import net.mamoe.mirai.utils.ExternalResource.Companion.toExternalResource
+import net.mamoe.mirai.message.data.buildMessageChain
+import net.mamoe.mirai.utils.ExternalResource.Companion.uploadAsImage
 import net.mamoe.mirai.utils.MiraiExperimentalApi
 import net.mamoe.mirai.utils.warning
 import org.jsoup.Jsoup
@@ -76,27 +77,34 @@ object TraceMoe : SimpleCommand(
             val to = result.int("to")
             val similarity = result.float("similarity")
 
-            val image = result.string("image")?.getImgMessage()?.let { group.uploadImage(it) }
+            val image = result.string("image")?.getImgMessage()
+//            uploadImage(it) }
 
             val r = if (episode == null) {
                 val filename = result.string("filename")
                 PlainText(
                     "原名:$native\n罗马音:$romaji\n英文名:$english\n匹配结果位于\n$filename\n${from?.div(60)}分${from?.rem(60)}秒至${
                         to?.div(60)
-                    }分${to?.rem(60)}秒\n结果相似度：${similarity}\n结果样图："
+                    }分${to?.rem(60)}秒\n结果相似度：${similarity}"
                 )
             } else {
                 PlainText(
                     "原名:$native\n罗马音:$romaji\n英文名:$english\n匹配结果位于第${episode}集${from?.div(60)}分${from?.rem(60)}秒至${
                         to?.div(60)
-                    }分${to?.rem(60)}秒\n结果相似度：${similarity}\n结果样图："
+                    }分${to?.rem(60)}秒\n结果相似度：${similarity}"
                 )
             }
-            return image?.let { r.plus(it) } ?: r
+            return if (image != null) {
+                buildMessageChain {
+                    +r
+                    +PlainText("\n结果样图：")
+                    +image.uploadAsImage(group)
+                }
+            } else r
         }
         return PlainText("结果解析异常")
     }
 
-    private fun String.getImgMessage() = URL(this).openConnection().getInputStream().toExternalResource()
+    private fun String.getImgMessage() = URL(this).openConnection().getInputStream()
 }
 

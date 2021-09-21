@@ -92,11 +92,16 @@ object AcgImage : SimpleCommand(
         return null
     }
 
-    fun getReplenishment(group: Long, supply: Int) {
+    fun getReplenishment(group: Long, supply: Int): String {
         val dbObject = SQLiteJDBC(PluginMain.resolveDataPath("User.db"))
         val quota = dbObject.selectOne("ACGImg", "group_id", group, 1)["score"] as Int
+        if (quota + supply >= 200) {
+            dbObject.closeDB()
+            return "补给已达上限"
+        }
         dbObject.update("ACGImg", "group_id", group, "score", quota + supply)
         dbObject.closeDB()
+        return "是司令部的补给！色图配给+$supply"
     }
 
 

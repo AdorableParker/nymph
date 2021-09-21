@@ -8,9 +8,9 @@ package com.example.navigatorTB_Nymph
 
 import net.mamoe.mirai.console.command.MemberCommandSenderOnMessage
 import net.mamoe.mirai.console.command.SimpleCommand
+import net.mamoe.mirai.console.command.isUser
 import net.mamoe.mirai.console.util.ConsoleExperimentalApi
 import net.mamoe.mirai.utils.MiraiExperimentalApi
-import net.mamoe.mirai.utils.info
 
 @Suppress("UNUSED_PARAMETER") // 忽略未使用的参数警告
 @MiraiExperimentalApi
@@ -20,9 +20,11 @@ object Test : SimpleCommand(
     description = "功能测试命令"
 ) {
     @Handler
-    fun MemberCommandSenderOnMessage.main() {
-        PluginMain.logger.info {
-            "测试命令执行"
+    suspend fun MemberCommandSenderOnMessage.main() {
+        if (isUser() && user.id == MySetting.AdminID) {
+            sendMessage("Hi,Administration")
+        } else {
+            sendMessage("权限不足")
         }
     }
 }

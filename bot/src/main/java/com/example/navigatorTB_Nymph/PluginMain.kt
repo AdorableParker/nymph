@@ -64,7 +64,7 @@ object PluginMain : KotlinPlugin(
     JvmPluginDescription(
         id = "MCP.navigatorTB_Nymph",
         name = "navigatorTB",
-        version = "0.10.19"
+        version = "0.10.20"
     )
 ) {
 
@@ -142,7 +142,7 @@ object PluginMain : KotlinPlugin(
                                 group.runCatching {
                                     this.sendMessage(message)
                                 }.onFailure {
-                                    logger.warning { "File:PluginMain.kt\tLine:152\n${it.message}" }
+                                    logger.warning { "File:PluginMain.kt\tLine:152\nGroup:$groupID\n${it.cause}" }
                                 }
                             }
                         }
@@ -288,14 +288,15 @@ object PluginMain : KotlinPlugin(
         }
         // 退群清理
         this.globalEventChannel().subscribeAlways<BotLeaveEvent.Kick> {
+
             val dbObject = SQLiteJDBC(resolveDataPath("User.db"))
-            val pR = dbObject.selectOne("Responsible", "group_id", it.groupId, 1)
-            dbObject.delete("Policy", "group_id", it.groupId.toString())
-            dbObject.delete("SubscribeInfo", "group_id", it.groupId.toString())
-            dbObject.delete("Responsible", "group_id", it.groupId.toString())
-            dbObject.delete("ACGImg", "group_id", it.groupId.toString())
+            val pR = dbObject.selectOne("Responsible", "group_id", group.id, 1)
+            dbObject.delete("Policy", "group_id", group.id.toString())
+            dbObject.delete("SubscribeInfo", "group_id", group.id.toString())
+            dbObject.delete("Responsible", "group_id", group.id.toString())
+            dbObject.delete("ACGImg", "group_id", group.id.toString())
             dbObject.closeDB()
-            logger.info { "###\n事件—被移出群:\n- 群ID：${it.groupId}\n- 相关群负责人：${pR["principal_ID"]}\n###" }
+            logger.info { "###\n事件—被移出群:\n- 群ID：${group.id}\n- 相关群负责人：${pR["principal_ID"]}\n###" }
         }
         // 戳一戳
         this.globalEventChannel().subscribeAlways<NudgeEvent> {
@@ -360,7 +361,7 @@ object PluginMain : KotlinPlugin(
                 val v2 = if (groupInfo["ACGImgAllowed"] as Int == 1) (1..100).random() else 0
 //                PluginMain.logger.info { "不at执行这里,$v" }
                 if (v1 <= numerator) AI.dialogue(subject, message.content.trim())
-                if (v1 <= 98) return@invoke
+                if (v1 <= 99) return@invoke
 
                 val supply = when (v2) {
                     in 1..7 -> 10
@@ -369,8 +370,7 @@ object PluginMain : KotlinPlugin(
                     else -> 0
                 }
                 if (supply > 0) {
-                    subject.sendMessage("是司令部的补给！色图配给+$supply")
-                    AcgImage.getReplenishment(subject.id, supply)
+                    subject.sendMessage(AcgImage.getReplenishment(subject.id, supply))
                 }
             }
         }
