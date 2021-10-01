@@ -64,7 +64,7 @@ object PluginMain : KotlinPlugin(
     JvmPluginDescription(
         id = "MCP.navigatorTB_Nymph",
         name = "navigatorTB",
-        version = "0.10.20"
+        version = "0.11.0"
     )
 ) {
 
@@ -79,7 +79,8 @@ object PluginMain : KotlinPlugin(
     val KEYWORD_SUMMARY = KeywordSummary()
 
     val VOTES: MutableMap<Long, VoteUser> = mutableMapOf()
-    val GAME = mutableMapOf<Long, Minesweeper>()
+    val MINESWEEPER_GAME = mutableMapOf<Long, Minesweeper>()
+    val TicTacToe_GAME = mutableMapOf<Long, TicTacToe>()
     val BothSidesDuel = mutableMapOf<Member, Gun>()
 
     override fun onEnable() {
@@ -87,15 +88,19 @@ object PluginMain : KotlinPlugin(
         MyPluginData.reload()
         UsageStatistics.reload()
 
-        if (MyPluginData.initialization) {
+        if (MyPluginData.initialization) {  // 首次启动初始化数据库
             dataBastInit()
             MyPluginData.initialization = false
+        } else {                              // 重置状态数据防止出现状态锁定
+            MyPluginData.AcgImageRun.clear()
         }
 
         Tarot.register()            // 塔罗
         CrowdVerdict.register()     // 众裁
         SauceNAO.register()         // 搜图
         MinesweeperGame.register()  // 扫雷
+        Test.register()             // 测试
+        TicTacToeGame.register()    // 井字棋
         Calculator.register()       // 计算器
         Music.register()            // 点歌姬
         GroupPolicy.register()      // 群策略
@@ -106,14 +111,13 @@ object PluginMain : KotlinPlugin(
         Construction.register()     // 建造时间
         ShipMap.register()          // 打捞地图
         SendDynamic.register()      // 动态查询
+        Request.register()          // 加群操作
         WikiAzurLane.register()     // 碧蓝Wiki
         CalculationExp.register()   // 经验计算器
         Birthday.register()         // 舰船下水日
         Roster.register()           // 碧蓝和谐名
-        Test.register()             // 测试
-        AI.register()               // 图灵数据库增删改查
-        Request.register()          // 加群操作
         AssetDataAccess.register()  // 资源数据库处理
+        AI.register()               // 图灵数据库增删改查
 //        MyHelp.register()           // 帮助功能
         CommandManager.registerCommand(MyHelp, true) // 帮助功能,需要覆盖内建指令
         // 动态更新
@@ -151,7 +155,7 @@ object PluginMain : KotlinPlugin(
 
             }
 //            job1.start(MyTime(0, 2))
-            job1.start(MyTime(0, 6))
+            job1.start(MyTime(0, 3))
         }
         // 报时
         PluginMain.launch {
@@ -356,21 +360,29 @@ object PluginMain : KotlinPlugin(
                 val dbObject = SQLiteJDBC(resolveDataPath("User.db"))
                 val groupInfo = dbObject.selectOne("Policy", "group_id", group.id, 1)
                 dbObject.closeDB()
-                val numerator = groupInfo["TriggerProbability"] as Int
-                val v1 = (1..100).random()
-                val v2 = if (groupInfo["ACGImgAllowed"] as Int == 1) (1..100).random() else 0
-//                PluginMain.logger.info { "不at执行这里,$v" }
-                if (v1 <= numerator) AI.dialogue(subject, message.content.trim())
-                if (v1 <= 99) return@invoke
 
-                val supply = when (v2) {
-                    in 1..7 -> 10
-                    in 8..19 -> 4
-                    in 20..46 -> 1
-                    else -> 0
-                }
-                if (supply > 0) {
-                    subject.sendMessage(AcgImage.getReplenishment(subject.id, supply))
+                try {
+                    val numerator = groupInfo["TriggerProbability"] as Int
+                    val v1 = (1..100).random()
+                    val v2 = if (groupInfo["ACGImgAllowed"] as Int == 1) (1..100).random() else 0
+                    //                PluginMain.logger.info { "不at执行这里,$v" }
+                    if (v1 <= numerator) AI.dialogue(subject, message.content.trim())
+                    if (v1 <= 99) return@invoke
+
+                    val supply = when (v2) {
+                        in 1..7 -> 10
+                        in 8..19 -> 4
+                        in 20..46 -> 1
+                        else -> 0
+                    }
+                    if (supply > 0) {
+                        subject.sendMessage(AcgImage.getReplenishment(subject.id, supply))
+                    }
+                } catch (e: NullPointerException) {
+                    for (i in 0..10) {
+                        logger.debug { "问题复现：" }
+                        logger.debug { group.id.toString() }
+                    }
                 }
             }
         }
@@ -442,28 +454,29 @@ object PluginMain : KotlinPlugin(
 
     override fun onDisable() {
 //        PluginMain.launch{ announcement("正在关闭") } // 关闭太快发不出来
-        CalculationExp.unregister()     // 经验计算器
-        WikiAzurLane.unregister()       // 碧蓝Wiki
-        Construction.unregister()       // 建造时间
-        ShipMap.unregister()            // 打捞地图
-        SendDynamic.unregister()        // 动态查询
-        GroupPolicy.unregister()        // 群策略
-        Test.unregister()               // 测试
-        Roster.unregister()             // 碧蓝和谐名
-        Calculator.unregister()         // 计算器
-        AutoBanned.unregister()         // 自助禁言
+        Tarot.unregister()              // 塔罗
         CrowdVerdict.unregister()       // 众裁
         SauceNAO.unregister()           // 搜图
-        Request.unregister()            // 加群操作
-        AI.unregister()                 // 图灵数据库增删改查
-        Tarot.unregister()              // 塔罗
-        MyHelp.unregister()             // 帮助功能
-        Birthday.unregister()           // 舰船下水日
-        Music.unregister()              // 点歌姬
+        Test.unregister()               // 测试
         MinesweeperGame.unregister()    // 扫雷
-        Duel.unregister()                 // 禁言决斗
-        TraceMoe.unregister()             // 以图搜番
-        AcgImage.unregister()         // 随机图片
+        TicTacToeGame.unregister()      // 井字棋
+        GroupPolicy.unregister()        // 群策略
+        Music.unregister()              // 点歌姬
+        Calculator.unregister()         // 计算器
+        Construction.unregister()       // 建造时间
+        TraceMoe.unregister()           // 以图搜番
+        Duel.unregister()               // 禁言决斗
+        MyHelp.unregister()             // 帮助功能
+        AutoBanned.unregister()         // 自助禁言
+        Request.unregister()            // 加群操作
+        AcgImage.unregister()           // 随机图片
+        ShipMap.unregister()            // 打捞地图
+        SendDynamic.unregister()        // 动态查询
+        WikiAzurLane.unregister()       // 碧蓝Wiki
+        Roster.unregister()             // 碧蓝和谐名
+        Birthday.unregister()           // 舰船下水日
+        CalculationExp.unregister()     // 经验计算器
+        AI.unregister()                 // 图灵数据库增删改查
         PluginMain.cancel()
     }
 }
@@ -473,7 +486,10 @@ object PluginMain : KotlinPlugin(
 
 
 object MyPluginData : AutoSavePluginData("TB_Data") { // "name" 是保存的文件名 (不带后缀)
+    @ValueDescription("初始化状态")
     var initialization: Boolean by value(true)
+
+    @ValueDescription("历史动态时间戳")
     val timeStampOfDynamic: MutableMap<Int, Long> by value(
         mutableMapOf(
             233114659 to 1L,
@@ -482,6 +498,8 @@ object MyPluginData : AutoSavePluginData("TB_Data") { // "name" 是保存的文�
             401742377 to 1L
         )
     )
+
+    @ValueDescription("UID对照表")
     val nameOfDynamic: MutableMap<Int, String> by value(
         mutableMapOf(
             233114659 to "AzurLane",
@@ -490,6 +508,8 @@ object MyPluginData : AutoSavePluginData("TB_Data") { // "name" 是保存的文�
             401742377 to "GenShin"
         )
     )
+
+    @ValueDescription("报时模式对照表")
     val tellTimeMode: MutableMap<Int, String> by value(
         mutableMapOf(
             1 to "舰队Collection-中文",
@@ -499,18 +519,23 @@ object MyPluginData : AutoSavePluginData("TB_Data") { // "name" 是保存的文�
             4 to "千恋*万花-音频(芳乃/茉子/丛雨/蕾娜)-音频"
         )
     )
+
+    @ValueDescription("群邀请白名单")
     val groupIdList: MutableMap<Long, GroupCertificate> by value(
         mutableMapOf()
     )
 
+    @ValueDescription("群继承信息")
     val pactList: MutableList<Long> by value(
         mutableListOf()
     )
 
+    @ValueDescription("对决功能状态")
     val duelTime: MutableMap<Long, Long> by value(
         mutableMapOf()
     )
 
+    @ValueDescription("随机图片功能状态")
     val AcgImageRun: MutableSet<Long> by value(
         mutableSetOf()
     )
@@ -549,6 +574,7 @@ object MySetting : AutoSavePluginConfig("TB_Setting") {
 }
 
 object UsageStatistics : AutoSavePluginData("TB_UsageStatistics") {
+    @ValueDescription("功能使用频率记录")
     private val tellTimeMode: MutableMap<Int, MutableMap<String, Int>> by value(
         mutableMapOf()
     )

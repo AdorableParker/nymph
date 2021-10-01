@@ -37,7 +37,7 @@ object MinesweeperGame : CompositeCommand(
                 else -> level
             }, punishment = punishment
         )
-        PluginMain.GAME[group.id] = minesweeperGame
+        PluginMain.MINESWEEPER_GAME[group.id] = minesweeperGame
         subject.sendImage(minesweeperGame.getImage())
     }
 
@@ -52,14 +52,14 @@ object MinesweeperGame : CompositeCommand(
             sendMessage("创建自定义游戏失败,请检查：\n1、棋盘宽不能大于40;\n2、高不能大于60;\n3、雷数不应超出地块总数;")
         } else {
             val minesweeperGame = Minesweeper(0, width, high, mine, punishment)
-            PluginMain.GAME[group.id] = minesweeperGame
+            PluginMain.MINESWEEPER_GAME[group.id] = minesweeperGame
             subject.sendImage(minesweeperGame.getImage())
         }
     }
 
     @SubCommand("踩")
     suspend fun MemberCommandSenderOnMessage.dig(x: Int, y: Int) {
-        val minesweeperGame = PluginMain.GAME[group.id]
+        val minesweeperGame = PluginMain.MINESWEEPER_GAME[group.id]
         if (minesweeperGame != null) {
             if (minesweeperGame.validation(x, y)) {
                 sendMessage("坐标无效,操作失败")
@@ -74,7 +74,7 @@ object MinesweeperGame : CompositeCommand(
                 }.onFailure {
                     group.sendMessage("嘤嘤嘤，TB在本群权限不足")
                 }
-                PluginMain.GAME.remove(group.id)
+                PluginMain.MINESWEEPER_GAME.remove(group.id)
                 sendMessage("本局游戏结束")
             }
         } else {
@@ -84,7 +84,7 @@ object MinesweeperGame : CompositeCommand(
 
     @SubCommand("旗")
     suspend fun MemberCommandSenderOnMessage.flag(x: Int, y: Int) {
-        val minesweeperGame = PluginMain.GAME[group.id]
+        val minesweeperGame = PluginMain.MINESWEEPER_GAME[group.id]
         if (minesweeperGame != null) {
             if (minesweeperGame.validation(x, y)) {
                 sendMessage("坐标无效,操作失败")
@@ -115,7 +115,7 @@ class Minesweeper(type: Int, w: Int = 0, h: Int = 0, mine: Int = 0, val punishme
     private var image: BufferedImage
 
     init {
-        record(Birthday.primaryName)
+        record(MinesweeperGame.primaryName)
         when (type) {
             1 -> {
                 width = 10

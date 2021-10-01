@@ -11,6 +11,7 @@ import net.mamoe.mirai.console.command.SimpleCommand
 import net.mamoe.mirai.console.command.isUser
 import net.mamoe.mirai.console.util.ConsoleExperimentalApi
 import net.mamoe.mirai.utils.MiraiExperimentalApi
+import net.mamoe.mirai.utils.info
 
 @Suppress("UNUSED_PARAMETER") // 忽略未使用的参数警告
 @MiraiExperimentalApi
@@ -23,6 +24,9 @@ object Test : SimpleCommand(
     suspend fun MemberCommandSenderOnMessage.main() {
         if (isUser() && user.id == MySetting.AdminID) {
             sendMessage("Hi,Administration")
+            val list = mutableSetOf<Long>()
+            bot.groups.forEach { list.add(it.id) }
+            PluginMain.logger.info { list.joinToString(",") }
         } else {
             sendMessage("权限不足")
         }

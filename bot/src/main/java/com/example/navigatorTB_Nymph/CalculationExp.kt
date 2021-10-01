@@ -25,7 +25,7 @@ object CalculationExp : SimpleCommand(
     @Handler
     suspend fun MemberCommandSenderOnMessage.main(current_level: Int, lvOrExp: Int, special: Boolean = false) {
         record(primaryName)
-        if (lvOrExp <= 120) {
+        if (lvOrExp <= 125) {
             val balance = (current_level until lvOrExp).fold(0) { accExp: Int, level: Int ->
                 val result = accExp + calculateParts(level, special)
                 result
@@ -34,7 +34,7 @@ object CalculationExp : SimpleCommand(
         } else {
             var level = current_level
             var exp = lvOrExp
-            while (exp > 0 && level <= 119) {
+            while (exp > 0 && level <= 124) {
                 exp -= calculateParts(level, special)
                 level++
             }
@@ -50,35 +50,28 @@ object CalculationExp : SimpleCommand(
 
     private fun calculateParts(target_level: Int, special: Boolean): Int {
         val totalExp = when (target_level) {
-            in 0..40 -> target_level * 10
-            in 41..60 -> 400 + (target_level - 40) * 20
-            in 61..70 -> 800 + (target_level - 60) * 30
-            in 71..80 -> 1100 + (target_level - 70) * 40
-            in 81..90 -> 1500 + (target_level - 80) * 50
-            in 101..104 -> 7000 + (target_level - 100) * 200
-            in 106..110 -> 8500 + (target_level - 105) * 1200
-            in 111..115 -> 14500 + (target_level - 110) * 1800
-            in 116..119 -> 23500 + (target_level - 115) * 2100
-            else -> when (target_level) {
-                91 -> 2100
-                92 -> 2200
-                93 -> 2400
-                94 -> 2600
-                95 -> 3000
-                96 -> 3500
-                97 -> 4000
-                98 -> 6000
-                99 -> 13200
-                100 -> 7000
-                105 -> 8500
-                120 -> return 3000000
-                else -> 0
-            }
+            in 0..40 -> target_level
+            in 41..60 -> 2 * target_level - 40
+            in 61..70 -> 3 * target_level - 100
+            in 71..80 -> 4 * target_level - 170
+            in 81..90 -> 5 * target_level - 250
+            in 91..92 -> 10 * target_level - 700
+            in 93..94 -> 20 * target_level - 1620
+            in 95..95 -> 300
+            in 96..97 -> 50 * target_level - 4450
+            in 98..98 -> 600
+            in 99..99 -> 1320
+            in 100..105 -> 30 * target_level - 2500
+            in 106..110 -> 60 * target_level - 5650
+            in 111..115 -> 100 * target_level - 10050
+            in 116..120 -> 150 * target_level - 15800
+            in 120..124 -> 210 * target_level - 23000
+            else -> return 3000000
         }
         return if (special) {
-            totalExp * if (target_level in 90..99) 13 else 12
+            totalExp * if (target_level in 90..99) 130 else 120
         } else {
-            totalExp * 10
+            totalExp * 100
         }
     }
 }

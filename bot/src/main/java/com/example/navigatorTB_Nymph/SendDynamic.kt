@@ -111,7 +111,7 @@ object SendDynamic : CompositeCommand(
                 val originDynamic = analysis(timestamp, origType, origin)
                 return Dynamic(
                     timestamp,
-                    "转发并评论：${card.obj("item")?.string("content")}\n转发源：${originDynamic.text}",
+                    "转发并评论：\n${card.obj("item")?.string("content")}\n转发源：\n${originDynamic.text}",
                     originDynamic.imageStream
                 )
             }
@@ -124,19 +124,19 @@ object SendDynamic : CompositeCommand(
                     it.string("img_src")
                         ?.let { imgSrc -> imgSrcList.add(URL(imgSrc).openConnection().getInputStream()) }
                 }
-                return Dynamic(timestamp, "含图动态:$description", imgSrcList)
+                return Dynamic(timestamp, "含图动态:\n$description", imgSrcList)
                 // 返回首张图片地址
 //                val imgSrc = card.obj("item")?.array<JsonObject>("pictures")?.get(0)?.string("img_src")
 //                return if (imgSrc.isNullOrBlank()) Dynamic(timestamp, description, null)
 //                else Dynamic(timestamp, description, imgSrcList)
             }
             // 无图动态
-            4 -> return Dynamic(timestamp, "无图动态：${card.obj("item")?.string("content")}", null)
+            4 -> return Dynamic(timestamp, "无图动态：\n${card.obj("item")?.string("content")}", null)
             // 视频
             8 -> {
                 val dynamic = card.string("dynamic") // 描述
                 val imgSrc = card.string("pic")      //封面图片
-                return Dynamic(timestamp, "视频动态：$dynamic", listOf(URL(imgSrc).openConnection().getInputStream()))
+                return Dynamic(timestamp, "视频动态：\n$dynamic", listOf(URL(imgSrc).openConnection().getInputStream()))
             }
             // 专栏
             64 -> {

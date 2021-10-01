@@ -43,7 +43,7 @@ object Calculator : SimpleCommand(
         '+' -> first.add(back)
         '-' -> first.subtract(back)
         '*' -> first.multiply(back)
-        '/' -> first.divide(back, 24, RoundingMode.HALF_UP)
+        '/' -> if (back != BigDecimal(0)) first.divide(back, 24, RoundingMode.HALF_UP) else "除数不能为零"
         '%' -> first.remainder(back)
         else -> null
     }
@@ -63,7 +63,9 @@ object Calculator : SimpleCommand(
 
                     while (stack.isNotEmpty() && '(' != stack.lastElement()) {
                         val sign = stack.pop()
-                        operation(stackRPN.pop(), stackRPN.pop(), sign)?.let { stackRPN.push(it) }
+                        operation(stackRPN.pop(), stackRPN.pop(), sign)?.let {
+                            if (it is BigDecimal) stackRPN.push(it) else return it.toString()
+                        }
                             ?: let { return "错误,意外的运算符 '$sign',预期得到'+', '-', '*', '/', '%', '(', ')'" }
                     }
                     if (stack.isEmpty()) return "错误,意外的运算符 ')'"
@@ -90,7 +92,11 @@ object Calculator : SimpleCommand(
                             ?: let { return "错误,'${list.joinToString("")}'不是有效的数字" }
                         list.clear()
                         if (rpn[i] == 'π') {
-                            stackRPN.push(operation(BigDecimal(3.14159), stackRPN.pop(), '*'))
+                            stackRPN.push(
+                                operation(BigDecimal(PI), stackRPN.pop(), '*')?.let {
+                                    if (it is BigDecimal) it else return "运算异常"
+                                }
+                            )
                             continue
                         }
                         if (stack.isEmpty()) {
@@ -103,7 +109,11 @@ object Calculator : SimpleCommand(
                         !comparePriority(rpn[i], stack.lastElement())
                     ) {
                         val sign = stack.pop()
-                        operation(stackRPN.pop(), stackRPN.pop(), sign)?.let { stackRPN.push(it) }
+                        operation(
+                            stackRPN.pop(),
+                            stackRPN.pop(),
+                            sign
+                        )?.let { if (it is BigDecimal) stackRPN.push(it) else return it.toString() }
                             ?: let { return "错误,意外的运算符 '$sign',预期得到'+', '-', '*', '/', '%', '(', ')'" }
                     }
                     stack.push(rpn[i])
@@ -116,7 +126,11 @@ object Calculator : SimpleCommand(
         }
         while (!stack.isEmpty()) {
             val sign = stack.pop()
-            operation(stackRPN.pop(), stackRPN.pop(), sign)?.let { stackRPN.push(it) }
+            operation(
+                stackRPN.pop(),
+                stackRPN.pop(),
+                sign
+            )?.let { if (it is BigDecimal) stackRPN.push(it) else return it.toString() }
                 ?: let { return "错误,意外的运算符 '$sign',预期得到'+', '-', '*', '/', '%', '(', ')'" }
         }
         return stackRPN.pop().toString().replaceFirst(Regex("\\.0*$|(\\.\\d*?)0+$"), "$1")
