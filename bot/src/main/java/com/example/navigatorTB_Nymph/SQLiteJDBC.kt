@@ -212,7 +212,7 @@ class SQLiteJDBC(DbPath: Path) {
      * @param [column] 限制字段
      * @param [value] 限制值(不需要额外引号)
      * @param [conjunction] 连接词
-     * @param [mods] 匹配模式(0:全等字符串,1:不做处理,2:尾部为value的字符串,3:头部为value的字符串,4:包含有value的字符串)
+     * @param [mods] 匹配模式(0:全等字符串,1:不做处理,2:尾部为value的字符串,3:头部为value的字符串,4:包含有value的字符串,5:不等于value且value不做处理)
      */
     fun select(
         table: String,  // 目标表名
@@ -229,6 +229,7 @@ class SQLiteJDBC(DbPath: Path) {
             2 -> column.forEach { determiner.add("$it GLOB '*${valueIterator.next()}'") }
             3 -> column.forEach { determiner.add("$it GLOB '${valueIterator.next()}*'") }
             4 -> column.forEach { determiner.add("$it GLOB '*${valueIterator.next()}*'") }
+            5 -> column.forEach { determiner.add("$it != ${valueIterator.next()}") }
             else -> column.forEach { determiner.add("$it = '${valueIterator.next()}'") }
         }
         val sql = "SELECT * FROM $table WHERE ${determiner.joinToString(" $conjunction ")};"
@@ -255,6 +256,9 @@ class SQLiteJDBC(DbPath: Path) {
         return resultList
     }
 
+    /**
+     * 执行给定的sql语句
+     */
     fun executeStatement(sql: String): MutableList<MutableMap<String?, Any?>> {
         val resultList: MutableList<MutableMap<String?, Any?>> = ArrayList()
         try {

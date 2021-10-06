@@ -64,7 +64,7 @@ object PluginMain : KotlinPlugin(
     JvmPluginDescription(
         id = "MCP.navigatorTB_Nymph",
         name = "navigatorTB",
-        version = "0.11.0"
+        version = "0.12.0"
     )
 ) {
 
@@ -91,7 +91,7 @@ object PluginMain : KotlinPlugin(
         if (MyPluginData.initialization) {  // 首次启动初始化数据库
             dataBastInit()
             MyPluginData.initialization = false
-        } else {                              // 重置状态数据防止出现状态锁定
+        } else {                            // 重置状态数据防止出现状态锁定
             MyPluginData.AcgImageRun.clear()
         }
 
@@ -104,6 +104,7 @@ object PluginMain : KotlinPlugin(
         Calculator.register()       // 计算器
         Music.register()            // 点歌姬
         GroupPolicy.register()      // 群策略
+        RollDice.register()         // 简易骰娘
         AutoBanned.register()       // 自助禁言
         Duel.register()             // 禁言决斗
         TraceMoe.register()         // 以图搜番
@@ -130,7 +131,14 @@ object PluginMain : KotlinPlugin(
                         val time = SimpleDateFormat("yy-MM-dd HH:mm", Locale.CHINA).format(dynamic.timestamp)
                         val dbObject = SQLiteJDBC(resolveDataPath("User.db"))
                         val groupList =
-                            MyPluginData.nameOfDynamic[list.key]?.let { dbObject.select("SubscribeInfo", it, 1.0, 1) }
+                            MyPluginData.nameOfDynamic[list.key]?.let {
+                                if (LocalDateTime.now().hour in MySetting.undisturbed) { // 免打扰模式判断
+                                    dbObject.executeStatement(
+                                        "SELECT * FROM Policy JOIN SubscribeInfo USING (group_id) " +
+                                                "WHERE Policy.undisturbed = false AND SubscribeInfo.${it} = true;"
+                                    )
+                                } else dbObject.select("SubscribeInfo", it, 1.0, 1)
+                            }
                         dbObject.closeDB()
                         if (groupList != null) {
                             val me = Bot.getInstance(MySetting.BotID)
@@ -167,7 +175,10 @@ object PluginMain : KotlinPlugin(
                 dbObject.closeDB()
 
                 val userDbObject = SQLiteJDBC(resolveDataPath("User.db"))
-                val groupList = userDbObject.select("Policy", "TellTimeMode", 0, 5)
+                val groupList = if (time in MySetting.undisturbed) { // 免打扰模式判断
+                    userDbObject.select("Policy", listOf("undisturbed", "TellTimeMode"), listOf("1", "0"), "AND", 5)
+                } else userDbObject.select("Policy", "TellTimeMode", 0, 5)
+
                 userDbObject.closeDB()
                 val script = mutableMapOf<Int, List<MutableMap<String?, Any?>>>()
 
@@ -410,7 +421,8 @@ object PluginMain : KotlinPlugin(
                 	"DailyReminderMode"	INTEGER NOT NULL DEFAULT 0,
                 	"Teaching"	REAL NOT NULL DEFAULT 0,
                 	"TriggerProbability"	INTEGER NOT NULL DEFAULT 33,
-                	"ACGImgAllowed"	INTEGER NOT NULL DEFAULT 0
+                	"ACGImgAllowed"	INTEGER NOT NULL DEFAULT 0,
+                    "undisturbed"   REAL NOT NULL DEFAULT 0
                 );
             """.trimIndent()
         )
@@ -463,6 +475,7 @@ object PluginMain : KotlinPlugin(
         GroupPolicy.unregister()        // 群策略
         Music.unregister()              // 点歌姬
         Calculator.unregister()         // 计算器
+        RollDice.unregister()           // 简易骰娘
         Construction.unregister()       // 建造时间
         TraceMoe.unregister()           // 以图搜番
         Duel.unregister()               // 禁言决斗
@@ -568,6 +581,9 @@ object MySetting : AutoSavePluginConfig("TB_Setting") {
 
     @ValueDescription("违禁词")
     val prohibitedWord by value("")
+
+    @ValueDescription("免打扰时间段:0-23")
+    val undisturbed: List<Int> by value(listOf(-1))
     //    @ValueDescription("数量") // 注释写法, 将会保存在 MySetting.yml 文件中.
 //    var count by value(0)
 //    val nested by value<MyNestedData>() // 嵌套类型是支持的

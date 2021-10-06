@@ -33,10 +33,42 @@ object GroupPolicy : CompositeCommand(
         *4* 教学许可
         *5* 色图许可
         *6* 对话概率
-        *7* 责任人绑定
-        *8* 继承到群
-        *9* 撤销继承协议
+        *7* 免打扰模式
+        *8* 责任人绑定
+        *9* 继承到群
+        *X* 撤销继承协议
         """.trimIndent()
+
+    @SubCommand("免打扰模式")
+    suspend fun MemberCommandSenderOnMessage.tellUndisturbed(value: Int) {
+        if (permissionCheck(user)) {
+            sendMessage("权限不足")
+            return
+        }
+        val dbObject = SQLiteJDBC(PluginMain.resolveDataPath("User.db"))
+        if (value > 0) {
+            dbObject.update("Policy", "group_id", group.id, "undisturbed", 1)
+            sendMessage("夜间免打扰已启用")
+        } else {
+            dbObject.update("Policy", "group_id", group.id, "undisturbed", 0)
+            sendMessage("夜间免打扰已停用")
+        }
+        dbObject.closeDB()
+    }
+
+    @SubCommand("免打扰模式")
+    suspend fun MemberCommandSenderOnMessage.tellUndisturbed() {
+        sendMessage(
+            """
+            无效模式参数，设定失败,请参考以下示范命令
+            群策略 免打扰模式 [模式值]
+            ——————————
+            模式值 | 说明
+            > 0	    开启免打扰
+            ≯ 0     关闭免打扰
+            """.trimIndent()
+        )
+    }
 
     @SubCommand("报时模式")
     suspend fun MemberCommandSenderOnMessage.tellTime(mode: Int) {
