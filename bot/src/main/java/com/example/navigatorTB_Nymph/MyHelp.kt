@@ -32,4 +32,15 @@ object MyHelp : SimpleCommand(
 //        val commandList = PluginMain.allNames
 //        sendMessage("${}")
     }
+
+    @Handler
+    suspend fun MemberCommandSenderOnMessage.main(name: String) {
+        CommandManager.allRegisteredCommands.forEach {
+            if (it.owner == PluginMain && (name == it.primaryName || name in it.secondaryNames)) {
+                sendMessage("主命令名:${it.primaryName}\t别名：${it.secondaryNames.joinToString(",")}\n详细说明:${it.usage}")
+            }
+        }
+//        val commandList = PluginMain.allNames
+//        sendMessage("${}")
+    }
 }
