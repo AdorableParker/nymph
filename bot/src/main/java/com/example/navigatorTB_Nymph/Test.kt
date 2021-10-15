@@ -13,7 +13,6 @@ import net.mamoe.mirai.console.util.ConsoleExperimentalApi
 import net.mamoe.mirai.utils.MiraiExperimentalApi
 import net.mamoe.mirai.utils.info
 
-@Suppress("UNUSED_PARAMETER") // 忽略未使用的参数警告
 @MiraiExperimentalApi
 @ConsoleExperimentalApi
 object Test : SimpleCommand(
@@ -29,6 +28,20 @@ object Test : SimpleCommand(
             PluginMain.logger.info { list.joinToString(",") }
         } else {
             sendMessage("权限不足")
+        }
+    }
+
+    @Handler
+    suspend fun MemberCommandSenderOnMessage.main(groupID: Long) {
+        val group = bot.getGroup(groupID)
+        if (group != null) {
+            runCatching {
+                group.sendMessage("状态测试")
+            }.onFailure {
+                sendMessage(it.message.orEmpty())
+            }
+        } else {
+            sendMessage("获取群对象失败")
         }
     }
 }

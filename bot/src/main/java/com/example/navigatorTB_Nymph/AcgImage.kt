@@ -10,6 +10,7 @@ import net.mamoe.mirai.console.util.ConsoleExperimentalApi
 import net.mamoe.mirai.contact.Contact.Companion.sendImage
 import net.mamoe.mirai.utils.ExternalResource.Companion.toExternalResource
 import net.mamoe.mirai.utils.MiraiExperimentalApi
+import net.mamoe.mirai.utils.warning
 import org.jsoup.Jsoup
 import java.io.InputStream
 import java.net.URL
@@ -56,22 +57,26 @@ object AcgImage : SimpleCommand(
             MyPluginData.AcgImageRun.remove(group.id)
             return
         }
-        getRandomImg()?.let { inputStream ->
-            inputStream.toExternalResource().use {
-                group.sendImage(it)
-            }
-            dbObject.update(
-                "ACGImg",
-                "group_id",
-                "${group.id}",
-                arrayOf("score", "date"),
-                arrayOf("${score - 1}", "${Instant.now().epochSecond}")
-            )
-            if (score - 1 < 10) {
-                sendMessage("ℹ本群剩余配给已经不足10点了")
-            }
-        } ?: sendMessage("数据传输失败...嗯.一定是塞壬的问题..")
-
+        runCatching {
+            getRandomImg()?.let { inputStream ->
+                inputStream.toExternalResource().use {
+                    group.sendImage(it)
+                }
+                dbObject.update(
+                    "ACGImg",
+                    "group_id",
+                    "${group.id}",
+                    arrayOf("score", "date"),
+                    arrayOf("${score - 1}", "${Instant.now().epochSecond}")
+                )
+                if (score - 1 < 10) {
+                    sendMessage("ℹ本群剩余配给已经不足10点了")
+                }
+            } ?: throw IllegalAccessException("图片数据流为空")
+        }.onFailure {
+            PluginMain.logger.warning { "File:AcgImage.kt    Line:77\n${it.message}" }
+            sendMessage("数据传输失败...嗯.一定是塞壬的问题..")
+        }
         dbObject.closeDB()
         MyPluginData.AcgImageRun.remove(group.id)
     }
