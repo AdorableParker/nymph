@@ -23,6 +23,8 @@ object AutoBanned : SimpleCommand(
     @Handler
     suspend fun MemberCommandSenderOnMessage.main(durationSeconds: Int) {
         record(primaryName)
+        if (group.botMuteRemaining > 0) return
+
         if (!group.botPermission.isOperator()) {
             sendMessage("TB在本群没有管理员权限，无法使用本功能")
             return
@@ -41,6 +43,8 @@ object AutoBanned : SimpleCommand(
     @Handler
     suspend fun MemberCommandSenderOnMessage.main(MemberTarget: Member, durationSeconds: Int) {
         record(primaryName)
+        if (group.botMuteRemaining > 0) return
+
         if (!group.botPermission.isOperator()) {
             sendMessage("TB在本群没有管理员权限，无法使用本功能")
             return

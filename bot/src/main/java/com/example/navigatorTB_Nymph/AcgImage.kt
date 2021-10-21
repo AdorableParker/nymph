@@ -27,6 +27,7 @@ object AcgImage : SimpleCommand(
     suspend fun MemberCommandSenderOnMessage.main() {
         record(primaryName)
         if (group.botMuteRemaining > 0) return
+
         if (MyPluginData.AcgImageRun.contains(group.id)) {
             sendMessage("功能运行中，请等待")
             return
@@ -74,7 +75,7 @@ object AcgImage : SimpleCommand(
                 }
             } ?: throw IllegalAccessException("图片数据流为空")
         }.onFailure {
-            PluginMain.logger.warning { "File:AcgImage.kt    Line:77\n${it.message}" }
+            PluginMain.logger.warning { "File:AcgImage.kt    Line:78\n${it.message}" }
             sendMessage("数据传输失败...嗯.一定是塞壬的问题..")
         }
         dbObject.closeDB()
@@ -91,7 +92,7 @@ object AcgImage : SimpleCommand(
             //            return ImmutableImageleImage.loader().fromStream(inputStream).bytes(PngWriter.MaxCompression).inputStream() // com.sksamuel.scrimage.ImageParseException 原因不详
             return URL(link).openConnection().getInputStream()
         }.onFailure {
-            PluginMain.logger.warning("File:AcgImage.kt\tLine:89\n$it")
+            PluginMain.logger.warning("File:AcgImage.kt\tLine:95\n$it")
         }
         webClient.close()
         return null
@@ -101,6 +102,7 @@ object AcgImage : SimpleCommand(
         val dbObject = SQLiteJDBC(PluginMain.resolveDataPath("User.db"))
         val quota = dbObject.selectOne("ACGImg", "group_id", group, 1)["score"] as Int
         if (quota + supply >= 200) {
+            dbObject.update("ACGImg", "group_id", group, "score", 200)
             dbObject.closeDB()
             return "补给已达上限"
         }
@@ -111,4 +113,3 @@ object AcgImage : SimpleCommand(
 
 
 }
-

@@ -34,6 +34,8 @@ object WikiAzurLane : CompositeCommand(
 
     @SubCommand("强度榜", "强度主榜")
     suspend fun MemberCommandSenderOnMessage.strengthRanking() {
+        if (group.botMuteRemaining > 0) return
+
         getWikiImg("PVE用舰船综合性能强度榜", 1).use {
             if (it != null) {
                 subject.sendImage(it)
@@ -45,6 +47,8 @@ object WikiAzurLane : CompositeCommand(
 
     @SubCommand("强度副榜")
     suspend fun MemberCommandSenderOnMessage.strengthDeputyRanking() {
+        if (group.botMuteRemaining > 0) return
+
         getWikiImg("PVE用舰船综合性能强度榜", 2).use {
             if (it != null) {
                 subject.sendImage(it)
@@ -57,6 +61,8 @@ object WikiAzurLane : CompositeCommand(
 
     @SubCommand("装备榜")
     suspend fun MemberCommandSenderOnMessage.equipmentRanking() {
+        if (group.botMuteRemaining > 0) return
+
         getWikiImg("装备一图榜", 0).use {
             if (it != null) {
                 subject.sendImage(it)
@@ -68,6 +74,8 @@ object WikiAzurLane : CompositeCommand(
 
     @SubCommand("P站榜", "社保榜")
     suspend fun MemberCommandSenderOnMessage.pixivRanking() {
+        if (group.botMuteRemaining > 0) return
+
         getWikiImg("P站搜索结果一览榜（社保榜）", 0).use {
             if (it != null) {
                 subject.sendImage(it)

@@ -26,6 +26,8 @@ object Construction : SimpleCommand(
     @Handler
     suspend fun MemberCommandSenderOnMessage.main(uncheckedIndex: String) {
         record(primaryName)
+        if (group.botMuteRemaining > 0) return
+
         val pretreatmentIndex = uncheckedIndex.replace('：', ':').toCharArray()
         pretreatmentIndex.forEachIndexed { index, char ->
             if (char.isLowerCase()) pretreatmentIndex[index] = char.uppercaseChar()
@@ -37,6 +39,8 @@ object Construction : SimpleCommand(
 
     @Handler
     suspend fun MemberCommandSenderOnMessage.main() {
+        if (group.botMuteRemaining > 0) return
+
         sendMessage("参数不匹配, 你是否想执行:\n $usage")
     }
 

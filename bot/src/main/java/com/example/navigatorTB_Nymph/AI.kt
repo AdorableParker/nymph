@@ -23,6 +23,9 @@ object AI : CompositeCommand(
 
     @SubCommand("教学")
     suspend fun MemberCommandSenderOnMessage.main(question: String, answer: String) {
+
+        if (group.botMuteRemaining > 0) return
+
         val userDBObject = SQLiteJDBC(PluginMain.resolveDataPath("User.db"))
         val info = userDBObject.selectOne("Policy", "group_id", group.id, 1)
         if (info["Teaching"] == 0.0) {
@@ -73,6 +76,8 @@ object AI : CompositeCommand(
 
     @SubCommand("查询")
     suspend fun MemberCommandSenderOnMessage.main(key: String) {
+        if (group.botMuteRemaining > 0) return
+
         val dbObject =
             SQLiteJDBC(PluginMain.resolveDataPath("AI.db"))
         val entryList =
@@ -112,6 +117,8 @@ object AI : CompositeCommand(
 
     @SubCommand("统计")
     suspend fun MemberCommandSenderOnMessage.main() {
+        if (group.botMuteRemaining > 0) return
+
         val dbObject =
             SQLiteJDBC(PluginMain.resolveDataPath("AI.db"))
         val entryList =
@@ -134,6 +141,8 @@ object AI : CompositeCommand(
 
     @SubCommand("EID查询")
     suspend fun MemberCommandSenderOnMessage.eIDMain(EID: Int) {
+        if (group.botMuteRemaining > 0) return
+
         val dbObject =
             SQLiteJDBC(PluginMain.resolveDataPath("AI.db"))
         val entryList =
@@ -158,6 +167,8 @@ object AI : CompositeCommand(
 
     @SubCommand("删除")
     suspend fun MemberCommandSenderOnMessage.main(EID: Int) {
+        if (group.botMuteRemaining > 0) return
+
         val dbObject =
             SQLiteJDBC(PluginMain.resolveDataPath("AI.db"))
         val entry = dbObject.select("Corpus", "ID", EID, 1)
@@ -173,6 +184,8 @@ object AI : CompositeCommand(
 
     @SubCommand("sudo删除")
     suspend fun MemberCommandSenderOnMessage.sudoMain(EID: Int) {
+        if (group.botMuteRemaining > 0) return
+
         val dbObject =
             SQLiteJDBC(PluginMain.resolveDataPath("AI.db"))
         val entry = dbObject.select("Corpus", "ID", EID, 1)

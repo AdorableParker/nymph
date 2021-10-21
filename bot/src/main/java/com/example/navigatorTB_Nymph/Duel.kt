@@ -88,6 +88,8 @@ object Duel : CompositeCommand(
     @SubCommand("发起")
     suspend fun MemberCommandSenderOnMessage.main(target: Member) {
         record(primaryName)
+        if (group.botMuteRemaining > 0) return
+
 //        bot.eventChannel.subscribeAlways<> {  }
         if (!group.botPermission.isOperator()) {
             sendMessage("TB在本群没有管理员权限，无法使用本功能")
@@ -126,6 +128,8 @@ object Duel : CompositeCommand(
 
     @SubCommand("射击")
     suspend fun MemberCommandSenderOnMessage.main() {
+        if (group.botMuteRemaining > 0) return
+
         if (!group.botPermission.isOperator()) {
             sendMessage("TB在本群没有管理员权限，无法使用本功能")
             return

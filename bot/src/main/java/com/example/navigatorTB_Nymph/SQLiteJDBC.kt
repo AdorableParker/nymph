@@ -15,7 +15,6 @@ import java.sql.Connection
 import java.sql.DriverManager
 import java.sql.ResultSet
 import java.sql.Statement
-import kotlin.system.exitProcess
 
 
 @MiraiExperimentalApi
@@ -24,13 +23,13 @@ class SQLiteJDBC(DbPath: Path) {
     private var c: Connection? = null
 
     init {
-        try {
+        runCatching {
             Class.forName("org.sqlite.JDBC")
             c = DriverManager.getConnection("jdbc:sqlite:$DbPath")
             c?.autoCommit = false
-        } catch (e: Exception) {
-            PluginMain.logger.warning { "File:SQLiteJBDC.kt\tLine:32\n${e.javaClass.name}:${e.message}" }
-            exitProcess(0)
+        }.onFailure {
+            stmt?.close()
+            PluginMain.logger.warning { "File:SQLiteJBDC.kt\tLine:32\n${it.message}" }
         }
     }
 
@@ -129,7 +128,7 @@ class SQLiteJDBC(DbPath: Path) {
             5 -> "SELECT * FROM $table WHERE $column != $value;"
             else -> "SELECT * FROM $table WHERE $column = '$value';"
         }
-        try {
+        runCatching {
             stmt = c?.createStatement()
             val rs: ResultSet? =
                 stmt?.executeQuery(sql)
@@ -144,9 +143,9 @@ class SQLiteJDBC(DbPath: Path) {
                 rs.close()
             }
             stmt?.close()
-        } catch (e: java.lang.Exception) {
-            PluginMain.logger.warning { "File:SQLiteJBDC.kt\tLine:148\n${e.javaClass.name}:${e.message}" }
-            exitProcess(0)
+        }.onFailure {
+            stmt?.close()
+            PluginMain.logger.warning { "File:SQLiteJBDC.kt\tLine:148\n${it.message}" }
         }
         return row
     }
@@ -178,7 +177,7 @@ class SQLiteJDBC(DbPath: Path) {
             5 -> "SELECT * FROM $table WHERE $column != $value;"
             else -> "SELECT * FROM $table WHERE $column = '$value';"
         }
-        try {
+        runCatching {
             stmt = c?.createStatement()
             val rs: ResultSet? =
                 stmt?.executeQuery(sql)
@@ -195,9 +194,9 @@ class SQLiteJDBC(DbPath: Path) {
                 rs.close()
             }
             stmt?.close()
-        } catch (e: java.lang.Exception) {
-            PluginMain.logger.warning { "File:SQLiteJBDC.kt\tLine:199\n${e.javaClass.name}:${e.message}" }
-            exitProcess(0)
+        }.onFailure {
+            stmt?.close()
+            PluginMain.logger.warning { "File:SQLiteJBDC.kt\tLine:199\n${it.message}" }
         }
         return resultList
     }
@@ -233,7 +232,7 @@ class SQLiteJDBC(DbPath: Path) {
             else -> column.forEach { determiner.add("$it = '${valueIterator.next()}'") }
         }
         val sql = "SELECT * FROM $table WHERE ${determiner.joinToString(" $conjunction ")};"
-        try {
+        runCatching {
             stmt = c?.createStatement()
             val rs: ResultSet? = stmt?.executeQuery(sql)
             if (rs != null) {
@@ -249,9 +248,9 @@ class SQLiteJDBC(DbPath: Path) {
                 rs.close()
             }
             stmt?.close()
-        } catch (e: java.lang.Exception) {
-            PluginMain.logger.warning { "File:SQLiteJBDC.kt\tLine:252\n${e.javaClass.name}:${e.message}" }
-            exitProcess(0)
+        }.onFailure {
+            stmt?.close()
+            PluginMain.logger.warning { "File:SQLiteJBDC.kt\tLine:252\n${it.message}" }
         }
         return resultList
     }
@@ -261,7 +260,7 @@ class SQLiteJDBC(DbPath: Path) {
      */
     fun executeStatement(sql: String): MutableList<MutableMap<String?, Any?>> {
         val resultList: MutableList<MutableMap<String?, Any?>> = ArrayList()
-        try {
+        kotlin.runCatching {
             stmt = c?.createStatement()
             val rs: ResultSet? = stmt?.executeQuery(sql)
             if (rs != null) {
@@ -277,9 +276,9 @@ class SQLiteJDBC(DbPath: Path) {
                 rs.close()
             }
             stmt?.close()
-        } catch (e: java.lang.Exception) {
-            PluginMain.logger.warning { "File:SQLiteJBDC.kt\tLine:277\n${e.javaClass.name}:${e.message}" }
-            exitProcess(0)
+        }.onFailure {
+            stmt?.close()
+            PluginMain.logger.warning { "File:SQLiteJBDC.kt\tLine:277\n${it.message}" }
         }
         return resultList
     }
@@ -296,15 +295,16 @@ class SQLiteJDBC(DbPath: Path) {
      * 用于执行非查询语句
      */
     private fun executeSQL(sql: String): Int {
-        return try {
+        return runCatching {
             stmt = c?.createStatement()
             val r = stmt?.executeUpdate(sql)
             stmt?.close()
             c?.commit()
             r ?: -1
-        } catch (e: java.lang.Exception) {
-            PluginMain.logger.warning { "File:SQLiteJBDC.kt\tLine:302\n${e.javaClass.name}:${e.message}" }
-            -1
-        }
+        }.onFailure {
+            stmt?.close()
+            PluginMain.logger.warning { "File:SQLiteJBDC.kt\tLine:306\n${it.message}" }
+            return -1
+        }.getOrDefault(-1)
     }
 }

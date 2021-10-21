@@ -30,6 +30,8 @@ object Roster : SimpleCommand(
     @Handler
     suspend fun MemberCommandSenderOnMessage.main(shipName: String) {
         record(primaryName)
+        if (group.botMuteRemaining > 0) return
+
         val i = shipName.toCharArray()
         i.forEachIndexed { index, char ->
             if (char.isLowerCase()) i[index] = char.uppercaseChar()

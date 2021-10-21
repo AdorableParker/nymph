@@ -21,6 +21,8 @@ object Test : SimpleCommand(
 ) {
     @Handler
     suspend fun MemberCommandSenderOnMessage.main() {
+        if (group.botMuteRemaining > 0) return
+
         if (isUser() && user.id == MySetting.AdminID) {
             sendMessage("Hi,Administration")
             val list = mutableSetOf<Long>()
@@ -33,6 +35,8 @@ object Test : SimpleCommand(
 
     @Handler
     suspend fun MemberCommandSenderOnMessage.main(groupID: Long) {
+        if (group.botMuteRemaining > 0) return
+
         val group = bot.getGroup(groupID)
         if (group != null) {
             runCatching {

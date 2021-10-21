@@ -31,6 +31,8 @@ object TraceMoe : SimpleCommand(
     @Handler
     suspend fun MemberCommandSenderOnMessage.main(image: Image) {
         record(primaryName)
+        if (group.botMuteRemaining > 0) return
+
         sendMessage("开始查询，请稍后...")
         val jsonObjString = getJSON(image.queryUrl())
         if (jsonObjString == null) {

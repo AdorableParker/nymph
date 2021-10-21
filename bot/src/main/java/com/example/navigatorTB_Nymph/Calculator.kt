@@ -27,6 +27,8 @@ object Calculator : SimpleCommand(
 
     @Handler
     suspend fun MemberCommandSenderOnMessage.main(express: String) {
+        if (group.botMuteRemaining > 0) return
+
         record(primaryName)
         sendMessage(analysis(express))
     }

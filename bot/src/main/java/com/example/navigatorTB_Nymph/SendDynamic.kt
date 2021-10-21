@@ -40,26 +40,36 @@ object SendDynamic : CompositeCommand(
 
     @SubCommand("小加加", "碧蓝公告")
     suspend fun MemberCommandSenderOnMessage.azurLane(index: Int = 0) {
+        if (group.botMuteRemaining > 0) return
+
         sendMessage(main(group, 233114659, index))
     }
 
     @SubCommand("阿米娅", "方舟公告")
     suspend fun MemberCommandSenderOnMessage.arKnights(index: Int = 0) {
+        if (group.botMuteRemaining > 0) return
+
         sendMessage(main(group, 161775300, index))
     }
 
     @SubCommand("呆毛王", "FGO公告")
     suspend fun MemberCommandSenderOnMessage.fateGrandOrder(index: Int = 0) {
+        if (group.botMuteRemaining > 0) return
+
         sendMessage(main(group, 233108841, index))
     }
 
     @SubCommand("派蒙", "原神公告")
     suspend fun MemberCommandSenderOnMessage.genShin(index: Int = 0) {
+        if (group.botMuteRemaining > 0) return
+
         sendMessage(main(group, 401742377, index))
     }
 
     @SubCommand("UID", "其他")
     suspend fun MemberCommandSenderOnMessage.other(uid: Int, index: Int = 0) {
+        if (group.botMuteRemaining > 0) return
+
         sendMessage(main(group, uid, index))
     }
 

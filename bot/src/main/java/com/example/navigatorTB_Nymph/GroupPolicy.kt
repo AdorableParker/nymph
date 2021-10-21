@@ -41,6 +41,8 @@ object GroupPolicy : CompositeCommand(
 
     @SubCommand("免打扰模式")
     suspend fun MemberCommandSenderOnMessage.tellUndisturbed(value: Int) {
+        if (group.botMuteRemaining > 0) return
+
         if (permissionCheck(user)) {
             sendMessage("权限不足")
             return
@@ -58,6 +60,8 @@ object GroupPolicy : CompositeCommand(
 
     @SubCommand("免打扰模式")
     suspend fun MemberCommandSenderOnMessage.tellUndisturbed() {
+        if (group.botMuteRemaining > 0) return
+
         sendMessage(
             """
             无效模式参数，设定失败,请参考以下示范命令
@@ -72,6 +76,8 @@ object GroupPolicy : CompositeCommand(
 
     @SubCommand("报时模式")
     suspend fun MemberCommandSenderOnMessage.tellTime(mode: Int) {
+        if (group.botMuteRemaining > 0) return
+
         if (permissionCheck(user)) {
             sendMessage("权限不足")
             return
@@ -94,6 +100,8 @@ object GroupPolicy : CompositeCommand(
 
     @SubCommand("报时模式")
     suspend fun MemberCommandSenderOnMessage.tellTime() {
+        if (group.botMuteRemaining > 0) return
+
         val info: MutableList<String> = mutableListOf()
         tellTimeMode.forEach {
             info.add("${it.key}\t    ${it.value}")
@@ -105,6 +113,8 @@ object GroupPolicy : CompositeCommand(
 
     @SubCommand("订阅模式")
     suspend fun MemberCommandSenderOnMessage.subscription(mode: String) {
+        if (group.botMuteRemaining > 0) return
+
         if (permissionCheck(user)) {
             sendMessage("权限不足")
             return
@@ -125,6 +135,8 @@ object GroupPolicy : CompositeCommand(
 
     @SubCommand("订阅模式")
     suspend fun MemberCommandSenderOnMessage.subscription() {
+        if (group.botMuteRemaining > 0) return
+
         sendMessage(
             """
             无效模式参数，设定失败,请参考以下示范命令
@@ -149,6 +161,8 @@ object GroupPolicy : CompositeCommand(
 
     @SubCommand("每日提醒模式")
     suspend fun MemberCommandSenderOnMessage.dailyReminder(mode: Int) {
+        if (group.botMuteRemaining > 0) return
+
         if (permissionCheck(user)) {
             sendMessage("权限不足")
             return
@@ -172,6 +186,8 @@ object GroupPolicy : CompositeCommand(
 
     @SubCommand("每日提醒模式")
     suspend fun MemberCommandSenderOnMessage.dailyReminder() {
+        if (group.botMuteRemaining > 0) return
+
         sendMessage(
             """
             无效模式参数，设定失败,请参考以下示范命令
@@ -188,6 +204,8 @@ object GroupPolicy : CompositeCommand(
 
     @SubCommand("教学许可")
     suspend fun MemberCommandSenderOnMessage.teaching(switch: Int) {
+        if (group.botMuteRemaining > 0) return
+
         if (permissionCheck(user)) {
             sendMessage("权限不足")
             return
@@ -205,6 +223,8 @@ object GroupPolicy : CompositeCommand(
 
     @SubCommand("教学许可")
     suspend fun MemberCommandSenderOnMessage.teaching() {
+        if (group.botMuteRemaining > 0) return
+
         sendMessage(
             """
             无效模式参数，设定失败,请参考以下示范命令
@@ -219,6 +239,8 @@ object GroupPolicy : CompositeCommand(
 
     @SubCommand("对话概率")
     suspend fun MemberCommandSenderOnMessage.triggerProbability(value: Int) {
+        if (group.botMuteRemaining > 0) return
+
         if (permissionCheck(user)) {
             sendMessage("权限不足")
             return
@@ -231,6 +253,8 @@ object GroupPolicy : CompositeCommand(
 
     @SubCommand("对话概率")
     suspend fun MemberCommandSenderOnMessage.triggerProbability() {
+        if (group.botMuteRemaining > 0) return
+
         sendMessage(
             """
             无效模式参数，设定失败,请参考以下示范命令
@@ -244,6 +268,8 @@ object GroupPolicy : CompositeCommand(
 
     @SubCommand("色图许可")
     suspend fun MemberCommandSenderOnMessage.acgImage(token: String) {
+        if (group.botMuteRemaining > 0) return
+
         if (permissionCheck(user)) {
             sendMessage("权限不足")
             return
@@ -265,6 +291,8 @@ object GroupPolicy : CompositeCommand(
 
     @SubCommand("色图许可")
     suspend fun MemberCommandSenderOnMessage.acgImage() {
+        if (group.botMuteRemaining > 0) return
+
         sendMessage(
             """
             无效模式参数，设定失败,请参考以下示范命令
@@ -285,6 +313,7 @@ object GroupPolicy : CompositeCommand(
     @SubCommand("责任人绑定")
     suspend fun MemberCommandSenderOnMessage.bindingOwnership(string: String) {
         if (group.botMuteRemaining > 0) return
+
         val dbObject = SQLiteJDBC(PluginMain.resolveDataPath("User.db"))
         val rpl = dbObject.selectOne("Responsible", "group_id", group.id, 1)
         val nowPR = rpl["principal_ID"].toString().toLong()
@@ -312,6 +341,8 @@ object GroupPolicy : CompositeCommand(
 
     @SubCommand("责任人绑定")
     suspend fun MemberCommandSenderOnMessage.bindingOwnership() {
+        if (group.botMuteRemaining > 0) return
+
         sendMessage(
             """
             无效参数，设定失败,请参考以下示范命令
@@ -352,6 +383,8 @@ object GroupPolicy : CompositeCommand(
 
     @SubCommand("继承到群")
     suspend fun MemberCommandSenderOnMessage.succeed() {
+        if (group.botMuteRemaining > 0) return
+
         sendMessage(
             """
             无效参数，设定失败,请参考以下示范命令
@@ -388,6 +421,8 @@ object GroupPolicy : CompositeCommand(
 
     @SubCommand("撤销继承协议")
     suspend fun MemberCommandSenderOnMessage.revokePact() {
+        if (group.botMuteRemaining > 0) return
+
         sendMessage(
             """
             无效参数，设定失败,请参考以下示范命令
