@@ -27,6 +27,7 @@ import net.mamoe.mirai.console.plugin.version
 import net.mamoe.mirai.console.util.ConsoleExperimentalApi
 import net.mamoe.mirai.contact.Contact
 import net.mamoe.mirai.contact.Member
+import net.mamoe.mirai.contact.UserOrBot
 import net.mamoe.mirai.event.EventPriority
 import net.mamoe.mirai.event.events.BotInvitedJoinGroupRequestEvent
 import net.mamoe.mirai.event.events.BotLeaveEvent
@@ -46,14 +47,17 @@ import java.text.SimpleDateFormat
 import java.time.LocalDateTime
 import java.util.*
 
-data class Dynamic(val timestamp: Long?, val text: String?, val imageStream: List<InputStream>?) {
-    suspend fun getMessage(contact: Contact): MessageChain =
-        if (imageStream != null) {
-            val message = mutableListOf<Message>(PlainText("$text"))
-            imageStream.forEach { message.add(it.uploadAsImage(contact)) }
-            message.toMessageChain()
-        } else buildMessageChain { +PlainText("$text") }
+data class Dynamic(val timestamp: Long, val text: String?, val imageStream: List<InputStream>?) {
+    suspend fun getMessage(subject: Contact, uORb: UserOrBot, t: String): ForwardMessage =
+        buildForwardMessage(subject) {
+            uORb says PlainText("$text")
+            imageStream?.forEach {
+                uORb says it.uploadAsImage(subject)
+            }
+            uORb says PlainText("发布时间:$t")
+        }
 }
+
 
 @Serializable
 class GroupCertificate(val principal_ID: Long = 0L, val flag: Boolean = false, val from: Long = 0L)
@@ -64,7 +68,7 @@ object PluginMain : KotlinPlugin(
     JvmPluginDescription(
         id = "MCP.navigatorTB_Nymph",
         name = "navigatorTB",
-        version = "0.12.6"
+        version = "0.12.9"
     )
 ) {
 
@@ -127,40 +131,37 @@ object PluginMain : KotlinPlugin(
             job1.addJob {
                 for (list in MyPluginData.timeStampOfDynamic) {
                     val dynamic = SendDynamic.getDynamic(list.key, 0, flag = true)
-                    if (dynamic.timestamp != null) {
-                        val time = SimpleDateFormat("yy-MM-dd HH:mm", Locale.CHINA).format(dynamic.timestamp)
-                        val dbObject = SQLiteJDBC(resolveDataPath("User.db"))
-                        val groupList =
-                            MyPluginData.nameOfDynamic[list.key]?.let {
-                                if (LocalDateTime.now().hour in MySetting.undisturbed) { // 免打扰模式判断
-                                    dbObject.executeStatement(
-                                        "SELECT * FROM Policy JOIN SubscribeInfo USING (group_id) " +
-                                                "WHERE Policy.undisturbed = false AND SubscribeInfo.${it} = true;"
-                                    )
-                                } else dbObject.select("SubscribeInfo", it, 1.0, 1)
-                            }
-                        dbObject.closeDB()
-                        if (groupList != null) {
-                            val me = Bot.getInstance(MySetting.BotID)
-                            val message = dynamic.getMessage(me.asFriend) + PlainText("\n发布时间:$time")
-//                            val img = dynamic.imageStream?.toExternalResource()
-                            for (groupInfo in groupList) {
-//                                PluginMain.logger.info { "开始推送至群:${groupInfo["group_id"]}" }
-                                val groupID = groupInfo["group_id"] as Int
-                                val group = Bot.getInstance(MySetting.BotID).getGroup(groupID.toLong())
-                                if (group == null || group.botMuteRemaining > 0) {
-                                    continue
-                                }
-                                group.runCatching {
-                                    this.sendMessage(message)
-                                }.onFailure {
-                                    logger.warning { "File:PluginMain.kt\tLine:152\nGroup:$groupID\n${it.cause}" }
-                                }
-                            }
+                    if (dynamic.timestamp == 0L) continue
+
+                    val time = SimpleDateFormat("yy-MM-dd HH:mm", Locale.CHINA).format(dynamic.timestamp)
+                    val dbObject = SQLiteJDBC(resolveDataPath("User.db"))
+                    val groupList = MyPluginData.nameOfDynamic[list.key]?.let {
+                        if (LocalDateTime.now().hour in MySetting.undisturbed) { // 免打扰模式判断
+                            dbObject.executeStatement(
+                                "SELECT * FROM Policy JOIN SubscribeInfo USING (group_id) " +
+                                        "WHERE Policy.undisturbed = false AND SubscribeInfo.${it} = true;"
+                            )
+                        } else dbObject.select("SubscribeInfo", it, 1.0, 1)
+                    }
+                    dbObject.closeDB()
+
+                    if (groupList.isNullOrEmpty()) continue
+
+                    val bot = Bot.getInstance(MySetting.BotID)
+                    val gList = mutableListOf<Contact>()
+                    groupList.forEach {
+                        val g = bot.getGroup((it["group_id"] as Int).toLong())
+                        if ((g != null) && (g.botMuteRemaining <= 0)) gList.add(g)
+                    }
+                    val forwardMessage = dynamic.getMessage(gList.random(), bot, time)
+                    for (g in gList) {
+                        runCatching {
+                            g.sendMessage(forwardMessage)
+                        }.onFailure {
+                            logger.warning { "File:PluginMain.kt\tLine:160\nGroup:${g.id}\n${it.message}" }
                         }
                     }
                 }
-
             }
 //            job1.start(MyTime(0, 2))
             job1.start(MyTime(0, 3))

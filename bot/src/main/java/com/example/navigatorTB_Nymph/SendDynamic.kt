@@ -14,6 +14,7 @@ import net.mamoe.mirai.console.command.CompositeCommand
 import net.mamoe.mirai.console.command.MemberCommandSenderOnMessage
 import net.mamoe.mirai.console.util.ConsoleExperimentalApi
 import net.mamoe.mirai.contact.Group
+import net.mamoe.mirai.contact.UserOrBot
 import net.mamoe.mirai.message.data.Message
 import net.mamoe.mirai.message.data.PlainText
 import net.mamoe.mirai.utils.MiraiExperimentalApi
@@ -42,38 +43,37 @@ object SendDynamic : CompositeCommand(
     suspend fun MemberCommandSenderOnMessage.azurLane(index: Int = 0) {
         if (group.botMuteRemaining > 0) return
 
-        sendMessage(main(group, 233114659, index))
+        sendMessage(main(group, bot, 233114659, index))
     }
 
     @SubCommand("阿米娅", "方舟公告")
     suspend fun MemberCommandSenderOnMessage.arKnights(index: Int = 0) {
         if (group.botMuteRemaining > 0) return
 
-        sendMessage(main(group, 161775300, index))
+        sendMessage(main(group, bot, 161775300, index))
     }
 
     @SubCommand("呆毛王", "FGO公告")
     suspend fun MemberCommandSenderOnMessage.fateGrandOrder(index: Int = 0) {
         if (group.botMuteRemaining > 0) return
 
-        sendMessage(main(group, 233108841, index))
+        sendMessage(main(group, bot, 233108841, index))
     }
 
     @SubCommand("派蒙", "原神公告")
     suspend fun MemberCommandSenderOnMessage.genShin(index: Int = 0) {
         if (group.botMuteRemaining > 0) return
 
-        sendMessage(main(group, 401742377, index))
+        sendMessage(main(group, bot, 401742377, index))
     }
 
     @SubCommand("UID", "其他")
     suspend fun MemberCommandSenderOnMessage.other(uid: Int, index: Int = 0) {
         if (group.botMuteRemaining > 0) return
-
-        sendMessage(main(group, uid, index))
+        sendMessage(main(group, bot, uid, index))
     }
 
-    suspend fun main(subject: Group, uid: Int, index: Int): Message {
+    suspend fun main(subject: Group, bot: UserOrBot, uid: Int, index: Int): Message {
         record(primaryName)
         if (index >= 10) {
             return PlainText("最多只能往前10条哦\n(￣﹃￣)")
@@ -82,7 +82,7 @@ object SendDynamic : CompositeCommand(
         }
         val dynamic = getDynamic(uid, index)
         val time = SimpleDateFormat("yy-MM-dd HH:mm", Locale.getDefault()).format(dynamic.timestamp)
-        return dynamic.getMessage(subject) + PlainText("\n发布时间:$time")
+        return dynamic.getMessage(subject, bot, time)
     }
 
     fun getDynamic(uid: Int, index: Int, flag: Boolean = false): Dynamic {
@@ -93,13 +93,11 @@ object SendDynamic : CompositeCommand(
         val desc = jsonObj.obj("data")
             ?.array<JsonObject>("cards")?.get(index)
             ?.obj("desc")
-        val timestamp = desc?.long("timestamp")?.times(1000)
+        val timestamp = desc?.long("timestamp")?.times(1000) ?: 0
         if (flag) {
-            timestamp?.let {
-                val oldTime = MyPluginData.timeStampOfDynamic[uid] ?: 0
-                if (oldTime >= it) return Dynamic(null, null, null)
-                MyPluginData.timeStampOfDynamic[uid] = it
-            }
+            val oldTime = MyPluginData.timeStampOfDynamic[uid] ?: 0
+            if (oldTime >= timestamp) return Dynamic(0, null, null)
+            MyPluginData.timeStampOfDynamic[uid] = timestamp
         }
         val typeCode = desc?.int("type")
         val cardStr = jsonObj.obj("data")
@@ -109,7 +107,7 @@ object SendDynamic : CompositeCommand(
         return analysis(timestamp, typeCode, card)
     }
 
-    private fun analysis(timestamp: Long?, typeCode: Int?, card: JsonObject): Dynamic {
+    private fun analysis(timestamp: Long, typeCode: Int?, card: JsonObject): Dynamic {
 
         when (typeCode) {
             // 无效数据
