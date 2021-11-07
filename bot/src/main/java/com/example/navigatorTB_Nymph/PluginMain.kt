@@ -11,7 +11,6 @@ import com.example.navigatorTB_Nymph.MySetting.prohibitedWord
 import com.mayabot.nlp.module.summary.KeywordSummary
 import com.mayabot.nlp.segment.Lexers.coreBuilder
 import kotlinx.coroutines.cancel
-import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
 import net.mamoe.mirai.Bot
 import net.mamoe.mirai.console.command.CommandManager
@@ -35,17 +34,12 @@ import net.mamoe.mirai.event.events.NudgeEvent
 import net.mamoe.mirai.event.globalEventChannel
 import net.mamoe.mirai.event.subscribeGroupMessages
 import net.mamoe.mirai.message.data.*
-import net.mamoe.mirai.utils.ExternalResource.Companion.toExternalResource
 import net.mamoe.mirai.utils.ExternalResource.Companion.uploadAsImage
 import net.mamoe.mirai.utils.MiraiExperimentalApi
 import net.mamoe.mirai.utils.debug
 import net.mamoe.mirai.utils.info
-import net.mamoe.mirai.utils.warning
-import java.io.File
 import java.io.InputStream
-import java.text.SimpleDateFormat
 import java.time.LocalDateTime
-import java.util.*
 
 data class Dynamic(val timestamp: Long, val text: String?, val imageStream: List<InputStream>?) {
     suspend fun getMessage(subject: Contact, uORb: UserOrBot, t: String): ForwardMessage =
@@ -68,7 +62,7 @@ object PluginMain : KotlinPlugin(
     JvmPluginDescription(
         id = "MCP.navigatorTB_Nymph",
         name = "navigatorTB",
-        version = "0.12.9"
+        version = "0.13.0-T"
     )
 ) {
 
@@ -126,142 +120,142 @@ object PluginMain : KotlinPlugin(
 //        MyHelp.register()           // 帮助功能
         CommandManager.registerCommand(MyHelp, true) // 帮助功能,需要覆盖内建指令
         // 动态更新
-        PluginMain.launch {
-            val job1 = CronJob("动态更新", 120)
-            job1.addJob {
-                for (list in MyPluginData.timeStampOfDynamic) {
-                    val dynamic = SendDynamic.getDynamic(list.key, 0, flag = true)
-                    if (dynamic.timestamp == 0L) continue
-
-                    val time = SimpleDateFormat("yy-MM-dd HH:mm", Locale.CHINA).format(dynamic.timestamp)
-                    val dbObject = SQLiteJDBC(resolveDataPath("User.db"))
-                    val groupList = MyPluginData.nameOfDynamic[list.key]?.let {
-                        if (LocalDateTime.now().hour in MySetting.undisturbed) { // 免打扰模式判断
-                            dbObject.executeStatement(
-                                "SELECT * FROM Policy JOIN SubscribeInfo USING (group_id) " +
-                                        "WHERE Policy.undisturbed = false AND SubscribeInfo.${it} = true;"
-                            )
-                        } else dbObject.select("SubscribeInfo", it, 1.0, 1)
-                    }
-                    dbObject.closeDB()
-
-                    if (groupList.isNullOrEmpty()) continue
-
-                    val bot = Bot.getInstance(MySetting.BotID)
-                    val gList = mutableListOf<Contact>()
-                    groupList.forEach {
-                        val g = bot.getGroup((it["group_id"] as Int).toLong())
-                        if ((g != null) && (g.botMuteRemaining <= 0)) gList.add(g)
-                    }
-                    val forwardMessage = dynamic.getMessage(gList.random(), bot, time)
-                    for (g in gList) {
-                        runCatching {
-                            g.sendMessage(forwardMessage)
-                        }.onFailure {
-                            logger.warning { "File:PluginMain.kt\tLine:160\nGroup:${g.id}\n${it.message}" }
-                        }
-                    }
-                }
-            }
-//            job1.start(MyTime(0, 2))
-            job1.start(MyTime(0, 3))
-        }
-        // 报时
-        PluginMain.launch {
-            val job2 = CronJob("报时", 3)
-            job2.addJob {
-                val time = LocalDateTime.now().hour
-                val dbObject = SQLiteJDBC(resolveDataPath("AssetData.db"))
-                val scriptList = dbObject.select("script", "Hour", time, 1)
-                dbObject.closeDB()
-
-                val userDbObject = SQLiteJDBC(resolveDataPath("User.db"))
-                val groupList = if (time in MySetting.undisturbed) { // 免打扰模式判断
-                    userDbObject.select("Policy", listOf("undisturbed", "TellTimeMode"), listOf("1", "0"), "AND", 5)
-                } else userDbObject.select("Policy", "TellTimeMode", 0, 5)
-
-                userDbObject.closeDB()
-                val script = mutableMapOf<Int, List<MutableMap<String?, Any?>>>()
-
-                for (groupPolicy in groupList) {
-                    val groupID = groupPolicy["group_id"] as Int
-                    val group = Bot.getInstance(MySetting.BotID).getGroup(groupID.toLong())
-                    if (group == null || group.botMuteRemaining > 0) continue
-
-                    val groupMode = groupPolicy["TellTimeMode"] as Int
-                    if (groupMode == -1) {
-                        group.sendMessage("现在${time}点咯")
-                        continue
-                    }
-
-                    if (script.containsKey(groupMode).not()) {
-                        script[groupPolicy["TellTimeMode"] as Int] =
-                            scriptList.filter { it["mode"] == groupPolicy["TellTimeMode"] }
-                    }
-                    val outScript = script[groupMode]?.random()?.get("content") as String
-
-                    if (groupMode % 2 == 0) {      //偶数
-                        val path = PluginMain.resolveDataPath("./报时语音/$outScript")
-                        val audio = File("$path").toExternalResource().use {
-                            group.uploadAudio(it)
-                        }
-                        audio.let { group.sendMessage(it) }
-                    } else {                      //奇数
-                        group.sendMessage(outScript)
-                    }
-                }
-            }
-            job2.start(MyTime(1, 0))
-//            job2.start(MyTime(0, 1))  // 测试时开启
-
-        }
-        // 每日提醒
-        PluginMain.launch {
-            val job3 = CronJob("每日提醒", 3)
-            job3.addJob {
-                val dbObject = SQLiteJDBC(resolveDataPath("User.db"))
-                val groupList = dbObject.select("Policy", "DailyReminderMode", 0, 5)
-                dbObject.closeDB()
-                val script = mapOf(
-                    1 to arrayListOf(
-                        "Ciallo～(∠・ω< )⌒★今天是周一哦,今天开放的是「战术研修」「商船护送」，困难也记得打呢。",
-                        "Ciallo～(∠・ω< )⌒★今天是周二哦,今天开放的是「战术研修」「海域突进」，困难也记得打呢。",
-                        "Ciallo～(∠・ω< )⌒★今天是周三哦,今天开放的是「战术研修」「斩首行动」，困难也记得打呢。",
-                        "Ciallo～(∠・ω< )⌒★今天是周四哦,今天开放的是「战术研修」「商船护送」，困难也记得打呢。",
-                        "Ciallo～(∠・ω< )⌒★今天是周五哦,今天开放的是「战术研修」「海域突进」，困难也记得打呢。",
-                        "Ciallo～(∠・ω< )⌒★今天是周六哦,今天开放的是「战术研修」「斩首行动」，困难也记得打呢。",
-                        "Ciallo～(∠・ω< )⌒★今天是周日哦,每日全部模式开放，每周两次的破交作战记得打哦，困难模式也别忘了。"
-                    ),
-                    2 to arrayListOf(
-                        "Ciallo～(∠・ω< )⌒★晚上好,Master,今天是周一, 今天周回本开放「弓阶修炼场」,「收集火种(枪杀)」。",
-                        "Ciallo～(∠・ω< )⌒★晚上好,Master,今天是周二, 今天周回本开放「枪阶修炼场」,「收集火种(剑骑)」。",
-                        "Ciallo～(∠・ω< )⌒★晚上好,Master,今天是周三, 今天周回本开放「狂阶修炼场」,「收集火种(弓术)」。",
-                        "Ciallo～(∠・ω< )⌒★晚上好,Master,今天是周四, 今天周回本开放「骑阶修炼场」,「收集火种(枪杀)」。",
-                        "Ciallo～(∠・ω< )⌒★晚上好,Master,今天是周五, 今天周回本开放「术阶修炼场」,「收集火种(剑骑)」。",
-                        "Ciallo～(∠・ω< )⌒★晚上好,Master,今天是周六, 今天周回本开放「杀阶修炼场」,「收集火种(弓术)」。",
-                        "Ciallo～(∠・ω< )⌒★晚上好,Master,今天是周日, 今天周回本开放「剑阶修炼场」,「收集火种(All)」。"
-                    )
-                )
-                for (groupPolicy in groupList) {
-                    val groupID = groupPolicy["group_id"] as Int
-                    val group = Bot.getInstance(MySetting.BotID).getGroup(groupID.toLong())
-                    if (group == null || group.botMuteRemaining > 0) {
-                        continue
-                    }
-                    when (groupPolicy["DailyReminderMode"]) {
-                        1 -> script[1]?.get(LocalDateTime.now().dayOfWeek.value - 1)?.let { group.sendMessage(it) }
-                        2 -> script[2]?.get(LocalDateTime.now().dayOfWeek.value - 1)?.let { group.sendMessage(it) }
-                        3 -> {
-                            script[1]?.get(LocalDateTime.now().dayOfWeek.value - 1)?.let { group.sendMessage(it) }
-                            script[2]?.get(LocalDateTime.now().dayOfWeek.value - 1)?.let { group.sendMessage(it) }
-                        }
-                        else -> logger.warning { "File:PluginMain.kt\tLine:242\n未知的模式" }
-                    }
-                }
-            }
-            job3.start(MyTime(24, 0), MyTime(21, 0))
-//            job3.start(MyTime(0, 3))
-        }
+//        PluginMain.launch {
+//            val job1 = CronJob("动态更新", 120)
+//            job1.addJob {
+//                for (list in MyPluginData.timeStampOfDynamic) {
+//                    val dynamic = SendDynamic.getDynamic(list.key, 0, flag = true)
+//                    if (dynamic.timestamp == 0L) continue
+//
+//                    val time = SimpleDateFormat("yy-MM-dd HH:mm", Locale.CHINA).format(dynamic.timestamp)
+//                    val dbObject = SQLiteJDBC(resolveDataPath("User.db"))
+//                    val groupList = MyPluginData.nameOfDynamic[list.key]?.let {
+//                        if (LocalDateTime.now().hour in MySetting.undisturbed) { // 免打扰模式判断
+//                            dbObject.executeStatement(
+//                                "SELECT * FROM Policy JOIN SubscribeInfo USING (group_id) " +
+//                                        "WHERE Policy.undisturbed = false AND SubscribeInfo.${it} = true;"
+//                            )
+//                        } else dbObject.select("SubscribeInfo", it, 1.0, 1)
+//                    }
+//                    dbObject.closeDB()
+//
+//                    if (groupList.isNullOrEmpty()) continue
+//
+//                    val bot = Bot.getInstance(MySetting.BotID)
+//                    val gList = mutableListOf<Contact>()
+//                    groupList.forEach {
+//                        val g = bot.getGroup((it["group_id"] as Int).toLong())
+//                        if ((g != null) && (g.botMuteRemaining <= 0)) gList.add(g)
+//                    }
+//                    val forwardMessage = dynamic.getMessage(gList.random(), bot, time)
+//                    for (g in gList) {
+//                        runCatching {
+//                            g.sendMessage(forwardMessage)
+//                        }.onFailure {
+//                            logger.warning { "File:PluginMain.kt\tLine:160\nGroup:${g.id}\n${it.message}" }
+//                        }
+//                    }
+//                }
+//            }
+////            job1.start(MyTime(0, 2))
+//            job1.start(MyTime(0, 3))
+//        }
+//        // 报时
+//        PluginMain.launch {
+//            val job2 = CronJob("报时", 3)
+//            job2.addJob {
+//                val time = LocalDateTime.now().hour
+//                val dbObject = SQLiteJDBC(resolveDataPath("AssetData.db"))
+//                val scriptList = dbObject.select("script", "Hour", time, 1)
+//                dbObject.closeDB()
+//
+//                val userDbObject = SQLiteJDBC(resolveDataPath("User.db"))
+//                val groupList = if (time in MySetting.undisturbed) { // 免打扰模式判断
+//                    userDbObject.select("Policy", listOf("undisturbed", "TellTimeMode"), listOf("1", "0"), "AND", 5)
+//                } else userDbObject.select("Policy", "TellTimeMode", 0, 5)
+//
+//                userDbObject.closeDB()
+//                val script = mutableMapOf<Int, List<MutableMap<String?, Any?>>>()
+//
+//                for (groupPolicy in groupList) {
+//                    val groupID = groupPolicy["group_id"] as Int
+//                    val group = Bot.getInstance(MySetting.BotID).getGroup(groupID.toLong())
+//                    if (group == null || group.botMuteRemaining > 0) continue
+//
+//                    val groupMode = groupPolicy["TellTimeMode"] as Int
+//                    if (groupMode == -1) {
+//                        group.sendMessage("现在${time}点咯")
+//                        continue
+//                    }
+//
+//                    if (script.containsKey(groupMode).not()) {
+//                        script[groupPolicy["TellTimeMode"] as Int] =
+//                            scriptList.filter { it["mode"] == groupPolicy["TellTimeMode"] }
+//                    }
+//                    val outScript = script[groupMode]?.random()?.get("content") as String
+//
+//                    if (groupMode % 2 == 0) {      //偶数
+//                        val path = PluginMain.resolveDataPath("./报时语音/$outScript")
+//                        val audio = File("$path").toExternalResource().use {
+//                            group.uploadAudio(it)
+//                        }
+//                        audio.let { group.sendMessage(it) }
+//                    } else {                      //奇数
+//                        group.sendMessage(outScript)
+//                    }
+//                }
+//            }
+//            job2.start(MyTime(1, 0))
+////            job2.start(MyTime(0, 1))  // 测试时开启
+//
+//        }
+//        // 每日提醒
+//        PluginMain.launch {
+//            val job3 = CronJob("每日提醒", 3)
+//            job3.addJob {
+//                val dbObject = SQLiteJDBC(resolveDataPath("User.db"))
+//                val groupList = dbObject.select("Policy", "DailyReminderMode", 0, 5)
+//                dbObject.closeDB()
+//                val script = mapOf(
+//                    1 to arrayListOf(
+//                        "Ciallo～(∠・ω< )⌒★今天是周一哦,今天开放的是「战术研修」「商船护送」，困难也记得打呢。",
+//                        "Ciallo～(∠・ω< )⌒★今天是周二哦,今天开放的是「战术研修」「海域突进」，困难也记得打呢。",
+//                        "Ciallo～(∠・ω< )⌒★今天是周三哦,今天开放的是「战术研修」「斩首行动」，困难也记得打呢。",
+//                        "Ciallo～(∠・ω< )⌒★今天是周四哦,今天开放的是「战术研修」「商船护送」，困难也记得打呢。",
+//                        "Ciallo～(∠・ω< )⌒★今天是周五哦,今天开放的是「战术研修」「海域突进」，困难也记得打呢。",
+//                        "Ciallo～(∠・ω< )⌒★今天是周六哦,今天开放的是「战术研修」「斩首行动」，困难也记得打呢。",
+//                        "Ciallo～(∠・ω< )⌒★今天是周日哦,每日全部模式开放，每周两次的破交作战记得打哦，困难模式也别忘了。"
+//                    ),
+//                    2 to arrayListOf(
+//                        "Ciallo～(∠・ω< )⌒★晚上好,Master,今天是周一, 今天周回本开放「弓阶修炼场」,「收集火种(枪杀)」。",
+//                        "Ciallo～(∠・ω< )⌒★晚上好,Master,今天是周二, 今天周回本开放「枪阶修炼场」,「收集火种(剑骑)」。",
+//                        "Ciallo～(∠・ω< )⌒★晚上好,Master,今天是周三, 今天周回本开放「狂阶修炼场」,「收集火种(弓术)」。",
+//                        "Ciallo～(∠・ω< )⌒★晚上好,Master,今天是周四, 今天周回本开放「骑阶修炼场」,「收集火种(枪杀)」。",
+//                        "Ciallo～(∠・ω< )⌒★晚上好,Master,今天是周五, 今天周回本开放「术阶修炼场」,「收集火种(剑骑)」。",
+//                        "Ciallo～(∠・ω< )⌒★晚上好,Master,今天是周六, 今天周回本开放「杀阶修炼场」,「收集火种(弓术)」。",
+//                        "Ciallo～(∠・ω< )⌒★晚上好,Master,今天是周日, 今天周回本开放「剑阶修炼场」,「收集火种(All)」。"
+//                    )
+//                )
+//                for (groupPolicy in groupList) {
+//                    val groupID = groupPolicy["group_id"] as Int
+//                    val group = Bot.getInstance(MySetting.BotID).getGroup(groupID.toLong())
+//                    if (group == null || group.botMuteRemaining > 0) {
+//                        continue
+//                    }
+//                    when (groupPolicy["DailyReminderMode"]) {
+//                        1 -> script[1]?.get(LocalDateTime.now().dayOfWeek.value - 1)?.let { group.sendMessage(it) }
+//                        2 -> script[2]?.get(LocalDateTime.now().dayOfWeek.value - 1)?.let { group.sendMessage(it) }
+//                        3 -> {
+//                            script[1]?.get(LocalDateTime.now().dayOfWeek.value - 1)?.let { group.sendMessage(it) }
+//                            script[2]?.get(LocalDateTime.now().dayOfWeek.value - 1)?.let { group.sendMessage(it) }
+//                        }
+//                        else -> logger.warning { "File:PluginMain.kt\tLine:242\n未知的模式" }
+//                    }
+//                }
+//            }
+//            job3.start(MyTime(24, 0), MyTime(21, 0))
+////            job3.start(MyTime(0, 3))
+//        }
         // 入群审核
         this.globalEventChannel().subscribeAlways<BotInvitedJoinGroupRequestEvent> {
             logger.debug { "File:PluginMain.kt\tLine:237\nGroupName:${it.groupName}\nGroupID：${it.groupId}" }
@@ -513,15 +507,15 @@ object MyPluginData : AutoSavePluginData("TB_Data") { // "name" 是保存的文�
         )
     )
 
-    @ValueDescription("UID对照表")
-    val nameOfDynamic: MutableMap<Int, String> by value(
-        mutableMapOf(
-            233114659 to "AzurLane",
-            161775300 to "ArKnights",
-            233108841 to "FateGrandOrder",
-            401742377 to "GenShin"
-        )
-    )
+//    @ValueDescription("UID对照表")
+//    val nameOfDynamic: MutableMap<Int, String> by value(
+//        mutableMapOf(
+//            233114659 to "AzurLane",
+//            161775300 to "ArKnights",
+//            233108841 to "FateGrandOrder",
+//            401742377 to "GenShin"
+//        )
+//    )
 
     @ValueDescription("报时模式对照表")
     val tellTimeMode: MutableMap<Int, String> by value(
@@ -529,6 +523,7 @@ object MyPluginData : AutoSavePluginData("TB_Data") { // "name" 是保存的文�
             1 to "舰队Collection-中文",
             3 to "舰队Collection-日文",
             5 to "明日方舟",
+            7 to "碧蓝航线",
             2 to "舰队Collection-音频",
             4 to "千恋*万花-音频(芳乃/茉子/丛雨/蕾娜)-音频"
         )
