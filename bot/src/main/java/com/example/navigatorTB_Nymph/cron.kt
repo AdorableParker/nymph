@@ -10,105 +10,98 @@ import kotlinx.coroutines.delay
 import net.mamoe.mirai.console.util.ConsoleExperimentalApi
 import net.mamoe.mirai.utils.MiraiExperimentalApi
 import net.mamoe.mirai.utils.info
-import net.mamoe.mirai.utils.warning
 import java.time.LocalDateTime
+import java.time.ZoneOffset
 
-data class MyTime(var hours: Int, var minute: Int) {
-    fun getNextInteger(starting: MyTime, anyDay: Boolean = false): Long {
-        return if (anyDay) {
-            val h = starting.hours - hours
-            val m = starting.minute - minute
-            val final = when {
-                h < 0 -> (24 + h) * 60 + m
-                h == 0 -> if (m < 0) 24 * 60 + m else m
-                else -> h * 60 + m
-            }
-            final * 60_000L
-        } else {
-            if (starting.hours == 0) ((minute / 10 + 1) * 10 - minute) * 60_000L else (60 - minute) * 60_000L
-        }
-    }
-
-    fun getSleepStamp(): Long {
-        return (hours * 60 + minute) * 60_000L
-    }
+data class Interval(val day: Int, val hour: Int = 0, val min: Int = 0) {
+    fun isZero(): Boolean = (day == 0 && hour == 0 && min == 0)
 }
 
-class CronJob(private val jobExplain: String, private val calibration: Int) {
-    private var flag = false
-    private var calibrationCountdown = 0
-    private var jobList = mutableListOf<suspend () -> Unit>()
+class CronJob {
+    private var calibrationCountdown = 0 //校准次数
+    private val timeAxis = mutableMapOf<Int, MutableList<Pair<Interval, suspend () -> Unit>>>() // 任务列表时间轴
 
     @MiraiExperimentalApi
     @ConsoleExperimentalApi
-    suspend fun start(period: MyTime) {
-        val startTime = MyTime(
-            LocalDateTime.now().hour,
-            LocalDateTime.now().minute
-        ).getNextInteger(period)
-        PluginMain.logger.info { "$jobExplain start sleep: $startTime ms" }
-        flag = true
-        delay(startTime)
-        while (flag) {
-            PluginMain.logger.info { "执行作业：$jobExplain" }
-            kotlin.runCatching {
+    suspend fun start() {
+        while (true) {
+            val t = LocalDateTime.now()
+            val serialNumber = t.dayOfYear * 10000 + t.hour * 100 + t.minute //序列号
+            val jobList = timeAxis[serialNumber]
+            if (jobList != null) {
                 for (job in jobList) {
-                    job()
+                    runCatching {
+                        job.second()
+                    }.onSuccess {
+                        PluginMain.logger.info { "任务完成" }
+                    }.onFailure {
+                        PluginMain.logger.info { "任务失败\n${it.message}" }
+                    }
+
+                    val next = getNext(serialNumber, t.year, job.first)
+                    timeAxis.getOrPut(next) { mutableListOf() }.add(job)
                 }
-            }.onSuccess {
-                PluginMain.logger.info { "$jobExplain 执行完毕" }
-            }.onFailure {
-                PluginMain.logger.warning { "$jobExplain 执行异常\n${it.message}\n${it.cause}" }
-            }
-            if (calibrationCountdown >= calibration) {
-                PluginMain.logger.info { "$jobExplain 执行校准" }
-                calibrationCountdown = 0
-                val nextTime = MyTime(
-                    LocalDateTime.now().hour,
-                    LocalDateTime.now().minute
-                ).getNextInteger(period)
-                PluginMain.logger.info { "$jobExplain 到下次执行睡眠$nextTime" }
-                delay(nextTime)
+                timeAxis.remove(serialNumber)
             } else {
-                delay(period.getSleepStamp())
-                calibrationCountdown++      // 计数增加
+                if (calibrationCountdown >= 20) {
+                    calibrationCountdown = 0
+                    calibration(serialNumber)
+                }
             }
+            delay(30000)
         }
     }
 
-    @MiraiExperimentalApi
-    @ConsoleExperimentalApi
-    suspend fun start(period: MyTime, starting: MyTime) {
-        val startTime = MyTime(
-            LocalDateTime.now().hour,
-            LocalDateTime.now().minute
-        ).getNextInteger(starting, true)
-        PluginMain.logger.info { "$jobExplain start sleep: $startTime ms" }
-        flag = true
-        delay(startTime)
-        while (flag) {
-            PluginMain.logger.info { "执行作业：$jobExplain" }
-            for (job in jobList) {
-                job()
+    private suspend fun calibration(nowSerialNumber: Int) {
+        val l = mutableListOf<Int>()
+        timeAxis.forEach { (serialNumber, _) -> if (serialNumber <= nowSerialNumber + 1) l.add(serialNumber) }
+        l.forEach {
+            for (job in timeAxis[it]!!) {
+                val next =
+                    if (job.first.isZero()) getNext(it, LocalDateTime.now().year, Interval(0, 0, 3)) else getNext(
+                        it,
+                        LocalDateTime.now().year,
+                        job.first
+                    )
+                timeAxis.getOrPut(next) { mutableListOf() }.add(job)
             }
-            PluginMain.logger.info { "$jobExplain 执行完毕" }
-            if (calibrationCountdown >= 120) {
-                PluginMain.logger.info { "$jobExplain 执行校准" }
-                calibrationCountdown = 0
-                val nextTime = MyTime(
-                    LocalDateTime.now().hour,
-                    LocalDateTime.now().minute
-                ).getNextInteger(starting, true)
-                PluginMain.logger.info { "$jobExplain 到下次执行睡眠$nextTime" }
-                delay(nextTime)
-            } else {
-                delay(period.getSleepStamp())
-                calibrationCountdown++      // 计数增加
-            }
+            timeAxis.remove(it)
+        }
+
+        delay(
+            LocalDateTime.now().plusMinutes(1).toEpochSecond(ZoneOffset.UTC) -
+                    LocalDateTime.now().toEpochSecond(ZoneOffset.UTC) * 1000
+        )
+    }
+
+    fun addJob(startTime: Int, interval: Interval, job: suspend () -> Unit) {
+        if (timeAxis.containsKey(startTime)) {
+            timeAxis[startTime]!!.add(Pair(interval, job))
+        } else {
+            timeAxis[startTime] = mutableListOf(Pair(interval, job))
         }
     }
 
-    fun addJob(job: suspend () -> Unit) {
-        jobList.add(job)
+    fun getNext(serial: Int, year: Int, interval: Interval): Int {
+        var m = serial % 100
+        var h = (serial - m) % 10000 / 100
+        var d = (serial - h - m) / 10000
+        m += interval.min
+        h += interval.hour
+        d += interval.day
+        if (m >= 60) {
+            m -= 60
+            h++
+        }
+        if (h >= 24) {
+            h -= 24
+            d++
+        }
+        if (d >= 366) {
+            if (year % 4 != 0 || d == 367) { // 如果不是闰年 或 是第367天
+                d = 1
+            }
+        }
+        return d * 10000 + h * 100 + m
     }
 }
