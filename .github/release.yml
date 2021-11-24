@@ -1,0 +1,19 @@
+# .github/release.yml
+
+changelog:
+  exclude:
+    labels:
+      - ignore-for-release
+  categories:
+    - title: 优化和修复🛠️
+      labels:
+        - breaking-change
+    - title: 新功能🆕
+      labels:
+        - enhancement
+    - title: 不兼容变更⚠️
+      labels:
+        - notCompatible
+    - title: 其他
+      labels:
+        - "*"
