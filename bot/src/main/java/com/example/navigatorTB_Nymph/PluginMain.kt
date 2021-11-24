@@ -440,10 +440,10 @@ object PluginMain : KotlinPlugin(
                 	"group_id"	NUMERIC NOT NULL UNIQUE,
                 	"TellTimeMode"	INTEGER NOT NULL DEFAULT 0,
                 	"DailyReminderMode"	INTEGER NOT NULL DEFAULT 0,
-                	"Teaching"	REAL NOT NULL DEFAULT 0,
+                	"Teaching"	INTEGER NOT NULL DEFAULT 0,
                 	"TriggerProbability"	INTEGER NOT NULL DEFAULT 33,
                 	"ACGImgAllowed"	INTEGER NOT NULL DEFAULT 0,
-                    "undisturbed"   REAL NOT NULL DEFAULT 0
+                    "undisturbed"   INTEGER NOT NULL DEFAULT 0
                 );
             """.trimIndent()
         )
@@ -451,7 +451,7 @@ object PluginMain : KotlinPlugin(
             """
                 CREATE TABLE "Responsible" (
                 	"group_id"	INTEGER NOT NULL UNIQUE,
-                	"principal_ID"	INTEGER NOT NULL
+                	"principal_ID"	NUMERIC NOT NULL
                 );
             """.trimIndent()
         )
@@ -459,10 +459,10 @@ object PluginMain : KotlinPlugin(
             """
                 CREATE TABLE "SubscribeInfo" (
                 	"group_id"	NUMERIC NOT NULL UNIQUE,
-                	"AzurLane"	REAL DEFAULT 0.0,
-                	"ArKnights"	REAL DEFAULT 0.0,
-                	"FateGrandOrder"	REAL DEFAULT 0.0,
-                	"GenShin"	REAL DEFAULT 0.0
+                	"AzurLane"	INTEGER DEFAULT 0.0,
+                	"ArKnights"	INTEGER DEFAULT 0.0,
+                	"FateGrandOrder"	INTEGER DEFAULT 0.0,
+                	"GenShin"	INTEGER DEFAULT 0.0
                 );
             """.trimIndent()
         )
