@@ -16,6 +16,7 @@ import net.mamoe.mirai.contact.Member
 import net.mamoe.mirai.contact.isOperator
 import net.mamoe.mirai.message.data.At
 import net.mamoe.mirai.message.data.PlainText
+import net.mamoe.mirai.message.data.buildMessageChain
 import net.mamoe.mirai.utils.MiraiExperimentalApi
 
 @MiraiExperimentalApi
@@ -37,7 +38,44 @@ object GroupPolicy : CompositeCommand(
         *8* 责任人绑定
         *9* 继承到群
         *X* 撤销继承协议
+        *EX*群策略设定状态汇报
         """.trimIndent()
+
+    @SubCommand("群策略设定状态汇报", "汇报")
+    suspend fun MemberCommandSenderOnMessage.report() {
+        if (group.botMuteRemaining > 0) return
+        val dbObject = SQLiteJDBC(PluginMain.resolveDataPath("User.db"))
+
+        val policy = dbObject.selectOne("Policy", "group_id", group.id, 1)
+        val subscribeInfo = dbObject.selectOne("SubscribeInfo", "group_id", group.id, 1)
+        val responsible = dbObject.selectOne("Responsible", "group_id", group.id, 1)
+        val acgImg = dbObject.selectOne("ACGImg", "group_id", group.id, 1)
+        dbObject.closeDB()
+
+        val state = listOf("停用", "启用")
+        val d = policy["DailyReminderMode"] as Int
+        sendMessage(buildMessageChain {
+            +"群策略设定状态报告\n"
+            +"===============\n"
+            +"免打扰状态：   \t${state[policy["undisturbed"] as Int]}\n"
+            +"教学许可状态：\t${state[policy["Teaching"] as Int]}\n"
+            +"色图许可状态：\t${state[policy["ACGImgAllowed"] as Int]}\n"
+            +"订阅状态：\n"
+            +"\t>碧蓝航线\t${state[subscribeInfo["AzurLane"] as Int]}\n"
+            +"\t>明日方舟\t${state[subscribeInfo["ArKnights"] as Int]}\n"
+            +"\t>FGO\t\t${state[subscribeInfo["FateGrandOrder"] as Int]}\n"
+            +"\t>原神\t\t${state[subscribeInfo["GenShin"] as Int]}\n"
+            +"每日提醒状态：\n"
+            +"\t>碧蓝航线\t${state[d % 2]}\n"
+            +"\t>FGO\t\t${state[d / 2]}\n"
+            +"报时模式：\t${tellTimeMode[policy["TellTimeMode"] as Int]}\n"
+            +"对话概率:\t\t${policy["TriggerProbability"]}%\n"
+            +"群色图配给：\t${acgImg["score"]}/200\n"
+            +"群责任人：\t"
+            +At((responsible["principal_ID"] as Int).toLong())
+        })
+    }
+
 
     @SubCommand("免打扰模式")
     suspend fun MemberCommandSenderOnMessage.tellUndisturbed(value: Int) {
@@ -122,10 +160,10 @@ object GroupPolicy : CompositeCommand(
         val i = mode.toIntOrNull(16)
         if (i != null && i >= 0) {
             val dbObject = SQLiteJDBC(PluginMain.resolveDataPath("User.db"))
-            dbObject.update("SubscribeInfo", "group_id", group.id, "AzurLane", if (i and 1 == 1) 1.0 else 0.0)
-            dbObject.update("SubscribeInfo", "group_id", group.id, "ArKnights", if (i and 2 == 2) 1.0 else 0.0)
-            dbObject.update("SubscribeInfo", "group_id", group.id, "FateGrandOrder", if (i and 4 == 4) 1.0 else 0.0)
-            dbObject.update("SubscribeInfo", "group_id", group.id, "GenShin", if (i and 8 == 8) 1.0 else 0.0)
+            dbObject.update("SubscribeInfo", "group_id", group.id, "AzurLane", if (i and 1 == 1) 1 else 0)
+            dbObject.update("SubscribeInfo", "group_id", group.id, "ArKnights", if (i and 2 == 2) 1 else 0)
+            dbObject.update("SubscribeInfo", "group_id", group.id, "FateGrandOrder", if (i and 4 == 4) 1 else 0)
+            dbObject.update("SubscribeInfo", "group_id", group.id, "GenShin", if (i and 8 == 8) 1 else 0)
             sendMessage("订阅设定到模式$mode")
             dbObject.closeDB()
         } else {
@@ -212,10 +250,10 @@ object GroupPolicy : CompositeCommand(
         }
         val dbObject = SQLiteJDBC(PluginMain.resolveDataPath("User.db"))
         if (switch > 0) {
-            dbObject.update("Policy", "group_id", group.id, "Teaching", 1.0)
+            dbObject.update("Policy", "group_id", group.id, "Teaching", 1)
             sendMessage("已开启本群教学模式")
         } else {
-            dbObject.update("Policy", "group_id", group.id, "Teaching", 0.0)
+            dbObject.update("Policy", "group_id", group.id, "Teaching", 0)
             sendMessage("已关闭本群教学模式")
         }
         dbObject.closeDB()

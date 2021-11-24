@@ -14,7 +14,6 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
 import net.mamoe.mirai.Bot
-import net.mamoe.mirai.console.command.CommandManager
 import net.mamoe.mirai.console.command.CommandManager.INSTANCE.register
 import net.mamoe.mirai.console.command.CommandManager.INSTANCE.unregister
 import net.mamoe.mirai.console.data.AutoSavePluginConfig
@@ -68,7 +67,7 @@ object PluginMain : KotlinPlugin(
     JvmPluginDescription(
         id = "MCP.navigatorTB_Nymph",
         name = "navigatorTB",
-        version = "0.13.0"
+        version = "0.14.2"
     )
 ) {
 
@@ -99,8 +98,9 @@ object PluginMain : KotlinPlugin(
         } else {                            // 重置状态数据防止出现状态锁定
             MyPluginData.AcgImageRun.clear()
         }
-
         Tarot.register()            // 塔罗
+        SignIn.register()           // 签到
+        OneWord.register()          // 一言
         CrowdVerdict.register()     // 众裁
         SauceNAO.register()         // 搜图
         MinesweeperGame.register()  // 扫雷
@@ -125,15 +125,15 @@ object PluginMain : KotlinPlugin(
         Roster.register()           // 碧蓝和谐名
         AssetDataAccess.register()  // 资源数据库处理
         AI.register()               // 图灵数据库增删改查
-//        MyHelp.register()           // 帮助功能
-        CommandManager.registerCommand(MyHelp, true) // 帮助功能,需要覆盖内建指令
+        MyHelp.register()           // 帮助功能
+//        CommandManager.registerCommand(MyHelp, true) // 帮助功能,需要覆盖内建指令
         // 动态更新
         PluginMain.launch {
             CRON.start()
         }
         // 入群审核
         this.globalEventChannel().subscribeAlways<BotInvitedJoinGroupRequestEvent> {
-            logger.debug { "File:PluginMain.kt\tLine:237\nGroupName:${it.groupName}\nGroupID：${it.groupId}" }
+            logger.debug { "File:PluginMain.kt\tLine:135\nGroupName:${it.groupName}\nGroupID：${it.groupId}" }
             MyPluginData.groupIdList.forEach { (groupID, user) ->
                 logger.debug { "GroupID:$groupID\tUserID：${user.principal_ID}\tFrom：${user.from}" }
             }
@@ -267,8 +267,10 @@ object PluginMain : KotlinPlugin(
                 }
             }
         }
-
-        residentTask()
+        // 常驻任务
+        if (MySetting.resident) {
+            residentTask()
+        }
 
         logger.info { "Hi: ${MySetting.name},启动完成,V$version" } // 发送回执.
     }
@@ -486,10 +488,13 @@ object PluginMain : KotlinPlugin(
     override fun onDisable() {
 //        PluginMain.launch{ announcement("正在关闭") } // 关闭太快发不出来
         Tarot.unregister()              // 塔罗
+        SignIn.unregister()             // 签到
+        OneWord.unregister()            // 一言
         CrowdVerdict.unregister()       // 众裁
         SauceNAO.unregister()           // 搜图
         Test.unregister()               // 测试
         MinesweeperGame.unregister()    // 扫雷
+        Schedule.unregister()         // 日程表
         TicTacToeGame.unregister()      // 井字棋
         GroupPolicy.unregister()        // 群策略
         Music.unregister()              // 点歌姬
@@ -544,6 +549,8 @@ object MyPluginData : AutoSavePluginData("TB_Data") { // "name" 是保存的文�
     @ValueDescription("报时模式对照表")
     val tellTimeMode: MutableMap<Int, String> by value(
         mutableMapOf(
+            0 to "关闭",
+            -1 to "标准",
             1 to "舰队Collection-中文",
             3 to "舰队Collection-日文",
             5 to "明日方舟",
@@ -604,6 +611,9 @@ object MySetting : AutoSavePluginConfig("TB_Setting") {
 
     @ValueDescription("免打扰时间段:0-23")
     val undisturbed: List<Int> by value(listOf(-1))
+
+    @ValueDescription("启用常驻定时任务")
+    val resident: Boolean by value(false)
     //    @ValueDescription("数量") // 注释写法, 将会保存在 MySetting.yml 文件中.
 //    var count by value(0)
 //    val nested by value<MyNestedData>() // 嵌套类型是支持的

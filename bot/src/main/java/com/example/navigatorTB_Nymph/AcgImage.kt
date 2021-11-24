@@ -1,20 +1,10 @@
 package com.example.navigatorTB_Nymph
 
 import com.example.navigatorTB_Nymph.UsageStatistics.record
-import com.gargoylesoftware.htmlunit.BrowserVersion
-import com.gargoylesoftware.htmlunit.WebClient
-import com.gargoylesoftware.htmlunit.html.HtmlPage
 import net.mamoe.mirai.console.command.MemberCommandSenderOnMessage
 import net.mamoe.mirai.console.command.SimpleCommand
 import net.mamoe.mirai.console.util.ConsoleExperimentalApi
-import net.mamoe.mirai.contact.Contact.Companion.sendImage
-import net.mamoe.mirai.utils.ExternalResource.Companion.toExternalResource
 import net.mamoe.mirai.utils.MiraiExperimentalApi
-import net.mamoe.mirai.utils.warning
-import org.jsoup.Jsoup
-import java.io.InputStream
-import java.net.URL
-import java.time.Instant
 
 
 @MiraiExperimentalApi
@@ -27,7 +17,8 @@ object AcgImage : SimpleCommand(
     suspend fun MemberCommandSenderOnMessage.main() {
         record(primaryName)
         if (group.botMuteRemaining > 0) return
-
+        sendMessage("功能整改中")
+/*
         if (MyPluginData.AcgImageRun.contains(group.id)) {
             sendMessage("功能运行中，请等待")
             return
@@ -80,8 +71,10 @@ object AcgImage : SimpleCommand(
         }
         dbObject.closeDB()
         MyPluginData.AcgImageRun.remove(group.id)
+ */
     }
 
+/*
     private fun getRandomImg(): InputStream? {
         val webClient = WebClient(BrowserVersion.EDGE) //新建一个浏览器客户端对象 指定内核
         webClient.options.isCssEnabled = false //是否启用CSS, 因为不需要展现页面, 所以不需要启用
@@ -97,6 +90,7 @@ object AcgImage : SimpleCommand(
         webClient.close()
         return null
     }
+ */
 
     fun getReplenishment(group: Long, supply: Int): String {
         val dbObject = SQLiteJDBC(PluginMain.resolveDataPath("User.db"))

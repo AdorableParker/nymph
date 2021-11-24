@@ -14,7 +14,7 @@ import java.time.LocalDateTime
 import java.time.ZoneOffset
 
 data class Interval(val day: Int, val hour: Int = 0, val min: Int = 0) {
-    fun isZero(): Boolean = (day == 0 && hour == 0 && min == 0)
+    fun isZero(): Boolean = day == 0 && hour == 0 && min == 0
 }
 
 class CronJob {
@@ -37,9 +37,10 @@ class CronJob {
                     }.onFailure {
                         PluginMain.logger.info { "任务失败\n${it.message}" }
                     }
-
-                    val next = getNext(serialNumber, t.year, job.first)
-                    timeAxis.getOrPut(next) { mutableListOf() }.add(job)
+                    if (job.first.isZero().not()) {
+                        val next = getNext(serialNumber, t.year, job.first)
+                        timeAxis.getOrPut(next) { mutableListOf() }.add(job)
+                    }
                 }
                 timeAxis.remove(serialNumber)
             } else {
@@ -48,6 +49,7 @@ class CronJob {
                     calibration(serialNumber)
                 }
             }
+            calibrationCountdown++
             delay(30000)
         }
     }
@@ -103,5 +105,15 @@ class CronJob {
             }
         }
         return d * 10000 + h * 100 + m
+    }
+
+    fun query(deadline: Int): String {
+        var l = "序列号 | 任务数\n--------|---------"
+        timeAxis.forEach { (serialNumber, jobList) ->
+            if (serialNumber <= deadline) {
+                l += "\n$serialNumber|${jobList.size}"
+            }
+        }
+        return l
     }
 }

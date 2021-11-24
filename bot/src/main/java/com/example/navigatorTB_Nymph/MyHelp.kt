@@ -15,10 +15,10 @@ import net.mamoe.mirai.utils.MiraiExperimentalApi
 @MiraiExperimentalApi
 @ConsoleExperimentalApi
 object MyHelp : SimpleCommand(
-    PluginMain, "help", "帮助", "菜单",
+    PluginMain, "Menu", "帮助", "菜单",
     description = "帮助命令"
 ) {
-    override val usage: String = "${CommandManager.commandPrefix}help"
+    override val usage: String = "${CommandManager.commandPrefix}Menu"
 
     @Handler
     suspend fun MemberCommandSenderOnMessage.main() {

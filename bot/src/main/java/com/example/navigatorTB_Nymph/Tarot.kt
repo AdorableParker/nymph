@@ -14,6 +14,7 @@ import net.mamoe.mirai.console.util.ConsoleExperimentalApi
 import net.mamoe.mirai.message.data.PlainText
 import net.mamoe.mirai.utils.ExternalResource.Companion.toExternalResource
 import net.mamoe.mirai.utils.MiraiExperimentalApi
+import net.mamoe.mirai.utils.info
 import java.io.File
 import java.time.LocalDateTime
 import kotlin.random.Random
@@ -33,10 +34,24 @@ object Tarot : SimpleCommand(
         record(primaryName)
         if (group.botMuteRemaining > 0) return
 
+        val r = divineTarot(user.id)
+        PluginMain.logger.info { r["ImgPath"] }
+        r["ImgPath"]?.let { path ->
+            File(PluginMain.resolveDataPath(path).toString()).toExternalResource().use {
+                sendMessage(
+                    PlainText("${r["Brand"]}\n牌面含义关键词:${r["word"]}") + group.uploadImage(it)
+                )
+            }
+        } ?: sendMessage("占卜失败")
+
+    }
+
+    fun divineTarot(uid: Long): Map<String, String> {
         val today = LocalDateTime.now()
         var i = 1
-        while (user.id / 10 * i <= 0) i *= 10
-        val seeds = (today.year * 1000L + today.dayOfYear) * i + user.id
+        while (uid / 10 * i <= 0) i *= 10
+        val seeds = (today.year * 1000L + today.dayOfYear) * i + uid
+
         val brand = listOf(
             "The Fool(愚者)",
             "The Magician(魔术师)", "The High Priestess(女祭司)", "The Empress(女王)", "The Emperor(皇帝)", "The Hierophant(教皇)",
@@ -45,18 +60,24 @@ object Tarot : SimpleCommand(
             "The Tower(塔)", "The Star(星星)", "The Moon(月亮)", "The Sun(太阳)", "Judgement(审判)",
             "The World(世界)"
         ).random(Random(seeds))
-//        PluginMain.logger.info{brand}
+
         val dbObject = SQLiteJDBC(PluginMain.resolveDataPath("AssetData.db"))
         val r = dbObject.selectOne("Tarot", "Brand", brand)
         dbObject.closeDB()
-        if ((0..100).random(Random(seeds)) >= 50) {
-            File(PluginMain.resolveDataPath(r["uprightImg"].toString()).toString()).toExternalResource().use {
-                sendMessage(PlainText("判定！顺位-$brand\n牌面含义关键词:${r["Upright"]}") + group.uploadImage(it))
-            }
-        } else {
-            File(PluginMain.resolveDataPath(r["invertImg"].toString()).toString()).toExternalResource().use {
-                sendMessage(PlainText("判定！逆位-$brand\n牌面含义关键词:${r["Reversed"]}") + group.uploadImage(it))
-            }
+        r["seeds"] = seeds
+        return when ((0..100).random(Random(seeds))) {
+            in 0..50 -> mapOf(
+                "side" to "顺位",
+                "Brand" to brand,
+                "word" to r["Upright"].toString(),
+                "ImgPath" to r["UprightImg"].toString()
+            )
+            else -> mapOf(
+                "side" to "逆位",
+                "Brand" to brand,
+                "word" to r["Reversed"].toString(),
+                "ImgPath" to r["invertImg"].toString()
+            )
         }
     }
 }
