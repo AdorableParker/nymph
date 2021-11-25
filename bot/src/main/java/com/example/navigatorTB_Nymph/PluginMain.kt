@@ -22,7 +22,6 @@ import net.mamoe.mirai.console.data.ValueDescription
 import net.mamoe.mirai.console.data.value
 import net.mamoe.mirai.console.plugin.jvm.JvmPluginDescription
 import net.mamoe.mirai.console.plugin.jvm.KotlinPlugin
-import net.mamoe.mirai.console.plugin.version
 import net.mamoe.mirai.console.util.ConsoleExperimentalApi
 import net.mamoe.mirai.contact.Contact
 import net.mamoe.mirai.contact.Member
@@ -272,7 +271,7 @@ object PluginMain : KotlinPlugin(
             residentTask()
         }
 
-        logger.info { "Hi: ${MySetting.name},启动完成,V$version" } // 发送回执.
+//        logger.info { "Hi: ${MySetting.name},启动完成,V$version" } // 发送回执.
     }
 
     private fun residentTask() {
@@ -597,8 +596,8 @@ object MySetting : AutoSavePluginConfig("TB_Setting") {
     @ValueDescription("超级管理员账号")
     val AdminID by value(123456L)
 
-    @ValueDescription("图床API")
-    val ImageHostingService by value("")
+//    @ValueDescription("图床API")
+//    val ImageHostingService by value("")
 
     @ValueDescription("违禁词")
     val prohibitedWord by value("")
