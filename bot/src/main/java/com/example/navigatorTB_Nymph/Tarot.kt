@@ -14,7 +14,6 @@ import net.mamoe.mirai.console.util.ConsoleExperimentalApi
 import net.mamoe.mirai.message.data.PlainText
 import net.mamoe.mirai.utils.ExternalResource.Companion.toExternalResource
 import net.mamoe.mirai.utils.MiraiExperimentalApi
-import net.mamoe.mirai.utils.info
 import java.io.File
 import java.time.LocalDateTime
 import kotlin.random.Random
@@ -35,7 +34,7 @@ object Tarot : SimpleCommand(
         if (group.botMuteRemaining > 0) return
 
         val r = divineTarot(user.id)
-        PluginMain.logger.info { r["ImgPath"] }
+//        PluginMain.logger.info { r["ImgPath"] }
         r["ImgPath"]?.let { path ->
             File(PluginMain.resolveDataPath(path).toString()).toExternalResource().use {
                 sendMessage(
@@ -70,7 +69,7 @@ object Tarot : SimpleCommand(
                 "side" to "顺位",
                 "Brand" to brand,
                 "word" to r["Upright"].toString(),
-                "ImgPath" to r["UprightImg"].toString()
+                "ImgPath" to r["uprightImg"].toString()
             )
             else -> mapOf(
                 "side" to "逆位",

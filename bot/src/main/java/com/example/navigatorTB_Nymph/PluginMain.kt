@@ -67,7 +67,7 @@ object PluginMain : KotlinPlugin(
     JvmPluginDescription(
         id = "MCP.navigatorTB_Nymph",
         name = "navigatorTB",
-        version = "0.14.2"
+        version = "0.14.3"
     )
 ) {
 
@@ -289,9 +289,7 @@ object PluginMain : KotlinPlugin(
         CRON.addJob(t.dayOfYear * 10000 + 20 * 100, Interval(1, 0, 3)) { dailyReminder() }
     }
 
-    /**
-     * 每日提醒
-     */
+    /* 每日提醒 */
     private suspend fun dailyReminder() {
         logger.info { "执行任务：每日提醒" }
         val dbObject = SQLiteJDBC(resolveDataPath("User.db"))
@@ -335,9 +333,7 @@ object PluginMain : KotlinPlugin(
         }
     }
 
-    /**
-     * 报时
-     */
+    /* 报时 */
     private suspend fun tellTime() {
         logger.info { "执行任务：整点报时" }
         val time = LocalDateTime.now().hour
@@ -382,9 +378,7 @@ object PluginMain : KotlinPlugin(
         }
     }
 
-    /**
-     * 动态推送
-     */
+    /* 动态推送 */
     private suspend fun dynamicPush() {
         logger.info { "执行任务：动态推送" }
         for (list in MyPluginData.timeStampOfDynamic) {
