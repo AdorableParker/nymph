@@ -12,6 +12,7 @@ import com.example.navigatorTB_Nymph.MySetting.prohibitedWord
 import com.mayabot.nlp.module.summary.KeywordSummary
 import com.mayabot.nlp.segment.Lexers.coreBuilder
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
 import net.mamoe.mirai.Bot
 import net.mamoe.mirai.console.command.CommandManager.INSTANCE.register
@@ -33,6 +34,7 @@ import net.mamoe.mirai.event.events.NudgeEvent
 import net.mamoe.mirai.event.globalEventChannel
 import net.mamoe.mirai.event.subscribeGroupMessages
 import net.mamoe.mirai.message.data.*
+import net.mamoe.mirai.utils.ExternalResource.Companion.toExternalResource
 import net.mamoe.mirai.utils.ExternalResource.Companion.uploadAsImage
 import net.mamoe.mirai.utils.MiraiExperimentalApi
 import net.mamoe.mirai.utils.debug
@@ -45,6 +47,7 @@ import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.InputStream
+import java.text.SimpleDateFormat
 import java.time.LocalDateTime
 import java.util.*
 import javax.imageio.ImageIO
@@ -76,6 +79,7 @@ data class Dynamic(
         // 绘制透明白色遮罩
         graphics.color = Color(255, 255, 255, 192)
         graphics.fillRect(0, 15, 720, 470)
+
 
         // 开始绘制文字
         if (text != null) {
