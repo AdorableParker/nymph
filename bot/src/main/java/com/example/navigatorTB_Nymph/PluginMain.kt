@@ -653,8 +653,8 @@ object MySetting : AutoSavePluginConfig("TB_Setting") {
     @ValueDescription("超级管理员账号")
     val AdminID by value(123456L)
 
-    @ValueDescription("图床API")
-    val ImageHostingService by value("")
+//    @ValueDescription("图床API")
+//    val ImageHostingService by value("")
 
     @ValueDescription("违禁词")
     val prohibitedWord by value("")
