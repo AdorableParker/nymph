@@ -13,6 +13,7 @@ import net.mamoe.mirai.console.command.CommandManager
 import net.mamoe.mirai.console.command.CompositeCommand
 import net.mamoe.mirai.console.command.MemberCommandSenderOnMessage
 import net.mamoe.mirai.console.util.ConsoleExperimentalApi
+import net.mamoe.mirai.contact.Contact.Companion.sendImage
 import net.mamoe.mirai.contact.Group
 import net.mamoe.mirai.contact.UserOrBot
 import net.mamoe.mirai.message.data.Message
@@ -73,6 +74,13 @@ object SendDynamic : CompositeCommand(
         sendMessage(main(group, bot, uid, index))
     }
 
+    @SubCommand("测试")
+    suspend fun MemberCommandSenderOnMessage.test(uid: Int, index: Int = 0) {
+        if (group.botMuteRemaining > 0) return
+        group.sendImage(getDynamic(uid, index).message2jpg())
+//        sendMessage(main(group, bot, uid, index))
+    }
+
     suspend fun main(subject: Group, bot: UserOrBot, uid: Int, index: Int): Message {
         record(primaryName)
         if (index >= 10) {
@@ -82,7 +90,7 @@ object SendDynamic : CompositeCommand(
         }
         val dynamic = getDynamic(uid, index)
         val time = SimpleDateFormat("yy-MM-dd HH:mm", Locale.getDefault()).format(dynamic.timestamp)
-        return dynamic.getMessage(subject, bot, time)
+        return dynamic.getMessage(subject, bot, time, "")
     }
 
     fun getDynamic(uid: Int, index: Int, flag: Boolean = false): Dynamic {
@@ -92,36 +100,36 @@ object SendDynamic : CompositeCommand(
         val jsonObj = Parser.default().parse(StringBuilder(doc)) as JsonObject
         val desc = jsonObj.obj("data")
             ?.array<JsonObject>("cards")?.get(index)
-            ?.obj("desc")
-        val timestamp = desc?.long("timestamp")?.times(1000) ?: 0
+            ?.obj("desc")!!
+
+        val typeCode = desc.int("type") ?: 0
+        val timestamp = desc.long("timestamp")?.times(1000) ?: 0
+
         if (flag) {
             val oldTime = MyPluginData.timeStampOfDynamic[uid] ?: 0
-            if (oldTime >= timestamp) return Dynamic(0, null, null)
+            if (oldTime >= timestamp) return Dynamic("", 0)
             MyPluginData.timeStampOfDynamic[uid] = timestamp
         }
-        val typeCode = desc?.int("type")
-        val cardStr = jsonObj.obj("data")
-            ?.array<JsonObject>("cards")?.get(index)
-            ?.string("card")
-        val card = Parser.default().parse(StringBuilder(cardStr)) as JsonObject
-        return analysis(timestamp, typeCode, card)
+
+        return analysis(timestamp, typeCode, desc)
     }
 
-    private fun analysis(timestamp: Long, typeCode: Int?, card: JsonObject): Dynamic {
+    private fun analysis(timestamp: Long, typeCode: Int, card: JsonObject): Dynamic {
+        val d = Dynamic(
+            name = card.obj("user")?.string("name") ?: "动态更新",
+            timestamp = timestamp
+        )
 
         when (typeCode) {
             // 无效数据
-            0 -> return Dynamic(timestamp, "没有相关动态信息", null)
+            0 -> d.text = "没有相关动态信息"
             // 转发
             1 -> {
-                val origType = card.obj("item")?.int("orig_type")
+                val origType = card.obj("item")?.int("orig_type") ?: 0
                 val origin = Parser.default().parse(StringBuilder(card.string("origin"))) as JsonObject
                 val originDynamic = analysis(timestamp, origType, origin)
-                return Dynamic(
-                    timestamp,
-                    "转发并评论：\n${card.obj("item")?.string("content")}\n转发源：\n${originDynamic.text}",
-                    originDynamic.imageStream
-                )
+                d.text = "转发并评论：\n${card.obj("item")?.string("content")}\n转发源：\n${originDynamic.text}"
+                d.imageStream = originDynamic.imageStream
             }
             // 含图动态
             2 -> {
@@ -132,44 +140,39 @@ object SendDynamic : CompositeCommand(
                     it.string("img_src")
                         ?.let { imgSrc -> imgSrcList.add(URL(imgSrc).openConnection().getInputStream()) }
                 }
-                return Dynamic(timestamp, "含图动态:\n$description", imgSrcList)
-                // 返回首张图片地址
-//                val imgSrc = card.obj("item")?.array<JsonObject>("pictures")?.get(0)?.string("img_src")
-//                return if (imgSrc.isNullOrBlank()) Dynamic(timestamp, description, null)
-//                else Dynamic(timestamp, description, imgSrcList)
+                d.text = "含图动态:\n$description"
+                d.imageStream = imgSrcList
             }
             // 无图动态
-            4 -> return Dynamic(timestamp, "无图动态：\n${card.obj("item")?.string("content")}", null)
+            4 -> d.text = "无图动态：\n${card.obj("item")?.string("content")}"
             // 视频
             8 -> {
                 val dynamic = card.string("dynamic") // 描述
                 val imgSrc = card.string("pic")      //封面图片
-                return Dynamic(timestamp, "视频动态：\n$dynamic", listOf(URL(imgSrc).openConnection().getInputStream()))
+                d.text = "视频动态：\n$dynamic"
+                d.imageStream = listOf(URL(imgSrc).openConnection().getInputStream())
             }
             // 专栏
             64 -> {
                 val title = card.string("title")       // 标题
                 val summary = card.string("summary")   // 摘要
+                d.text = "专栏标题:$title\n专栏摘要：\n$summary…"
                 val imgSrc = card.array<String>("image_urls")?.get(0) // 封面图片
-                return if (imgSrc.isNullOrBlank()) Dynamic(timestamp, "专栏标题:$title\n专栏摘要：\n$summary…", null)
-                else Dynamic(
-                    timestamp,
-                    "专栏标题:$title\n专栏摘要：\n$summary…",
-                    listOf(URL(imgSrc).openConnection().getInputStream())
-                )
+                if (imgSrc != null) d.imageStream = listOf(URL(imgSrc).openConnection().getInputStream())
             }
             // 卡片
             2048 -> {
                 val title = card.obj("sketch")?.string("title")          // 标题
                 val context = card.obj("vest")?.string("content")        // 内容
                 val targetURL = card.obj("sketch")?.string("target_url") // 相关链接
-                return Dynamic(timestamp, "动态标题:$title\n动态内容：\n$context\n相关链接:\n$targetURL", null)
+                d.text = "动态标题:$title\n动态内容：\n$context\n相关链接:\n$targetURL"
             }
             // 未知类型
             else -> {
                 PluginMain.logger.warning("File:SendDynamic.kt\tLine:162\n错误信息:未知的类型码 $typeCode ")
-                return Dynamic(timestamp, "是未知的动态类型,无法解析", null)
+                d.text = "是未知的动态类型,无法解析"
             }
         }
+        return d
     }
 }

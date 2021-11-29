@@ -7,6 +7,7 @@
 package com.example.navigatorTB_Nymph
 
 
+import com.example.navigatorTB_Nymph.MyPluginData.nameOfDynamic
 import com.example.navigatorTB_Nymph.MySetting.prohibitedWord
 import com.mayabot.nlp.module.summary.KeywordSummary
 import com.mayabot.nlp.segment.Lexers.coreBuilder
@@ -22,7 +23,6 @@ import net.mamoe.mirai.console.data.ValueDescription
 import net.mamoe.mirai.console.data.value
 import net.mamoe.mirai.console.plugin.jvm.JvmPluginDescription
 import net.mamoe.mirai.console.plugin.jvm.KotlinPlugin
-import net.mamoe.mirai.console.plugin.version
 import net.mamoe.mirai.console.util.ConsoleExperimentalApi
 import net.mamoe.mirai.contact.Contact
 import net.mamoe.mirai.contact.Member
@@ -40,20 +40,73 @@ import net.mamoe.mirai.utils.MiraiExperimentalApi
 import net.mamoe.mirai.utils.debug
 import net.mamoe.mirai.utils.info
 import net.mamoe.mirai.utils.warning
+import java.awt.Color
+import java.awt.Font
+import java.awt.image.BufferedImage
+import java.io.ByteArrayInputStream
+import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.InputStream
 import java.text.SimpleDateFormat
 import java.time.LocalDateTime
 import java.util.*
+import javax.imageio.ImageIO
 
-data class Dynamic(val timestamp: Long, val text: String?, val imageStream: List<InputStream>?) {
-    suspend fun getMessage(subject: Contact, uORb: UserOrBot, t: String): ForwardMessage =
-        buildForwardMessage(subject) {
-            uORb says PlainText("$text")
-            imageStream?.forEach {
-                uORb says it.uploadAsImage(subject)
+data class Dynamic(
+    val name: String, val timestamp: Long,
+    var text: String? = null,
+    var imageStream: List<InputStream>? = null
+) {
+
+    fun message2jpg(): ByteArrayInputStream {
+        val height = (imageStream?.size ?: 0) / 3 * 1080 + (text?.length ?: 0) / 40 * 25 // 计算高度
+        val image = BufferedImage(1080, height, BufferedImage.TYPE_INT_RGB)
+        val graphics = image.createGraphics()
+        // 绘制背景色
+        graphics.color = Color.WHITE
+        graphics.fillRect(0, 0, 1080, height)
+
+        // 绘制配图
+        if (imageStream != null) {
+            for ((index, img) in imageStream!!.withIndex()) {
+                val i = ImageIO.read(img)
+                val w = 1080 / imageStream!!.size
+                val h = w / i.width * i.height
+                graphics.drawImage(i, index % 3 * w, index / 3 * h, w, h, null)
             }
-            uORb says PlainText("发布时间:$t")
+        }
+
+        // 绘制透明白色遮罩
+        graphics.color = Color(255, 255, 255, 192)
+        graphics.fillRect(0, 15, 720, 470)
+
+        // 开始绘制文字
+        if (text != null) {
+            graphics.color = Color(0, 0, 0, 192)
+            graphics.font = Font("大签字笔体", Font.PLAIN, 45)
+            var i = 0
+            for (wordList in text!!.split("\n")) {
+                for (str in text!!.chunked(42)) {
+                    graphics.drawString(str, 20, 20 + i * 25)
+                    i++
+                }
+            }
+        }
+        graphics.dispose()
+
+        // 输出图片
+        val os = ByteArrayOutputStream()
+        ImageIO.write(image, "jpg", os)
+        return ByteArrayInputStream(os.toByteArray())
+    }
+
+    suspend fun getMessage(subject: Contact, uORb: UserOrBot, t: String, name: String): ForwardMessage =
+        buildForwardMessage(subject) {
+            uORb named name says PlainText("$text")
+            imageStream?.forEach {
+                uORb named name says it.uploadAsImage(subject)
+            }
+            uORb named name says PlainText("发布时间:$t")
         }
 }
 
@@ -67,7 +120,7 @@ object PluginMain : KotlinPlugin(
     JvmPluginDescription(
         id = "MCP.navigatorTB_Nymph",
         name = "navigatorTB",
-        version = "0.14.3"
+        version = "0.14.5"
     )
 ) {
 
@@ -153,6 +206,7 @@ object PluginMain : KotlinPlugin(
                         ancestor.quit()
                     }
                 } else {
+                    //暂时屏蔽
                     dbObject.insert("Policy", arrayOf("group_id"), arrayOf("${it.groupId}"))
                     dbObject.insert("SubscribeInfo", arrayOf("group_id"), arrayOf("${it.groupId}"))
                     dbObject.insert("ACGImg", arrayOf("group_id"), arrayOf("${it.groupId}"))
@@ -271,8 +325,6 @@ object PluginMain : KotlinPlugin(
         if (MySetting.resident) {
             residentTask()
         }
-
-        logger.info { "Hi: ${MySetting.name},启动完成,V$version" } // 发送回执.
     }
 
     private fun residentTask() {
@@ -387,7 +439,7 @@ object PluginMain : KotlinPlugin(
 
             val time = SimpleDateFormat("yy-MM-dd HH:mm", Locale.CHINA).format(dynamic.timestamp)
             val dbObject = SQLiteJDBC(resolveDataPath("User.db"))
-            val groupList = MyPluginData.nameOfDynamic[list.key]?.let {
+            val groupList = nameOfDynamic[list.key]?.let {
                 if (LocalDateTime.now().hour in MySetting.undisturbed) { // 免打扰模式判断
                     dbObject.executeStatement(
                         "SELECT * FROM Policy JOIN SubscribeInfo USING (group_id) " +
@@ -405,12 +457,16 @@ object PluginMain : KotlinPlugin(
                 val g = bot.getGroup((it["group_id"] as Int).toLong())
                 if ((g != null) && (g.botMuteRemaining <= 0)) gList.add(g)
             }
-            val forwardMessage = dynamic.getMessage(gList.random(), bot, time)
+            val forwardMessage = dynamic.getMessage(
+                gList.random(), bot, time,
+                nameOfDynamic.getOrDefault(list.key, "动态更新")
+            )
+
             for (g in gList) {
                 runCatching {
                     g.sendMessage(forwardMessage)
                 }.onFailure {
-                    logger.warning { "File:PluginMain.kt\tLine:160\nGroup:${g.id}\n${it.message}" }
+                    logger.warning { "File:PluginMain.kt\tLine:418\nGroup:${g.id}\n${it.message}" }
                 }
             }
         }
@@ -517,7 +573,7 @@ object PluginMain : KotlinPlugin(
 
 
 object MyPluginData : AutoSavePluginData("TB_Data") { // "name" 是保存的文件名 (不带后缀)
-    @ValueDescription("初始化状态")
+    @ValueDescription("初始化状态,如果为True则会初始化重置所有用户数据")
     var initialization: Boolean by value(true)
 
     @ValueDescription("历史动态时间戳")

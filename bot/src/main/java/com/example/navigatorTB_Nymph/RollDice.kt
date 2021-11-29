@@ -13,7 +13,7 @@ object RollDice : SimpleCommand(
     PluginMain, "rollDice", "判定",
     description = "简易骰娘"
 ) {
-    override val usage: String = "${CommandManager.commandPrefix}判定 [P] <R> <D> <V>" +
+    override val usage: String = "${CommandManager.commandPrefix}判定 [P] <R> <D> <V>\n" +
             "Pip\t成功目标\n" +
             "Roll\t掷数-默认：1\n" +
             "Dice\t骰面数-默认：6\n" +

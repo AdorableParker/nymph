@@ -34,11 +34,10 @@ object Tarot : SimpleCommand(
         if (group.botMuteRemaining > 0) return
 
         val r = divineTarot(user.id)
-//        PluginMain.logger.info { r["ImgPath"] }
         r["ImgPath"]?.let { path ->
             File(PluginMain.resolveDataPath(path).toString()).toExternalResource().use {
                 sendMessage(
-                    PlainText("${r["Brand"]}\n牌面含义关键词:${r["word"]}") + group.uploadImage(it)
+                    PlainText("${r["side"]}${r["Brand"]}\n牌面含义关键词:${r["word"]}") + group.uploadImage(it)
                 )
             }
         } ?: sendMessage("占卜失败")
@@ -66,13 +65,13 @@ object Tarot : SimpleCommand(
         r["seeds"] = seeds
         return when ((0..100).random(Random(seeds))) {
             in 0..50 -> mapOf(
-                "side" to "顺位",
+                "side" to "判定！顺位-",
                 "Brand" to brand,
                 "word" to r["Upright"].toString(),
                 "ImgPath" to r["uprightImg"].toString()
             )
             else -> mapOf(
-                "side" to "逆位",
+                "side" to "判定！逆位-",
                 "Brand" to brand,
                 "word" to r["Reversed"].toString(),
                 "ImgPath" to r["invertImg"].toString()

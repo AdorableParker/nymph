@@ -36,8 +36,6 @@ object SignIn : SimpleCommand(
         val oneWord = hitokoto()
         val tarot = divineTarot(uid)
 
-        val image = BufferedImage(720, 500, BufferedImage.TYPE_INT_ARGB)
-        val graphics = image.createGraphics()
         val themeColor = when (tarot["Brand"]) {
             "The Hanged Man(倒吊人)" -> Color.decode("#69b960")
             "The Emperor(皇帝)", "Justice(正义)", "The Chariot(战车)", "The Magician(魔术师)" -> Color.decode("#ff9e3e")
@@ -53,6 +51,9 @@ object SignIn : SimpleCommand(
             "The Moon(月亮)" -> Color.decode("#8a677d")
             else -> Color.WHITE
         }
+
+        val image = BufferedImage(720, 500, BufferedImage.TYPE_INT_ARGB)
+        val graphics = image.createGraphics()
         // 绘制背景色
         graphics.color = themeColor
         graphics.fillRect(0, 0, 720, 500)
