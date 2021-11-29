@@ -11,7 +11,6 @@ import com.example.navigatorTB_Nymph.MySetting.prohibitedWord
 import com.mayabot.nlp.module.summary.KeywordSummary
 import com.mayabot.nlp.segment.Lexers.coreBuilder
 import kotlinx.coroutines.cancel
-import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
 import net.mamoe.mirai.Bot
 import net.mamoe.mirai.console.command.CommandManager.INSTANCE.register
@@ -33,17 +32,12 @@ import net.mamoe.mirai.event.events.NudgeEvent
 import net.mamoe.mirai.event.globalEventChannel
 import net.mamoe.mirai.event.subscribeGroupMessages
 import net.mamoe.mirai.message.data.*
-import net.mamoe.mirai.utils.ExternalResource.Companion.toExternalResource
 import net.mamoe.mirai.utils.ExternalResource.Companion.uploadAsImage
 import net.mamoe.mirai.utils.MiraiExperimentalApi
 import net.mamoe.mirai.utils.debug
 import net.mamoe.mirai.utils.info
-import net.mamoe.mirai.utils.warning
-import java.io.File
 import java.io.InputStream
-import java.text.SimpleDateFormat
 import java.time.LocalDateTime
-import java.util.*
 
 data class Dynamic(val timestamp: Long, val text: String?, val imageStream: List<InputStream>?) {
     suspend fun getMessage(subject: Contact, uORb: UserOrBot, t: String): ForwardMessage =
@@ -529,15 +523,15 @@ object MyPluginData : AutoSavePluginData("TB_Data") { // "name" 是保存的文�
         )
     )
 
-    @ValueDescription("UID对照表")
-    val nameOfDynamic: MutableMap<Int, String> by value(
-        mutableMapOf(
-            233114659 to "AzurLane",
-            161775300 to "ArKnights",
-            233108841 to "FateGrandOrder",
-            401742377 to "GenShin"
-        )
-    )
+//    @ValueDescription("UID对照表")
+//    val nameOfDynamic: MutableMap<Int, String> by value(
+//        mutableMapOf(
+//            233114659 to "AzurLane",
+//            161775300 to "ArKnights",
+//            233108841 to "FateGrandOrder",
+//            401742377 to "GenShin"
+//        )
+//    )
 
     @ValueDescription("报时模式对照表")
     val tellTimeMode: MutableMap<Int, String> by value(
