@@ -33,7 +33,7 @@
 
 ### DLC
 
-* [**MirrorWorld**](https://github.com/AdorableParker/nymph/DLC)
+* [**MirrorWorld**](https://adorableparker.github.io/nymph/DLC)
 
 <!--
 ###说明
