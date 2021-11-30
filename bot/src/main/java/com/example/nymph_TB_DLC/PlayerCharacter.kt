@@ -5,17 +5,26 @@ import com.example.nymph_TB_DLC.MirrorWorldUser.userPermanent
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class PermanentData(var pt: Int)
-
-//val traits = mapOf(
-//    "-钞能力-"  to "可以通过花费金币改变判定结果",
-//    "-被剥削者-" to "金币收入-60%",
-//    "-皇室荣光-" to "可以终止对战或拒绝终止对战",
-//    "-被通缉者-" to "击败惩罚+50%",
-//    "-名人效应-" to "所有奖励和惩罚加成+50%",
-//    "-被传颂者-" to "所有惩罚-10%,所有奖励+10%",
-//    "-精打细算-" to "金币收入+50%"
-//)
+data class PermanentData(var pt: Int = 0, var pc: PlayerCharacter? = null) {
+    fun outInfo(): String {
+        return """拥有Pt:$pt
+        ==========
+        玩家角色:
+        ${pc?.info() ?: "角色未建立"}
+        """.trimIndent()
+    }
+}
+/*
+val traits = mapOf(
+    "-钞能力-"  to "可以通过花费金币改变判定结果",
+    "-被剥削者-" to "金币收入-60%",
+    "-皇室荣光-" to "可以终止对战或拒绝终止对战",
+    "-被通缉者-" to "击败惩罚+50%",
+    "-名人效应-" to "所有奖励和惩罚加成+50%",
+    "-被传颂者-" to "所有惩罚-10%,所有奖励+10%",
+    "-精打细算-" to "金币收入+50%"
+)
+ */
 
 
 @Serializable
@@ -41,7 +50,7 @@ data class Bar(var Max: Int) {
 }
 
 @Serializable
-class UserObj {
+class PlayerCharacter {
     private var gold: Int = 0                                       //金币，需要保留
 
     private var lv: Int = 1                                         //等级，不保留
@@ -50,7 +59,8 @@ class UserObj {
     private var bag = arrayOfNulls<Int>(16)                    //物品，不保留
     private var traitsList: MutableSet<String> = mutableSetOf()     //特质，不保留
     private var skillList: MutableSet<String> = mutableSetOf()      //技能，不保留
-    private var skillPrint: Int = 0                                  //技能点，不保留
+    private var skillPrint: Int = 0                                 //技能点，不保留
+    private var attributePrint: Int = 18                            //技能点，不保留
 
     //六维 不保留
     private var strength = 1                    //力量，最低为1，最高为7
@@ -60,10 +70,30 @@ class UserObj {
     private var agile = 1                       //敏捷，最低为1，最高为7
     private var luck = 0                        //运气，最低为0，最高为7
 
-    private var hp = Bar(lv * 100)           // 生命值，不保留
-    private var mp = Bar(lv * 20)            // 法力值，不保留
+    private var hp = Bar(lv * 100)         // 生命值，不保留
+    private var mp = Bar(lv * 20)          // 法力值，不保留
     private var atp = 0                         // 物理攻击，不保留
     private var spp = 0                         // 法术攻击，不保留
+
+    fun info(): String {
+        val buffer = StringBuilder()
+        for ((i, element) in traitsList.withIndex()) {
+            buffer.append(if (i % 2 == 1) "\t${element}" else "\n${element}")
+        }
+        return """
+            等级:$lv\t金币:${gold}枚
+            HP:${hp.current}/${hp.Max}\tMP:${mp.current}/${mp.Max}
+            AD:$atp\tAP:${spp}
+            经验:$userExp/${lv * lv}
+            闲置技能点:$skillPrint
+            拥有特质:$buffer
+            拥有技能:$buffer
+            ------六维加点------
+            力量:$strength\t法力:$magic
+            智力:$intelligence\t体质:$physique
+            敏捷:$agile\t运气:$luck
+            """.trimIndent()
+    }
 
 
     fun newRole(origin: Int, reputation: Int, profession: Int, traitsPrint: Int) {
@@ -95,7 +125,7 @@ class UserObj {
     private fun judge(goal: Int) = (0..100).random() + luck * 2 >= goal
 
     //普通攻击计算
-    fun attack(foe: UserObj): String {
+    fun attack(foe: PlayerCharacter): String {
         //闪避能力最先
         if (foe.skillList.contains("[闪避]") && foe.judge(80)) return "闪避了这次攻击"
         //闪避计算完成
@@ -147,7 +177,7 @@ class UserObj {
     }
 
     //玩家战斗胜利结算
-    fun settlement(foe: UserObj): String {
+    fun settlement(foe: PlayerCharacter): String {
         val exp = (((foe.lv * foe.lv) - (lv * lv)) * 0.2 * ((intelligence * 0.1) + 1) * getTraits("Exp")).toInt()
         val getGold = (getTraits("Gold") * foe.gold * 0.1).toInt()
         userExp += exp

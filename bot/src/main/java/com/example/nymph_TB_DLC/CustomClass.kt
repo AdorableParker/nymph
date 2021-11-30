@@ -13,11 +13,6 @@ object MirrorWorldUser : AutoSavePluginData("DLC_PlayerData") { // "name" 是保
     val userPermanent: MutableMap<Long, PermanentData> by value(
         mutableMapOf()
     )
-
-    @ValueDescription("玩家角色")
-    val userTemporary: MutableMap<Long, UserObj> by value(
-        mutableMapOf()
-    )
 }
 
 object MirrorWorldAssets : AutoSavePluginData("DLC_AssetsData") { // "name" 是保存的文件名 (不带后缀)
