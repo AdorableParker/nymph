@@ -3,7 +3,7 @@
 ## DLC
 
 * ### MirrorWorld
-   此内容需要在`Mirai`上拥有基础插件[`navigatorTB_Nymph`](https://github.com/AdorableParker/nymph/)才能运行
+   此内容需要在`Mirai`上拥有基础插件[`navigatorTB_Nymph`](https://adorableparker.github.io/nymph/)才能运行
   #### 关于此内容![(暂定)](https://img.shields.io/badge/_暂定-gray)
    暂定为大型娱乐性质功能  
    设定为**RPG**游戏
