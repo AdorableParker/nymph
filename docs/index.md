@@ -1,40 +1,29 @@
-# 自用QQ机器人的Mirai版本![(Beta)](https://img.shields.io/badge/_Beta-gray)
+# nymph_Bot_DLC![(Beta)](https://img.shields.io/badge/_Beta-gray)
 
 
+## DLC  
+此内容需要在`Mirai`上拥有基础插件`navigatorTB_Nymph`才能运行
+
+## 关于此内容![(暂定)](https://img.shields.io/badge/_暂定-gray)  
+暂定为大型娱乐性质功能  
+设定为**RPG**游戏  
 ## 已有功能
-* [X] 碧蓝航线的舰船经验计算器 ![`已完成`](https://img.shields.io/badge/_Achieved-green)
-* [X] 碧蓝航线的Wiki榜单图片爬取 ![`已完成`](https://img.shields.io/badge/_Achieved-green)
-* [X] 碧蓝航线的建造时间查询 ![`已完成`](https://img.shields.io/badge/_Achieved-green)
-* [X] 碧蓝航线的打捞地点查询 ![`已完成`](https://img.shields.io/badge/_Achieved-green)
-* [X] 主动查询`bilibili`的动态更新 ![`已完成`](https://img.shields.io/badge/_Achieved-green)
-* [X] 自动检测`bilibili`的动态更新并推送 ![`已完成`](https://img.shields.io/badge/_Achieved-green)
-* [X] 整点语音报时 ![`已完成`](https://img.shields.io/badge/_Achieved-green)
-* [X] 整点报时 ![`已完成`](https://img.shields.io/badge/_Achieved-green)
-  > 增加了`碧蓝航线`的报时
-* [X] 游戏每日提醒 ![`已完成`](https://img.shields.io/badge/_Achieved-green)
-* [X] 船名查询 ![`已完成`](https://img.shields.io/badge/_Achieved-green)
-* [X] 计算器 ![`已完成`](https://img.shields.io/badge/_Achieved-green)
-* [X] 自助禁言 ![`已完成`](https://img.shields.io/badge/_Achieved-green)
-* [X] 基于`SauceNao`的搜图 ![`已完成`](https://img.shields.io/badge/_Achieved-green)
-* [X] 智障聊天![`已完成`](https://img.shields.io/badge/_Achieved-green) 
-* [X] 半自动化同意入群邀请 ![`已完成`](https://img.shields.io/badge/_Achieved-green) 
-  > 有源于Mirai本身的问题
-* [X] 随机色图 ![`已完成`](https://img.shields.io/badge/_Achieved-green) 
-  > mirai更新了图片接口，目前停用中
-* [X] 众裁禁言 ![`已完成`](https://img.shields.io/badge/_Achieved-green)
-* [X] 塔罗占卜 ![`已完成`](https://img.shields.io/badge/_Achieved-green) 
-* [X] 点歌姬 ![`已完成`](https://img.shields.io/badge/_Achieved-green)
-* [X] 历史今日 - 军舰下水日期 ![`已完成`](https://img.shields.io/badge/_Achieved-green)
-* [X] 扫雷 ![`已完成`](https://img.shields.io/badge/_Achieved-green)
-* [X] 禁言决斗 ![`已完成`](https://img.shields.io/badge/_Achieved-green)
-* [X] 以图搜番 ![`已完成`](https://img.shields.io/badge/_Achieved-green)
-* [X] 一言 ![`已完成`](https://img.shields.io/badge/_Achieved-green)
-* [X] 签到 ![`正在推进`](https://img.shields.io/badge/-Underway-blue)  
+![`待推进`](https://img.shields.io/badge/-TODO-blue)
+## 设计中内容 ![(初稿)](https://img.shields.io/badge/初稿-gray)  
+> 以下内容随时可能变动或废弃
 
-| **说明** | **图标**                                                     |
+* 玩家对战
+* 死亡销档
+* 交易系统
+* 宠物系统
+* 副本系统
+* 随机事件
+
+<!-- | **说明** | **图标**                                                     |
 | -------: | :----------------------------------------------------------- |
 | 已经实现 | ![`已完成`](https://img.shields.io/badge/_Achieved-green)    |
 | 正在进行 | ![`正在推进`](https://img.shields.io/badge/-Underway-blue)   |
 | 暂时搁置 | ![`暂时搁置`](https://img.shields.io/badge/-Shelved-yellow)  |
 |   未测试 | ![`未测试`](https://img.shields.io/badge/-NotTested-red)     |
 | 不会实现 | ![`不会实现`](https://img.shields.io/badge/-Invalid-inactive) |
+ -->
