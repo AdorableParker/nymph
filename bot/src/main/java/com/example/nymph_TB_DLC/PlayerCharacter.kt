@@ -49,6 +49,7 @@ data class Bar(var Max: Int) {
     }
 }
 
+
 @Serializable
 class PlayerCharacter {
     private var gold: Int = 0                                       //金币，需要保留
@@ -60,20 +61,42 @@ class PlayerCharacter {
     private var traitsList: MutableSet<String> = mutableSetOf()     //特质，不保留
     private var skillList: MutableSet<String> = mutableSetOf()      //技能，不保留
     private var skillPrint: Int = 0                                 //技能点，不保留
-    private var attributePrint: Int = 18                            //技能点，不保留
+    private var attributePrint: Int = 18                            //属性点，不保留
 
     //六维 不保留
-    private var strength = 1                    //力量，最低为1，最高为7
-    private var magic = 1                       //法力，最低为1，最高为7
-    private var intelligence = 1                //智力，最低为1，最高为7
-    private var physique = 1                    //体质，最低为1，最高为7
-    private var agile = 1                       //敏捷，最低为1，最高为7
-    private var luck = 0                        //运气，最低为0，最高为7
 
-    private var hp = Bar(lv * 100)         // 生命值，不保留
-    private var mp = Bar(lv * 20)          // 法力值，不保留
-    private var atp = 0                         // 物理攻击，不保留
-    private var spp = 0                         // 法术攻击，不保留
+    /**力量*/
+    private var _str = 1                //最低为1，最高为7
+
+    /**法力*/
+    private var _men = 1                //最低为1，最高为7
+
+    /**智力*/
+    private var _int = 1                //最低为1，最高为7
+
+    /**体质*/
+    private var _vit = 1                //最低为1，最高为7
+
+    /**速度*/
+    private var _agi = 1                //最低为1，最高为7
+
+    /**运气*/
+    private var _lck = 0                //最低为0，最高为7
+    private var profession = arrayOf<Double>()  //职业属性曲线，不保留
+
+    /*
+                atk   mat    spd     hp    mp
+    2.骑士：[招架] 1.3   0.9    0.7    1.4   0.7 = 5
+    2.猎手：[闪避] 0.9   0.8    1.3    1.2   0.8 = 5
+    2.牧师：[回复] 1.1   1.1    0.9    0.9   1.0 = 5
+    2.法师：[附魔] 0.8   1.3    0.9    0.8   1.2 = 5
+     */
+
+    private var hp = Bar(0)         // 生命值，不保留
+    private var mp = Bar(0)         // 法力值，不保留
+    private var atk = 0                  // 物理攻击，不保留
+    private var mat = 0                  // 法术攻击，不保留
+    private var spd = 0                  // 行动速度，不保留
 
     fun info(): String {
         val buffer = StringBuilder()
@@ -83,20 +106,21 @@ class PlayerCharacter {
         return """
             等级:$lv\t金币:${gold}枚
             HP:${hp.current}/${hp.Max}\tMP:${mp.current}/${mp.Max}
-            AD:$atp\tAP:${spp}
+            ATK:$atk\tMAT:${mat}
             经验:$userExp/${lv * lv}
             闲置技能点:$skillPrint
             拥有特质:$buffer
             拥有技能:$buffer
             ------六维加点------
-            力量:$strength\t法力:$magic
-            智力:$intelligence\t体质:$physique
-            敏捷:$agile\t运气:$luck
+            力量:$_str\t法力:$_men
+            智力:$_int\t体质:$_vit
+            速度:$_agi\t运气:$_lck
             """.trimIndent()
     }
 
+    fun showAP() = attributePrint
 
-    fun newRole(origin: Int, reputation: Int, profession: Int, traitsPrint: Int) {
+    fun newRole(origin: Int, reputation: Int, prof: Int, traitsPrint: Int) {
         when (origin) {
             0 -> traitsList.add("-被剥削者-")
             2 -> {
@@ -113,16 +137,31 @@ class PlayerCharacter {
             2 -> traitsList.add("-名人效应-")
             3 -> traitsList.add("-被传颂者-")
         }
-        when (profession) {
-            0 -> skillList.add("[招架]")
-            1 -> skillList.add("[回复]")
-            2 -> skillList.add("[闪避]")
-            3 -> skillList.add("[附魔]")
+        profession = when (prof) {
+            1 -> {      //骑士
+                skillList.add("[招架]")
+                arrayOf(1.3, 0.9, 0.7, 1.4, 0.7)
+            }
+            2 -> {      //猎手
+                skillList.add("[闪避]")
+                arrayOf(0.9, 0.8, 1.3, 1.2, 0.8)
+            }
+            3 -> {      //牧师
+                skillList.add("[回复]")
+                arrayOf(1.1, 1.1, 0.9, 0.9, 1.0)
+            }
+            4 -> {      //法师
+                skillList.add("[附魔]")
+                arrayOf(0.8, 1.3, 0.9, 0.8, 1.2)
+            }
+            else -> {   //无职者
+                arrayOf(1.0, 1.0, 1.0, 1.0, 1.0)
+            }
         }
         skillPrint = traitsPrint
     }
 
-    private fun judge(goal: Int) = (0..100).random() + luck * 2 >= goal
+    private fun judge(goal: Int) = (0..100).random() + _lck - 4 + 5 / (2 + _lck) >= goal
 
     //普通攻击计算
     fun attack(foe: PlayerCharacter): String {
@@ -130,11 +169,11 @@ class PlayerCharacter {
         if (foe.skillList.contains("[闪避]") && foe.judge(80)) return "闪避了这次攻击"
         //闪避计算完成
         //初始化值
-        var ad = atp.toDouble()
+        var ad = atk.toDouble()
         var ap = 0.0
-        val magicDif = (magic - foe.magic) * 0.1 + 1
-        val strengthDif = (strength - foe.strength) * 0.1 + 1
-        val intelligenceDif = (intelligence - foe.intelligence) * 0.1 + 1
+        val magicDif = (_men - foe._men) * 0.1 + 1
+        val strengthDif = (_str - foe._str) * 0.1 + 1
+        val intelligenceDif = (_int - foe._int) * 0.1 + 1
         //攻击技能先算
         if (skillList.contains("[附魔]")) {
             ap = magicDif * intelligenceDif * ad * 0.5
@@ -178,7 +217,7 @@ class PlayerCharacter {
 
     //玩家战斗胜利结算
     fun settlement(foe: PlayerCharacter): String {
-        val exp = (((foe.lv * foe.lv) - (lv * lv)) * 0.2 * ((intelligence * 0.1) + 1) * getTraits("Exp")).toInt()
+        val exp = (((foe.lv * foe.lv) - (lv * lv)) * 0.2 * ((_int * 0.1) + 1) * getTraits("Exp")).toInt()
         val getGold = (getTraits("Gold") * foe.gold * 0.1).toInt()
         userExp += exp
         while (userExp >= lv * lv) {
@@ -196,7 +235,8 @@ class PlayerCharacter {
         return "你死了,本局游戏结束,角色数据删除,你获得${pt}积分"
     }
 
-    fun getAPS() = 40 / (agile + 2)
+    //战斗序列计算
+    fun getAPS() = 40 / (_agi + 2)
 }
 
 /*
@@ -245,8 +285,6 @@ class PlayerCharacter {
     2 小有名气：获得 -名人效应-
     3 声名远扬：获得 -被传颂者-
     #职业
-    2.骑士：[招架]
-    2.牧师：[回复]
-    2.猎手：[闪避]
-    2.法师：[附魔]
+
+
  */
