@@ -9,11 +9,8 @@ package com.example.navigatorTB_Nymph
 import net.mamoe.mirai.console.command.CommandManager
 import net.mamoe.mirai.console.command.MemberCommandSenderOnMessage
 import net.mamoe.mirai.console.command.SimpleCommand
-import net.mamoe.mirai.console.util.ConsoleExperimentalApi
-import net.mamoe.mirai.utils.MiraiExperimentalApi
 
-@MiraiExperimentalApi
-@ConsoleExperimentalApi
+
 object MyHelp : SimpleCommand(
     PluginMain, "Menu", "帮助", "菜单",
     description = "帮助命令"

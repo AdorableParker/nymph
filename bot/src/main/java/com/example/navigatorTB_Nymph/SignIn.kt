@@ -5,9 +5,7 @@ import com.example.navigatorTB_Nymph.Tarot.divineTarot
 import net.mamoe.mirai.console.command.CommandManager
 import net.mamoe.mirai.console.command.MemberCommandSenderOnMessage
 import net.mamoe.mirai.console.command.SimpleCommand
-import net.mamoe.mirai.console.util.ConsoleExperimentalApi
 import net.mamoe.mirai.contact.Contact.Companion.sendImage
-import net.mamoe.mirai.utils.MiraiExperimentalApi
 import java.awt.Color
 import java.awt.Font
 import java.awt.image.BufferedImage
@@ -18,8 +16,6 @@ import java.time.LocalDateTime
 import javax.imageio.ImageIO
 
 
-@MiraiExperimentalApi
-@ConsoleExperimentalApi
 object SignIn : SimpleCommand(
     PluginMain, "SignIn", "签到",
     description = "签到"

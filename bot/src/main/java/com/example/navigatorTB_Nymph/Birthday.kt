@@ -11,13 +11,11 @@ import com.example.navigatorTB_Nymph.UsageStatistics.record
 import net.mamoe.mirai.console.command.CommandManager
 import net.mamoe.mirai.console.command.MemberCommandSenderOnMessage
 import net.mamoe.mirai.console.command.SimpleCommand
-import net.mamoe.mirai.console.util.ConsoleExperimentalApi
 import net.mamoe.mirai.utils.MiraiExperimentalApi
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
-@MiraiExperimentalApi
-@ConsoleExperimentalApi
+
 object Birthday : SimpleCommand(
     PluginMain, "舰娘生日", "历史今天",
     description = "历史今日下水舰船"

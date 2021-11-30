@@ -6,8 +6,6 @@
 
 package com.example.navigatorTB_Nymph
 
-import net.mamoe.mirai.console.util.ConsoleExperimentalApi
-import net.mamoe.mirai.utils.MiraiExperimentalApi
 import net.mamoe.mirai.utils.debug
 import net.mamoe.mirai.utils.warning
 import java.nio.file.Path
@@ -17,8 +15,6 @@ import java.sql.ResultSet
 import java.sql.Statement
 
 
-@MiraiExperimentalApi
-@ConsoleExperimentalApi
 class SQLiteJDBC(DbPath: Path) {
     private var c: Connection? = null
 

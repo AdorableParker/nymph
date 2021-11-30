@@ -9,13 +9,10 @@ package com.example.navigatorTB_Nymph
 import com.example.navigatorTB_Nymph.UsageStatistics.record
 import net.mamoe.mirai.console.command.MemberCommandSenderOnMessage
 import net.mamoe.mirai.console.command.SimpleCommand
-import net.mamoe.mirai.console.util.ConsoleExperimentalApi
 import net.mamoe.mirai.contact.Member
 import net.mamoe.mirai.contact.isOperator
-import net.mamoe.mirai.utils.MiraiExperimentalApi
 
-@MiraiExperimentalApi
-@ConsoleExperimentalApi
+
 object AutoBanned : SimpleCommand(
     PluginMain, "AutoBanned", "自助禁言", "睡眠套餐",
     description = "用于解决群员的自闭需求"

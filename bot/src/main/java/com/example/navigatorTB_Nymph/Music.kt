@@ -12,12 +12,10 @@ import com.example.navigatorTB_Nymph.UsageStatistics.record
 import net.mamoe.mirai.console.command.CommandManager
 import net.mamoe.mirai.console.command.MemberCommandSenderOnMessage
 import net.mamoe.mirai.console.command.SimpleCommand
-import net.mamoe.mirai.console.util.ConsoleExperimentalApi
 import net.mamoe.mirai.message.data.Message
 import net.mamoe.mirai.message.data.MusicKind
 import net.mamoe.mirai.message.data.MusicShare
 import net.mamoe.mirai.message.data.PlainText
-import net.mamoe.mirai.utils.MiraiExperimentalApi
 import net.mamoe.mirai.utils.warning
 import org.jsoup.Jsoup
 import java.net.HttpURLConnection
@@ -34,8 +32,7 @@ data class MusicInfo(val type: MusicKind, val songName: String, val musicURL: St
     )
 }
 
-@MiraiExperimentalApi
-@ConsoleExperimentalApi
+
 object Music : SimpleCommand(
     PluginMain, "music", "点歌",
     description = "点歌姬"

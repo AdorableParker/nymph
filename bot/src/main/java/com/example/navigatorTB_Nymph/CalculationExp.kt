@@ -10,12 +10,8 @@ import com.example.navigatorTB_Nymph.UsageStatistics.record
 import net.mamoe.mirai.console.command.CommandManager.INSTANCE.commandPrefix
 import net.mamoe.mirai.console.command.MemberCommandSenderOnMessage
 import net.mamoe.mirai.console.command.SimpleCommand
-import net.mamoe.mirai.console.util.ConsoleExperimentalApi
-import net.mamoe.mirai.utils.MiraiExperimentalApi
 
 // 舰船经验计算器
-@MiraiExperimentalApi
-@ConsoleExperimentalApi
 object CalculationExp : SimpleCommand(
     PluginMain, "calculationExp", "舰船经验", "经验计算",
     description = "舰船经验计算器"

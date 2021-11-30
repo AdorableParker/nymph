@@ -6,7 +6,6 @@ import com.example.navigatorTB_Nymph.UsageStatistics.record
 import net.mamoe.mirai.console.command.CommandManager
 import net.mamoe.mirai.console.command.MemberCommandSenderOnMessage
 import net.mamoe.mirai.console.command.SimpleCommand
-import net.mamoe.mirai.console.util.ConsoleExperimentalApi
 import net.mamoe.mirai.contact.Group
 import net.mamoe.mirai.message.data.Image
 import net.mamoe.mirai.message.data.Image.Key.queryUrl
@@ -14,19 +13,18 @@ import net.mamoe.mirai.message.data.Message
 import net.mamoe.mirai.message.data.PlainText
 import net.mamoe.mirai.message.data.buildMessageChain
 import net.mamoe.mirai.utils.ExternalResource.Companion.uploadAsImage
-import net.mamoe.mirai.utils.MiraiExperimentalApi
 import net.mamoe.mirai.utils.warning
 import org.jsoup.Jsoup
 import java.net.URL
 
-@ConsoleExperimentalApi
-@MiraiExperimentalApi
+
 object TraceMoe : SimpleCommand(
     PluginMain, "TraceMoe", "搜番",
     description = "以图搜番"
 
 ) {
     override val usage: String = "${CommandManager.commandPrefix}搜番 [图片]"
+
 
     @Handler
     suspend fun MemberCommandSenderOnMessage.main(image: Image) {
@@ -48,7 +46,7 @@ object TraceMoe : SimpleCommand(
         sendMessage("$error")
     }
 
-    @ConsoleExperimentalApi
+
     private fun getJSON(img: String): String? {
         val url = "https://api.trace.moe/search?anilistInfo&cutBorders&url=$img"
         runCatching {

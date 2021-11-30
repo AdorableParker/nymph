@@ -4,11 +4,8 @@ import com.example.navigatorTB_Nymph.UsageStatistics.record
 import net.mamoe.mirai.console.command.CommandManager
 import net.mamoe.mirai.console.command.MemberCommandSenderOnMessage
 import net.mamoe.mirai.console.command.SimpleCommand
-import net.mamoe.mirai.console.util.ConsoleExperimentalApi
-import net.mamoe.mirai.utils.MiraiExperimentalApi
 
-@MiraiExperimentalApi
-@ConsoleExperimentalApi
+
 object RollDice : SimpleCommand(
     PluginMain, "rollDice", "判定",
     description = "简易骰娘"

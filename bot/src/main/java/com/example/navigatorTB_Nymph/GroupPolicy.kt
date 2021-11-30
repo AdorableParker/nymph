@@ -11,16 +11,13 @@ import com.example.navigatorTB_Nymph.UsageStatistics.record
 import net.mamoe.mirai.console.command.CommandManager
 import net.mamoe.mirai.console.command.CompositeCommand
 import net.mamoe.mirai.console.command.MemberCommandSenderOnMessage
-import net.mamoe.mirai.console.util.ConsoleExperimentalApi
 import net.mamoe.mirai.contact.Member
 import net.mamoe.mirai.contact.isOperator
 import net.mamoe.mirai.message.data.At
 import net.mamoe.mirai.message.data.PlainText
 import net.mamoe.mirai.message.data.buildMessageChain
-import net.mamoe.mirai.utils.MiraiExperimentalApi
 
-@MiraiExperimentalApi
-@ConsoleExperimentalApi
+
 object GroupPolicy : CompositeCommand(
     PluginMain, "GroupPolicy", "群策略",
     description = "群功能个性化配置"

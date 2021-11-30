@@ -45,8 +45,7 @@ enum class Piece {
     abstract fun rival(): Piece
 }
 
-@MiraiExperimentalApi
-@ConsoleExperimentalApi
+@OptIn(MiraiExperimentalApi::class, ConsoleExperimentalApi::class)
 class TicTacToe(solve: Boolean) {
     private val locate = arrayOf(
         Grid(1, 1), Grid(1, 2), Grid(1, 3),
@@ -333,8 +332,7 @@ class TicTacToe(solve: Boolean) {
     }
 }
 
-@MiraiExperimentalApi
-@ConsoleExperimentalApi
+
 object TicTacToeGame : CompositeCommand(
     PluginMain, "TicTacToe", "井字棋",
     description = "井字棋游戏实现"

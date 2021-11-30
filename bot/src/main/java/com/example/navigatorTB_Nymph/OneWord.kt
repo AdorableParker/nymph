@@ -5,12 +5,9 @@ import com.beust.klaxon.Parser
 import net.mamoe.mirai.console.command.CommandManager
 import net.mamoe.mirai.console.command.MemberCommandSenderOnMessage
 import net.mamoe.mirai.console.command.SimpleCommand
-import net.mamoe.mirai.console.util.ConsoleExperimentalApi
-import net.mamoe.mirai.utils.MiraiExperimentalApi
 import org.jsoup.Jsoup
 
-@MiraiExperimentalApi
-@ConsoleExperimentalApi
+
 object OneWord : SimpleCommand(
     PluginMain, "OneWord", "一言",
     description = "一言"

@@ -3,10 +3,8 @@ package com.example.navigatorTB_Nymph
 import com.example.navigatorTB_Nymph.UsageStatistics.record
 import net.mamoe.mirai.console.command.CompositeCommand
 import net.mamoe.mirai.console.command.MemberCommandSenderOnMessage
-import net.mamoe.mirai.console.util.ConsoleExperimentalApi
 import net.mamoe.mirai.contact.Contact.Companion.sendImage
 import net.mamoe.mirai.contact.isOperator
-import net.mamoe.mirai.utils.MiraiExperimentalApi
 import net.mamoe.mirai.utils.debug
 import java.awt.Color
 import java.awt.Font
@@ -15,8 +13,7 @@ import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import javax.imageio.ImageIO
 
-@MiraiExperimentalApi
-@ConsoleExperimentalApi
+
 object MinesweeperGame : CompositeCommand(
     PluginMain, "MinesweeperGame", "扫雷",
     description = "扫雷游戏实现"
@@ -108,8 +105,7 @@ object MinesweeperGame : CompositeCommand(
     }
 }
 
-@ConsoleExperimentalApi
-@MiraiExperimentalApi
+
 class Minesweeper(type: Int, w: Int = 0, h: Int = 0, mine: Int = 0, val punishment: Boolean = false) {
     private val width: Int
     private val high: Int

@@ -9,12 +9,9 @@ package com.example.navigatorTB_Nymph
 import net.mamoe.mirai.console.command.MemberCommandSenderOnMessage
 import net.mamoe.mirai.console.command.SimpleCommand
 import net.mamoe.mirai.console.command.isUser
-import net.mamoe.mirai.console.util.ConsoleExperimentalApi
-import net.mamoe.mirai.utils.MiraiExperimentalApi
 import net.mamoe.mirai.utils.info
 
-@MiraiExperimentalApi
-@ConsoleExperimentalApi
+
 object Test : SimpleCommand(
     PluginMain, "Test", "测试",
     description = "功能测试命令"

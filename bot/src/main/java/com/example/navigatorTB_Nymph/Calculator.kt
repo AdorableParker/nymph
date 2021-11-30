@@ -10,15 +10,12 @@ import com.example.navigatorTB_Nymph.UsageStatistics.record
 import net.mamoe.mirai.console.command.CommandManager
 import net.mamoe.mirai.console.command.MemberCommandSenderOnMessage
 import net.mamoe.mirai.console.command.SimpleCommand
-import net.mamoe.mirai.console.util.ConsoleExperimentalApi
-import net.mamoe.mirai.utils.MiraiExperimentalApi
 import java.math.BigDecimal
 import java.math.RoundingMode
 import java.util.*
 import kotlin.math.PI
 
-@MiraiExperimentalApi
-@ConsoleExperimentalApi
+
 object Calculator : SimpleCommand(
     PluginMain, "Calculator", "计算器", "计算",
     description = "计算器"

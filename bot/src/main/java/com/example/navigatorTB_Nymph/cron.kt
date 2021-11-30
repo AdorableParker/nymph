@@ -7,8 +7,6 @@
 package com.example.navigatorTB_Nymph
 
 import kotlinx.coroutines.delay
-import net.mamoe.mirai.console.util.ConsoleExperimentalApi
-import net.mamoe.mirai.utils.MiraiExperimentalApi
 import net.mamoe.mirai.utils.info
 import java.time.LocalDateTime
 import java.time.ZoneOffset
@@ -21,8 +19,6 @@ class CronJob {
     private var calibrationCountdown = 0 //校准次数
     private val timeAxis = mutableMapOf<Int, MutableList<Pair<Interval, suspend () -> Unit>>>() // 任务列表时间轴
 
-    @MiraiExperimentalApi
-    @ConsoleExperimentalApi
     suspend fun start() {
         while (true) {
             val t = LocalDateTime.now()

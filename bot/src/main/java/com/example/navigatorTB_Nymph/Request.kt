@@ -9,14 +9,10 @@ package com.example.navigatorTB_Nymph
 import net.mamoe.mirai.console.command.CommandSenderOnMessage
 import net.mamoe.mirai.console.command.SimpleCommand
 import net.mamoe.mirai.console.command.isUser
-import net.mamoe.mirai.console.util.ConsoleExperimentalApi
 import net.mamoe.mirai.event.events.MessageEvent
-import net.mamoe.mirai.utils.MiraiExperimentalApi
 import net.mamoe.mirai.utils.debug
 
 
-@MiraiExperimentalApi
-@ConsoleExperimentalApi
 object Request : SimpleCommand(
     PluginMain, "授权批准",
     description = "加群申请处理"

@@ -13,16 +13,12 @@ import com.example.navigatorTB_Nymph.UsageStatistics.record
 import net.mamoe.mirai.console.command.CommandManager
 import net.mamoe.mirai.console.command.MemberCommandSenderOnMessage
 import net.mamoe.mirai.console.command.SimpleCommand
-import net.mamoe.mirai.console.util.ConsoleExperimentalApi
 import net.mamoe.mirai.message.data.Image
 import net.mamoe.mirai.message.data.Image.Key.queryUrl
-import net.mamoe.mirai.utils.MiraiExperimentalApi
 import net.mamoe.mirai.utils.info
 import org.jsoup.Jsoup
 
 
-@MiraiExperimentalApi
-@ConsoleExperimentalApi
 object SauceNAO : SimpleCommand(
     PluginMain, "SauceNAO", "搜图",
     description = "以图搜图"
@@ -125,7 +121,6 @@ object SauceNAO : SimpleCommand(
         }
     }
 
-    @ConsoleExperimentalApi
     private fun getJSON(img: String): String? {
         val url = if (SauceNAOKey == "你的Key") "https://saucenao.com/search.php?db=999&dbmaski=32768&url=$img"
         else "https://saucenao.com/search.php?output_type=2&numres=1&db=999&api_key=$SauceNAOKey&url=$img"

@@ -10,12 +10,9 @@ import net.mamoe.mirai.console.command.CommandManager
 import net.mamoe.mirai.console.command.CommandSenderOnMessage
 import net.mamoe.mirai.console.command.CompositeCommand
 import net.mamoe.mirai.console.command.isUser
-import net.mamoe.mirai.console.util.ConsoleExperimentalApi
 import net.mamoe.mirai.event.events.MessageEvent
-import net.mamoe.mirai.utils.MiraiExperimentalApi
 
-@ConsoleExperimentalApi
-@MiraiExperimentalApi
+
 object AssetDataAccess : CompositeCommand(
     PluginMain, "AssetDataAccess", "写入资产",
     description = "资产数据库写入操作"

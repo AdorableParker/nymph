@@ -2,7 +2,6 @@ package com.example.navigatorTB_Nymph
 
 import net.mamoe.mirai.console.command.CompositeCommand
 import net.mamoe.mirai.console.command.MemberCommandSenderOnMessage
-import net.mamoe.mirai.console.util.ConsoleExperimentalApi
 import net.mamoe.mirai.message.data.At
 import net.mamoe.mirai.message.data.PlainText
 import net.mamoe.mirai.utils.MiraiExperimentalApi
@@ -11,12 +10,11 @@ import com.example.navigatorTB_Nymph.Birthday.main as birthday
 import com.example.navigatorTB_Nymph.Tarot.main as tarot
 
 
-@MiraiExperimentalApi
-@ConsoleExperimentalApi
 object Schedule : CompositeCommand(
     PluginMain, "Schedule", "日程",
     description = "日程表"
 ) {
+    @OptIn(MiraiExperimentalApi::class)
     @SubCommand("添加")
     suspend fun MemberCommandSenderOnMessage.addSchedule(startTime: Int, content: String) {
         if (group.botMuteRemaining > 0) return

@@ -10,11 +10,8 @@ import com.example.navigatorTB_Nymph.UsageStatistics.record
 import net.mamoe.mirai.console.command.CommandManager
 import net.mamoe.mirai.console.command.MemberCommandSenderOnMessage
 import net.mamoe.mirai.console.command.SimpleCommand
-import net.mamoe.mirai.console.util.ConsoleExperimentalApi
-import net.mamoe.mirai.utils.MiraiExperimentalApi
 
-@MiraiExperimentalApi
-@ConsoleExperimentalApi
+
 object ShipMap : SimpleCommand(
     PluginMain, "ShipMap", "打捞定位",
     description = "碧蓝航线舰船打捞定位"

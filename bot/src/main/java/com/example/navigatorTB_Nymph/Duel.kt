@@ -4,18 +4,15 @@ import com.example.navigatorTB_Nymph.MyPluginData.duelTime
 import com.example.navigatorTB_Nymph.UsageStatistics.record
 import net.mamoe.mirai.console.command.CompositeCommand
 import net.mamoe.mirai.console.command.MemberCommandSenderOnMessage
-import net.mamoe.mirai.console.util.ConsoleExperimentalApi
 import net.mamoe.mirai.contact.Group
 import net.mamoe.mirai.contact.Member
 import net.mamoe.mirai.contact.isOperator
 import net.mamoe.mirai.contact.nameCardOrNick
 import net.mamoe.mirai.message.data.At
 import net.mamoe.mirai.message.data.PlainText
-import net.mamoe.mirai.utils.MiraiExperimentalApi
 import java.time.Instant
 
-@MiraiExperimentalApi
-@ConsoleExperimentalApi
+
 class Gun(val adversary: Member) {
     private val magazine: MutableList<Int>
     private var tracer = 0
@@ -79,8 +76,7 @@ class Gun(val adversary: Member) {
 
 }
 
-@MiraiExperimentalApi
-@ConsoleExperimentalApi
+
 object Duel : CompositeCommand(
     PluginMain, "Duel", "决斗",
     description = "禁言决斗，用于普通群员与普通群员之间解决冲突"

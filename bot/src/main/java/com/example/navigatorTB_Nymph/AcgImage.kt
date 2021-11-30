@@ -3,12 +3,8 @@ package com.example.navigatorTB_Nymph
 import com.example.navigatorTB_Nymph.UsageStatistics.record
 import net.mamoe.mirai.console.command.MemberCommandSenderOnMessage
 import net.mamoe.mirai.console.command.SimpleCommand
-import net.mamoe.mirai.console.util.ConsoleExperimentalApi
-import net.mamoe.mirai.utils.MiraiExperimentalApi
 
 
-@MiraiExperimentalApi
-@ConsoleExperimentalApi
 object AcgImage : SimpleCommand(
     PluginMain, "acgImage", "随机图片",
     description = "随机发送acg图片"

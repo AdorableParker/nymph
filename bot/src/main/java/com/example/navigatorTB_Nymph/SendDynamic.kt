@@ -12,21 +12,18 @@ import com.example.navigatorTB_Nymph.UsageStatistics.record
 import net.mamoe.mirai.console.command.CommandManager
 import net.mamoe.mirai.console.command.CompositeCommand
 import net.mamoe.mirai.console.command.MemberCommandSenderOnMessage
-import net.mamoe.mirai.console.util.ConsoleExperimentalApi
 import net.mamoe.mirai.contact.Contact.Companion.sendImage
 import net.mamoe.mirai.contact.Group
 import net.mamoe.mirai.contact.UserOrBot
 import net.mamoe.mirai.message.data.Message
 import net.mamoe.mirai.message.data.PlainText
-import net.mamoe.mirai.utils.MiraiExperimentalApi
 import org.jsoup.Jsoup
 import java.io.InputStream
 import java.net.URL
 import java.text.SimpleDateFormat
 import java.util.*
 
-@MiraiExperimentalApi
-@ConsoleExperimentalApi
+
 object SendDynamic : CompositeCommand(
     PluginMain, "SendDynamic", "动态查询",
     description = "B站动态查询"

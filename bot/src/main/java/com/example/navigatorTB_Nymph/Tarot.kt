@@ -10,7 +10,6 @@ import com.example.navigatorTB_Nymph.UsageStatistics.record
 import net.mamoe.mirai.console.command.CommandManager
 import net.mamoe.mirai.console.command.MemberCommandSenderOnMessage
 import net.mamoe.mirai.console.command.SimpleCommand
-import net.mamoe.mirai.console.util.ConsoleExperimentalApi
 import net.mamoe.mirai.message.data.PlainText
 import net.mamoe.mirai.utils.ExternalResource.Companion.toExternalResource
 import net.mamoe.mirai.utils.MiraiExperimentalApi
@@ -19,8 +18,6 @@ import java.time.LocalDateTime
 import kotlin.random.Random
 
 
-@MiraiExperimentalApi
-@ConsoleExperimentalApi
 object Tarot : SimpleCommand(
     PluginMain, "DailyTarot", "每日塔罗",
     description = "塔罗占卜"

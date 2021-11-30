@@ -23,7 +23,6 @@ import net.mamoe.mirai.console.data.ValueDescription
 import net.mamoe.mirai.console.data.value
 import net.mamoe.mirai.console.plugin.jvm.JvmPluginDescription
 import net.mamoe.mirai.console.plugin.jvm.KotlinPlugin
-import net.mamoe.mirai.console.util.ConsoleExperimentalApi
 import net.mamoe.mirai.contact.Contact
 import net.mamoe.mirai.contact.Member
 import net.mamoe.mirai.contact.UserOrBot
@@ -115,8 +114,7 @@ data class Dynamic(
 @Serializable
 class GroupCertificate(val principal_ID: Long = 0L, val flag: Boolean = false, val from: Long = 0L)
 
-@MiraiExperimentalApi
-@ConsoleExperimentalApi
+
 object PluginMain : KotlinPlugin(
     JvmPluginDescription(
         id = "MCP.navigatorTB_Nymph",
@@ -141,6 +139,8 @@ object PluginMain : KotlinPlugin(
     val BothSidesDuel = mutableMapOf<Member, Gun>()
     val CRON = CronJob()
 
+
+    @OptIn(MiraiExperimentalApi::class)
     override fun onEnable() {
         MySetting.reload() // 从数据库自动读
         MyPluginData.reload()
@@ -227,7 +227,6 @@ object PluginMain : KotlinPlugin(
         }
         // 退群清理
         this.globalEventChannel().subscribeAlways<BotLeaveEvent.Kick> {
-
             val dbObject = SQLiteJDBC(resolveDataPath("User.db"))
             val pR = dbObject.selectOne("Responsible", "group_id", group.id, 1)
             dbObject.delete("Policy", "group_id", group.id.toString())
@@ -342,7 +341,7 @@ object PluginMain : KotlinPlugin(
     }
 
     /* 每日提醒 */
-    private suspend fun dailyReminder() {
+    private suspend inline fun dailyReminder() {
         logger.info { "执行任务：每日提醒" }
         val dbObject = SQLiteJDBC(resolveDataPath("User.db"))
         val groupList = dbObject.select("Policy", "DailyReminderMode", 0, 5)
@@ -386,7 +385,7 @@ object PluginMain : KotlinPlugin(
     }
 
     /* 报时 */
-    private suspend fun tellTime() {
+    private suspend inline fun tellTime() {
         logger.info { "执行任务：整点报时" }
         val time = LocalDateTime.now().hour
         val dbObject = SQLiteJDBC(resolveDataPath("AssetData.db"))
@@ -431,7 +430,7 @@ object PluginMain : KotlinPlugin(
     }
 
     /* 动态推送 */
-    private suspend fun dynamicPush() {
+    private suspend inline fun dynamicPush() {
         logger.info { "执行任务：动态推送" }
         for (list in MyPluginData.timeStampOfDynamic) {
             val dynamic = SendDynamic.getDynamic(list.key, 0, flag = true)

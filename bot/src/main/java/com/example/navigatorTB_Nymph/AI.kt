@@ -8,14 +8,11 @@ package com.example.navigatorTB_Nymph
 
 import net.mamoe.mirai.console.command.CompositeCommand
 import net.mamoe.mirai.console.command.MemberCommandSenderOnMessage
-import net.mamoe.mirai.console.util.ConsoleExperimentalApi
 import net.mamoe.mirai.contact.Group
 import net.mamoe.mirai.utils.ExternalResource.Companion.toExternalResource
-import net.mamoe.mirai.utils.MiraiExperimentalApi
 import java.io.File
 
-@MiraiExperimentalApi
-@ConsoleExperimentalApi
+
 object AI : CompositeCommand(
     PluginMain, "AI",
     description = "AI功能"
@@ -225,7 +222,7 @@ object AI : CompositeCommand(
             s.toList().forEach { a.add(it.toString()) }
             wordList.toList().forEach { b.add(it.toString()) }
 
-            val jaccardIndex = (a intersect b).size.toDouble() / (a union b).size.toDouble()
+            val jaccardIndex = (a intersect b.toSet()).size.toDouble() / (a union b).size.toDouble()
             when {
                 jaccardIndex > jaccardMax -> {
                     jaccardMax = jaccardIndex
