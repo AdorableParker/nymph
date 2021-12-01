@@ -15,6 +15,7 @@ import net.mamoe.mirai.console.command.MemberCommandSenderOnMessage
 import net.mamoe.mirai.console.command.SimpleCommand
 import net.mamoe.mirai.console.plugin.jvm.JvmPluginDescription
 import net.mamoe.mirai.console.plugin.jvm.KotlinPlugin
+import net.mamoe.mirai.contact.Group
 import net.mamoe.mirai.event.events.GroupMessageEvent
 import net.mamoe.mirai.event.nextEvent
 
@@ -54,6 +55,12 @@ private suspend fun MemberCommandSenderOnMessage.yesOrNo(theme: String, no: Stri
         }
     }
     return false
+}
+
+class DLCPerm {
+    fun inquire(group: Group): Boolean = DLCPermData.dlc_permList.contains(group)
+    fun _enable_DLC(group: Group) = DLCPermData.dlc_permList.add(group)
+    fun _disable_DLC(group: Group): Boolean = DLCPermData.dlc_permList.remove(group)
 }
 
 
@@ -101,7 +108,7 @@ object PermanentBuild : SimpleCommand(
 }
 
 object APAllot : CompositeCommand(
-    DLC, "属性点分配",
+    DLC, "属性点",
     description = "分配属性点"
 ) {
     @SubCommand("分配")
@@ -125,23 +132,26 @@ object APAllot : CompositeCommand(
         sendMessage("[30秒]请按照以下顺序输入点数分配方案(各项之间使用冒号分割)：\n力量：法力：智力:体质：速度：运气")
         val lt = arrayOf(6)
         val enter = false
-        while (!enter) {
+        GetPlan@ while (!enter) {
             // 获取用户输入
             val plan = nextEvent<GroupMessageEvent>(30_000) { it.sender == user }.message.contentToString()
                 .split(":", "：", limit = 7)
             // 判断输入数量
             if (plan.size < 6) {
                 sendMessage("[30秒]参数数量不匹配,请重新输入")
-                break
+                continue
             }
             // 按顺序分配
             for (i in 0..5) {
                 when (val apv = plan[i].toIntOrNull()) { //检查输入合法性
-                    null -> sendMessage("属性值必须为整数")
+                    null -> {
+                        sendMessage("属性值必须为整数")
+                        continue@GetPlan
+                    }
                     in 0..7 -> lt[i] = apv
                     else -> {
-                        sendMessage("每项最多为其分配7点,请重新输入")
-                        break
+                        sendMessage("[30秒]每项最多为其分配7点,请重新输入")
+                        continue@GetPlan
                     }
                 }
             }
@@ -153,21 +163,22 @@ object APAllot : CompositeCommand(
             val mod = Tool(lt)
             sendMessage(
                 """方案有效,生成角色属性预览如下
-            等级:\t1
-            HP:${mod.draftHP()}\tMP:${mod.draftMP()}
-            ATK:${mod.draftATK()}\tMAT:${mod.draftMAT()}
-            ${mod.show6D()}
-            """.trimIndent()
+                等级:\t1
+                HP:${mod.draftHP()}\tMP:${mod.draftMP()}
+                ATK:${mod.draftATK()}\tMAT:${mod.draftMAT()}
+                ${mod.show6D()}
+                """.trimIndent()
             )
-            // 用户确定
-            if (yesOrNo(
-                    "确定当前方案？（剩余未分配的属性点将会以1属性点:${ExchangeRate}金币的比例自动转化为金币值）\n确定属性后,不可再次更改",
-                    "点数分配取消"
-                )
-            ) return else break
         }
+        // 用户确定
+        if (yesOrNo(
+                "确定当前方案？（剩余未分配的属性点将会以1属性点:${ExchangeRate}金币的比例自动转化为金币值）\n确定属性后,不可再次更改",
+                "点数分配取消"
+            )
+        ) return
+
         userData.pc!!.set6D(lt)
-        sendMessage("点数设定完成")
+        sendMessage("点数设定完成,可进行特性/技能学习")
     }
 }
 

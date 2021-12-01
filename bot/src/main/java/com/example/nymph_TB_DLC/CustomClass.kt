@@ -4,6 +4,7 @@ import net.mamoe.mirai.console.data.AutoSavePluginConfig
 import net.mamoe.mirai.console.data.AutoSavePluginData
 import net.mamoe.mirai.console.data.ValueDescription
 import net.mamoe.mirai.console.data.value
+import net.mamoe.mirai.contact.Group
 
 // 定义插件数据
 object MirrorWorldUser : AutoSavePluginData("DLC_PlayerData") { // "name" 是保存的文件名 (不带后缀)
@@ -14,6 +15,10 @@ object MirrorWorldUser : AutoSavePluginData("DLC_PlayerData") { // "name" 是保
     val userPermanent: MutableMap<Long, PermanentData> by value(
         mutableMapOf()
     )
+}
+
+object DLCPermData : AutoSavePluginData("DLC_PermData") {
+    var dlc_permList: ArrayList<Group> by value()
 }
 
 object MirrorWorldAssets : AutoSavePluginData("DLC_AssetsData") { // "name" 是保存的文件名 (不带后缀)
