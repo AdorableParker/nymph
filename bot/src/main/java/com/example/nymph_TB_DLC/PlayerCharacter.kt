@@ -1,8 +1,11 @@
 package com.example.nymph_TB_DLC
 
 import com.example.nymph_TB_DLC.MirrorWorldAssets.PositiveCorrection
+import com.example.nymph_TB_DLC.MirrorWorldConfig.AttackModifier
 import com.example.nymph_TB_DLC.MirrorWorldUser.userPermanent
 import kotlinx.serialization.Serializable
+import kotlin.math.roundToInt
+import kotlin.math.sqrt
 
 @Serializable
 data class PermanentData(var pt: Int = 0, var pc: PlayerCharacter? = null) {
@@ -49,42 +52,42 @@ data class Bar(var Max: Int) {
     }
 }
 
-
+/**角色对象 */
 @Serializable
 class PlayerCharacter {
     private var gold: Int = 0                                       //金币，需要保留
 
-    private var lv: Int = 1                                         //等级，不保留
-    private var userExp: Int = 0                                    //经验，不保留
-    private var ship = arrayOfNulls<Int>(5)                    //同伴，不保留
-    private var bag = arrayOfNulls<Int>(16)                    //物品，不保留
-    private var traitsList: MutableSet<String> = mutableSetOf()     //特质，不保留
-    private var skillList: MutableSet<String> = mutableSetOf()      //技能，不保留
-    private var skillPrint: Int = 0                                 //技能点，不保留
-    private var attributePrint: Int = 18                            //属性点，不保留
+    private var lv: Int = 1                                         //等级
+    private var userExp: Int = 0                                    //经验
+    private var ship = arrayOfNulls<Int>(5)                    //同伴
+    private var bag = arrayOfNulls<Int>(16)                    //物品
+    private var traitsList: MutableSet<String> = mutableSetOf()     //特质
+    private var skillList: MutableSet<String> = mutableSetOf()      //技能
+    private var skillPrint: Int = 0                                 //技能点
+    private var attributePrint: Int = 22                            //属性点
 
-    //六维 不保留
+    //六维
 
-    /**力量*/
-    private var _str = 1                //最低为1，最高为7
+    /**力量: 1..8*/
+    private var _str = 1
 
-    /**法力*/
-    private var _men = 1                //最低为1，最高为7
+    /**法力: 1..8*/
+    private var _men = 1
 
-    /**智力*/
-    private var _int = 1                //最低为1，最高为7
+    /**智力: 1..8*/
+    private var _int = 1
 
-    /**体质*/
-    private var _vit = 1                //最低为1，最高为7
+    /**体质: 1..8*/
+    private var _vit = 1
 
-    /**速度*/
-    private var _agi = 1                //最低为1，最高为7
+    /**速度: 1..8*/
+    private var _agi = 1
 
-    /**运气*/
-    private var _lck = 0                //最低为0，最高为7
-    private var profession = arrayOf<Double>()  //职业属性曲线，不保留
+    /**运气: 1..8*/
+    private var _lck = 1
+    private var profession = arrayOf<Double>()  //职业属性曲线
 
-    /*
+    /* 成长曲线
                 atk   mat    spd     hp    mp
     2.骑士：[招架] 1.3   0.9    0.7    1.4   0.7 = 5
     2.猎手：[闪避] 0.9   0.8    1.3    1.2   0.8 = 5
@@ -92,11 +95,11 @@ class PlayerCharacter {
     2.法师：[附魔] 0.8   1.3    0.9    0.8   1.2 = 5
      */
 
-    private var hp = Bar(0)         // 生命值，不保留
-    private var mp = Bar(0)         // 法力值，不保留
-    private var atk = 0                  // 物理攻击，不保留
-    private var mat = 0                  // 法术攻击，不保留
-    private var spd = 0                  // 行动速度，不保留
+    private var hp = Bar(0)         // 生命值
+    private var mp = Bar(0)         // 法力值
+    private var atk = 0                  // 物理攻击
+    private var mat = 0                  // 法术攻击
+    private var spd = 0                  // 行动速度
 
     fun info(): String {
         val buffer = StringBuilder()
@@ -171,9 +174,9 @@ class PlayerCharacter {
         //初始化值
         var ad = atk.toDouble()
         var ap = 0.0
-        val magicDif = (_men - foe._men) * 0.1 + 1
-        val strengthDif = (_str - foe._str) * 0.1 + 1
-        val intelligenceDif = (_int - foe._int) * 0.1 + 1
+        val magicDif = (_men - foe._men) * AttackModifier + 1
+        val strengthDif = (_str - foe._str) * AttackModifier + 1
+        val intelligenceDif = (_int - foe._int) * AttackModifier + 1
         //攻击技能先算
         if (skillList.contains("[附魔]")) {
             ap = magicDif * intelligenceDif * ad * 0.5
@@ -185,7 +188,7 @@ class PlayerCharacter {
         if (foe.skillList.contains("[招架]") && judge(50)) {
             ad /= 7
         }
-        val damage = (ap + ad).toInt()
+        val damage = (ap + ad).roundToInt()
         return if (foe.hp.harm(damage)) "最终受到了${damage}点伤害" else "被打败了"
     }
 
@@ -237,6 +240,44 @@ class PlayerCharacter {
 
     //战斗序列计算
     fun getAPS() = 40 / (_agi + 2)
+    fun set6D(plan: Array<Int>) {
+        _str += plan[0]
+        _men += plan[1]
+        _int += plan[2]
+        _vit += plan[3]
+        _agi += plan[4]
+        _lck += plan[5]
+    }
+}
+
+class Tool(sixD: Array<Int>) {
+    private val _str = sixD[0] + 1  //力
+    private val _men = sixD[1] + 1  //法
+    private val _int = sixD[2] + 1  //智
+    private val _vit = sixD[3] + 1  //体
+    private val _agi = sixD[4] + 1  //敏
+    private val _lck = sixD[5] + 1  //运
+
+    fun draftHP(lv: Int = 1, profession: Double = 1.0) =
+        ((9 * _vit + _str + 45) / 8.0 * 54 * profession + sqrt(lv * 235.7) * 5).roundToInt()
+
+    fun draftMP(lv: Int = 1, profession: Double = 1.0) =
+        ((9 * _men + _vit + 45) / 8.0 * 7 * profession + sqrt(lv * 75.3) * 5).roundToInt()
+
+    fun draftATK(lv: Int = 1, profession: Double = 1.0) =
+        (sqrt(_str / 8.0 * 314 * profession * lv) * 1.5).roundToInt()
+
+    fun draftMAT(lv: Int = 1, profession: Double = 1.0) =
+        (sqrt(_men / 8.0 * 314 * profession * lv) * 1.5).roundToInt()
+
+    fun draftSPD(lv: Int = 1, profession: Double = 1.0) =
+        (sqrt(31.4 * lv) / (4.13 * _agi) * profession + 10 - _agi).roundToInt()
+
+    fun show6D(): String = """------六维加点------
+    力量:$_str\t法力:$_men
+    智力:$_int\t体质:$_vit
+    速度:$_agi\t运气:$_lck
+    """.trimIndent()
 }
 
 /*

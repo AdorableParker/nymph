@@ -1,5 +1,6 @@
 package com.example.nymph_TB_DLC
 
+import net.mamoe.mirai.console.data.AutoSavePluginConfig
 import net.mamoe.mirai.console.data.AutoSavePluginData
 import net.mamoe.mirai.console.data.ValueDescription
 import net.mamoe.mirai.console.data.value
@@ -46,4 +47,12 @@ object MirrorWorldAssets : AutoSavePluginData("DLC_AssetsData") { // "name" 是�
             )
         )
     )
+}
+
+object MirrorWorldConfig : AutoSavePluginConfig("DLC_Config") {
+    @ValueDescription("攻击修正系数")
+    var AttackModifier: Double by value(0.06)
+
+    @ValueDescription("属性点汇率")
+    var ExchangeRate: Int by value(10)
 }
