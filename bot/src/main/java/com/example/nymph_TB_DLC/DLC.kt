@@ -15,7 +15,6 @@ import net.mamoe.mirai.console.command.MemberCommandSenderOnMessage
 import net.mamoe.mirai.console.command.SimpleCommand
 import net.mamoe.mirai.console.plugin.jvm.JvmPluginDescription
 import net.mamoe.mirai.console.plugin.jvm.KotlinPlugin
-import net.mamoe.mirai.contact.Group
 import net.mamoe.mirai.event.events.GroupMessageEvent
 import net.mamoe.mirai.event.nextEvent
 
@@ -32,6 +31,7 @@ object DLC : KotlinPlugin(
         MirrorWorldUser.reload()
         MirrorWorldAssets.reload()
 
+        DLCLoadManager.register()        //DLC管理器
         PermanentInfo.register()  //用户信息
         PermanentBuild.register() //建立角色
         APAllot.register()        //分配点数
@@ -56,13 +56,6 @@ private suspend fun MemberCommandSenderOnMessage.yesOrNo(theme: String, no: Stri
     }
     return false
 }
-
-class DLCPerm {
-    fun inquire(group: Group): Boolean = DLCPermData.dlc_permList.contains(group)
-    fun _enable_DLC(group: Group) = DLCPermData.dlc_permList.add(group)
-    fun _disable_DLC(group: Group): Boolean = DLCPermData.dlc_permList.remove(group)
-}
-
 
 object PermanentInfo : SimpleCommand(
     DLC, "我的信息",
