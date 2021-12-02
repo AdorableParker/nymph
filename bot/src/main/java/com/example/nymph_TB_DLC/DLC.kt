@@ -24,7 +24,7 @@ object DLC : KotlinPlugin(
         id = "MCP.TB_DLC",
         version = "0.0.1",
         name = "TB_DLC-MirrorWorld"
-    ) { dependsOn("MCP.navigatorTB_Nymph", "0.15.0") }) {
+    ) { dependsOn("MCP.navigatorTB_Nymph") }) {
 
 
     override fun onEnable() {
@@ -32,21 +32,14 @@ object DLC : KotlinPlugin(
         MirrorWorldUser.reload()
         MirrorWorldAssets.reload()
 
-
-//        val dlcClassList = LoadDLC().loadJarFile(DLC.resolveDataPath("DLC").toString())
-//        for (dlcClass in dlcClassList) {
-//            for (f in dlcClass.declaredMethods){
-//                f.invoke("","")
-//            }
-//        }
-
-
         PermanentInfo.register()  //用户信息
         PermanentBuild.register() //建立角色
         APAllot.register()        //分配点数
     }
 
     override fun onDisable() {
+
+
         DLC.cancel()
     }
 }
@@ -103,7 +96,8 @@ object PermanentBuild : SimpleCommand(
         }
         userData.pc = PlayerCharacter()
         sendMessage(
-            """角色已建立,可以开始分配属性点
+            """
+        角色已建立,可以开始分配属性点
         现在拥有${userData.pc!!.showAP()}点属性点可分配至
         力量：与物攻相关
         法力：与法术相关
@@ -173,8 +167,9 @@ object APAllot : CompositeCommand(
             // 输出汇报
             val mod = Tool(lt)
             sendMessage(
-                """方案有效,生成角色属性预览如下
-                等级:\t1
+                """
+                方案有效,生成角色属性预览如下
+                等级: 1
                 HP:${mod.draftHP()}\tMP:${mod.draftMP()}
                 ATK:${mod.draftATK()}\tMAT:${mod.draftMAT()}
                 ${mod.show6D()}

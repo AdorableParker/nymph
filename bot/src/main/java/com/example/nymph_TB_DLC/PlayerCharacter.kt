@@ -10,7 +10,8 @@ import kotlin.math.sqrt
 @Serializable
 data class PermanentData(var pt: Int = 0, var pc: PlayerCharacter? = null) {
     fun outInfo(): String {
-        return """拥有Pt:$pt
+        return """
+        拥有Pt:   $pt
         ==========
         玩家角色:
         ${pc?.info() ?: "角色未建立"}
@@ -273,7 +274,8 @@ class Tool(sixD: Array<Int>) {
     fun draftSPD(lv: Int = 1, profession: Double = 1.0) =
         (sqrt(31.4 * lv) / (4.13 * _agi) * profession + 10 - _agi).roundToInt()
 
-    fun show6D(): String = """------六维加点------
+    fun show6D(): String = """
+    ------六维加点------
     力量:$_str\t法力:$_men
     智力:$_int\t体质:$_vit
     速度:$_agi\t运气:$_lck
