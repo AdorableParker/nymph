@@ -17,7 +17,6 @@ import net.mamoe.mirai.contact.Group
 import net.mamoe.mirai.message.data.Message
 import net.mamoe.mirai.message.data.PlainText
 import net.mamoe.mirai.utils.ExternalResource.Companion.uploadAsImage
-import net.mamoe.mirai.utils.debug
 import org.jsoup.Jsoup
 import java.io.InputStream
 import java.net.URL
@@ -33,17 +32,10 @@ object SendDynamic : SimpleCommand(
     @Handler
     suspend fun MemberCommandSenderOnMessage.main(name: String, index: Int = 0) {
         if (group.botMuteRemaining > 0) return
-        PluginMain.logger.debug { name }
-//        sendMessage(core(group, DynamicNameList.getValue(name), index))
+        sendMessage(main(group, DynamicNameList.getOrDefault(name, name.toIntOrNull()), index))
     }
 
-    @Handler
-    suspend fun MemberCommandSenderOnMessage.main(uid: Int, index: Int = 0) {
-        if (group.botMuteRemaining > 0) return
-        sendMessage(core(group, uid, index))
-    }
-
-    private suspend fun core(group: Group, uid: Int?, index: Int): Message {
+    private suspend fun main(group: Group, uid: Int?, index: Int): Message {
         if (uid == null) return PlainText(usage)
         record(primaryName)
         if (index >= 10) {

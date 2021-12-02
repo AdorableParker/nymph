@@ -16,8 +16,8 @@ data class Dynamic(
     fun message2jpg(): ByteArrayInputStream {
         //计算文本区域高度
         val textList = arrayListOf<String>()
-        text?.split("\n")?.forEach { textList.addAll(it.chunked(23)) }
-        val textHeight = textList.size * 45
+        text?.split("\n")?.forEach { textList.addAll(it.chunked(24)) }
+        val textHeight = textList.size * 45 + 60
         //计算图片区域高度
         var imageWidth = 0
         var imageHeight = 0
@@ -39,14 +39,18 @@ data class Dynamic(
         graphics.color = Color.WHITE
         graphics.fillRect(0, 0, 1080, height)
         // 绘制配图
+        var cumulativeHeight = 0
+        var maxHeigh = 0
         for ((index, img) in imageList.withIndex()) {
             val w = if (imageList.size / 3 * 3 >= index + 1) 360 else 1080 / (imageList.size % 3)
             val h = (w * 1.0 / img.width * img.height).toInt()
-            graphics.drawImage(img, index % 3 * w, (index / 3.0 * h + textHeight).toInt(), w, h, null)
+            graphics.drawImage(img, index % 3 * w, cumulativeHeight + textHeight, w, h, null)
+            if (maxHeigh < h) maxHeigh = h
+            if (index % 3 == 2) cumulativeHeight += maxHeigh
         }
         // 绘制透明白色遮罩
         graphics.color = Color(240, 240, 255, 192)
-        graphics.fillRoundRect(5, 5, 1060, textHeight - 30, 5, 5)
+        graphics.fillRoundRect(5, 5, 1070, textHeight - 10, 5, 5)
 //      graphics.fillArc(5, 5, 1080, textHeight-30,5,5) //会出现一个似乎效果不错的花纹 等待用别的库重构所有图片生成程序
         // 开始绘制文字
         graphics.color = Color(0, 0, 0, 192)
