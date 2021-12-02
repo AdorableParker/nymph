@@ -39,10 +39,10 @@ data class Dynamic(
         graphics.color = Color.WHITE
         graphics.fillRect(0, 0, 1080, height)
         // 绘制配图
-        for ((index, i) in imageList.withIndex()) {
+        for ((index, img) in imageList.withIndex()) {
             val w = if (imageList.size / 3 * 3 >= index + 1) 360 else 1080 / (imageList.size % 3)
-            val h = (w * 1.0 / i.width * i.height).toInt()
-            graphics.drawImage(i, index % 3 * w, (index / 3.0 * h + textHeight).toInt(), w, h, null)
+            val h = (w * 1.0 / img.width * img.height).toInt()
+            graphics.drawImage(img, index % 3 * w, (index / 3.0 * h + textHeight).toInt(), w, h, null)
         }
         // 绘制透明白色遮罩
         graphics.color = Color(240, 240, 255, 192)

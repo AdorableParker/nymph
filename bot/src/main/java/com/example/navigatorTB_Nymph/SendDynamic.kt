@@ -8,6 +8,7 @@ package com.example.navigatorTB_Nymph
 
 import com.beust.klaxon.JsonObject
 import com.beust.klaxon.Parser
+import com.example.navigatorTB_Nymph.MySetting.DynamicNameList
 import com.example.navigatorTB_Nymph.UsageStatistics.record
 import net.mamoe.mirai.console.command.CommandManager
 import net.mamoe.mirai.console.command.MemberCommandSenderOnMessage
@@ -16,6 +17,7 @@ import net.mamoe.mirai.contact.Group
 import net.mamoe.mirai.message.data.Message
 import net.mamoe.mirai.message.data.PlainText
 import net.mamoe.mirai.utils.ExternalResource.Companion.uploadAsImage
+import net.mamoe.mirai.utils.debug
 import org.jsoup.Jsoup
 import java.io.InputStream
 import java.net.URL
@@ -26,35 +28,23 @@ object SendDynamic : SimpleCommand(
     description = "B站动态查询"
 ) {
     override val usage: String =
-        "${CommandManager.commandPrefix}动态查询 [目标ID] <回溯条数>\n" +
-                "目标ID列表：\n" +
-                "*1* 小加加,碧蓝公告\n" +
-                "*2* 阿米娅,方舟公告\n" +
-                "*3* 呆毛王,FGO公告\n" +
-                "*4* 派蒙,原神公告\n" +
-                "*5* UID,其他"
+        "${CommandManager.commandPrefix}动态查询 [简称|UID] <回溯条数>\n简称列表：\n${DynamicNameList.keys.joinToString("\t")}"
 
     @Handler
-    suspend fun MemberCommandSenderOnMessage.all(name: String, index: Int = 0) {
+    suspend fun MemberCommandSenderOnMessage.main(name: String, index: Int = 0) {
         if (group.botMuteRemaining > 0) return
-        sendMessage(
-            when (name) {
-                "碧蓝" -> core(group, 233114659, index)
-                "方舟" -> core(group, 161775300, index)
-                "FGO" -> core(group, 233108841, index)
-                "原神" -> core(group, 401742377, index)
-                else -> PlainText(usage)
-            }
-        )
+        PluginMain.logger.debug { name }
+//        sendMessage(core(group, DynamicNameList.getValue(name), index))
     }
 
     @Handler
-    suspend fun MemberCommandSenderOnMessage.other(uid: Int, index: Int = 0) {
+    suspend fun MemberCommandSenderOnMessage.main(uid: Int, index: Int = 0) {
         if (group.botMuteRemaining > 0) return
         sendMessage(core(group, uid, index))
     }
 
-    private suspend fun core(group: Group, uid: Int, index: Int): Message {
+    private suspend fun core(group: Group, uid: Int?, index: Int): Message {
+        if (uid == null) return PlainText(usage)
         record(primaryName)
         if (index >= 10) {
             return PlainText("最多只能往前10条哦\n(￣﹃￣)")

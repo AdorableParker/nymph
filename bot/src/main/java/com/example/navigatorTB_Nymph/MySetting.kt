@@ -17,6 +17,16 @@ object MySetting : AutoSavePluginConfig("TB_Setting") {
     @ValueDescription("超级管理员账号")
     val AdminID by value(123456L)
 
+    @ValueDescription("手动查询动态UID简称列表")
+    val DynamicNameList by value(
+        mapOf(
+            "碧蓝" to 233114659,
+            "方舟" to 161775300,
+            "FGO" to 233108841,
+            "原神" to 401742377
+        )
+    )
+
 //    @ValueDescription("图床API")
 //    val ImageHostingService by value("")
 
