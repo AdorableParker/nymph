@@ -152,6 +152,7 @@ object PluginMain : KotlinPlugin(
         } else {                            // 重置状态数据防止出现状态锁定
             MyPluginData.AcgImageRun.clear()
         }
+
         Tarot.register()            // 塔罗
         SignIn.register()           // 签到
         OneWord.register()          // 一言
@@ -324,6 +325,7 @@ object PluginMain : KotlinPlugin(
         if (MySetting.resident) {
             residentTask()
         }
+
     }
 
     private fun residentTask() {

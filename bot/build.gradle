@@ -27,7 +27,7 @@ dependencies {
     implementation('org.jsoup:jsoup:1.14.3')
     implementation('net.sourceforge.htmlunit:htmlunit:2.55.0')
     implementation('org.xerial:sqlite-jdbc:3.36.0.2')
-    implementation('com.mayabot.mynlp:mynlp-all:3.2.1') // 在有更好的分词库之前保持版本
+    implementation('com.mayabot.mynlp:mynlp-all:3.2.2') // 在有更好的分词库之前保持版本
 
     implementation("org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version")
 }

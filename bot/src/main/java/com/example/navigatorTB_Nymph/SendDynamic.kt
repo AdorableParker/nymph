@@ -137,7 +137,7 @@ object SendDynamic : CompositeCommand(
                     it.string("img_src")
                         ?.let { imgSrc -> imgSrcList.add(URL(imgSrc).openConnection().getInputStream()) }
                 }
-                d.text = "含图动态:\n$description"
+                d.text = if (description.isNullOrEmpty()) "含图动态:" else "含图动态:\n$description"
                 d.imageStream = imgSrcList
             }
             // 无图动态
@@ -146,7 +146,7 @@ object SendDynamic : CompositeCommand(
             8 -> {
                 val dynamic = card.string("dynamic") // 描述
                 val imgSrc = card.string("pic")      //封面图片
-                d.text = "视频动态：\n$dynamic"
+                d.text = if (dynamic.isNullOrEmpty()) "视频动态:" else "视频动态:\n$dynamic"
                 d.imageStream = listOf(URL(imgSrc).openConnection().getInputStream())
             }
             // 专栏
