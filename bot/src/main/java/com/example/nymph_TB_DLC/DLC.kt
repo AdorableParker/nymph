@@ -26,12 +26,21 @@ object DLC : KotlinPlugin(
         name = "TB_DLC-MirrorWorld"
     ) { dependsOn("MCP.navigatorTB_Nymph", "0.15.0") }) {
 
+
     override fun onEnable() {
         // 从数据库自动读
         MirrorWorldUser.reload()
         MirrorWorldAssets.reload()
 
-        DLCLoadManager.register()        //DLC管理器
+
+//        val dlcClassList = LoadDLC().loadJarFile(DLC.resolveDataPath("DLC").toString())
+//        for (dlcClass in dlcClassList) {
+//            for (f in dlcClass.declaredMethods){
+//                f.invoke("","")
+//            }
+//        }
+
+
         PermanentInfo.register()  //用户信息
         PermanentBuild.register() //建立角色
         APAllot.register()        //分配点数
@@ -41,6 +50,12 @@ object DLC : KotlinPlugin(
         DLC.cancel()
     }
 }
+
+
+/** DLC所含有的命令
+ * 需要在主体初始化时加载
+ * */
+annotation class DLCCommand
 
 private suspend fun MemberCommandSenderOnMessage.yesOrNo(theme: String, no: String): Boolean {
     sendMessage("[10秒/3次]$theme<是/否>")
@@ -57,6 +72,7 @@ private suspend fun MemberCommandSenderOnMessage.yesOrNo(theme: String, no: Stri
     return false
 }
 
+@DLCCommand
 object PermanentInfo : SimpleCommand(
     DLC, "我的信息",
     description = "用户信息"
@@ -71,6 +87,7 @@ object PermanentInfo : SimpleCommand(
     }
 }
 
+@DLCCommand
 object PermanentBuild : SimpleCommand(
     DLC, "建立角色",
     description = "玩家角色建立"
@@ -100,6 +117,7 @@ object PermanentBuild : SimpleCommand(
     }
 }
 
+@DLCCommand
 object APAllot : CompositeCommand(
     DLC, "属性点",
     description = "分配属性点"
