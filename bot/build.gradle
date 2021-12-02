@@ -23,11 +23,11 @@ dependencies {
     compileOnly("net.mamoe:mirai-console:2.8.2") // 后端
 
     implementation('org.jetbrains.kotlin:kotlin-serialization:1.6.0')
-    implementation('com.beust:klaxon:5.5')
-    implementation('org.jsoup:jsoup:1.14.3')
-    implementation('net.sourceforge.htmlunit:htmlunit:2.55.0')
-    implementation('org.xerial:sqlite-jdbc:3.36.0.2')
-    implementation('com.mayabot.mynlp:mynlp-all:3.2.1') // 在有更好的分词库之前保持版本
+//    implementation('com.beust:klaxon:5.5')
+//    implementation('org.jsoup:jsoup:1.14.3')
+//    implementation('net.sourceforge.htmlunit:htmlunit:2.55.0')
+//    implementation('org.xerial:sqlite-jdbc:3.36.0.2')
+//    implementation('com.mayabot.mynlp:mynlp-all:3.2.1') // 在有更好的分词库之前保持版本
 
     implementation("org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version")
 }
