@@ -13,19 +13,13 @@ import com.mayabot.nlp.module.summary.KeywordSummary
 import com.mayabot.nlp.segment.Lexers.coreBuilder
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
-import kotlinx.serialization.Serializable
 import net.mamoe.mirai.Bot
 import net.mamoe.mirai.console.command.CommandManager.INSTANCE.register
 import net.mamoe.mirai.console.command.CommandManager.INSTANCE.unregister
-import net.mamoe.mirai.console.data.AutoSavePluginConfig
-import net.mamoe.mirai.console.data.AutoSavePluginData
-import net.mamoe.mirai.console.data.ValueDescription
-import net.mamoe.mirai.console.data.value
 import net.mamoe.mirai.console.plugin.jvm.JvmPluginDescription
 import net.mamoe.mirai.console.plugin.jvm.KotlinPlugin
 import net.mamoe.mirai.contact.Contact
 import net.mamoe.mirai.contact.Member
-import net.mamoe.mirai.contact.UserOrBot
 import net.mamoe.mirai.event.EventPriority
 import net.mamoe.mirai.event.events.BotInvitedJoinGroupRequestEvent
 import net.mamoe.mirai.event.events.BotLeaveEvent
@@ -39,80 +33,8 @@ import net.mamoe.mirai.utils.MiraiExperimentalApi
 import net.mamoe.mirai.utils.debug
 import net.mamoe.mirai.utils.info
 import net.mamoe.mirai.utils.warning
-import java.awt.Color
-import java.awt.Font
-import java.awt.image.BufferedImage
-import java.io.ByteArrayInputStream
-import java.io.ByteArrayOutputStream
 import java.io.File
-import java.io.InputStream
-import java.text.SimpleDateFormat
 import java.time.LocalDateTime
-import java.util.*
-import javax.imageio.ImageIO
-
-data class Dynamic(
-    val name: String, val timestamp: Long,
-    var text: String? = null,
-    var imageStream: List<InputStream>? = null
-) {
-
-    fun message2jpg(): ByteArrayInputStream {
-        val height = (imageStream?.size ?: 0) / 3 * 1080 + (text?.length ?: 0) / 40 * 25 // 计算高度
-        val image = BufferedImage(1080, height, BufferedImage.TYPE_INT_RGB)
-        val graphics = image.createGraphics()
-        // 绘制背景色
-        graphics.color = Color.WHITE
-        graphics.fillRect(0, 0, 1080, height)
-
-        // 绘制配图
-        if (imageStream != null) {
-            for ((index, img) in imageStream!!.withIndex()) {
-                val i = ImageIO.read(img)
-                val w = 1080 / imageStream!!.size
-                val h = w / i.width * i.height
-                graphics.drawImage(i, index % 3 * w, index / 3 * h, w, h, null)
-            }
-        }
-
-        // 绘制透明白色遮罩
-        graphics.color = Color(255, 255, 255, 192)
-        graphics.fillRect(0, 15, 720, 470)
-
-
-        // 开始绘制文字
-        if (text != null) {
-            graphics.color = Color(0, 0, 0, 192)
-            graphics.font = Font("大签字笔体", Font.PLAIN, 45)
-            var i = 0
-            for (wordList in text!!.split("\n")) {
-                for (str in text!!.chunked(42)) {
-                    graphics.drawString(str, 20, 20 + i * 25)
-                    i++
-                }
-            }
-        }
-        graphics.dispose()
-
-        // 输出图片
-        val os = ByteArrayOutputStream()
-        ImageIO.write(image, "jpg", os)
-        return ByteArrayInputStream(os.toByteArray())
-    }
-
-    suspend fun getMessage(subject: Contact, uORb: UserOrBot, t: String, name: String): ForwardMessage =
-        buildForwardMessage(subject) {
-            uORb named name says PlainText("$text")
-            imageStream?.forEach {
-                uORb named name says it.uploadAsImage(subject)
-            }
-            uORb named name says PlainText("发布时间:$t")
-        }
-}
-
-
-@Serializable
-class GroupCertificate(val principal_ID: Long = 0L, val flag: Boolean = false, val from: Long = 0L)
 
 
 object PluginMain : KotlinPlugin(
@@ -437,8 +359,6 @@ object PluginMain : KotlinPlugin(
         for (list in MyPluginData.timeStampOfDynamic) {
             val dynamic = SendDynamic.getDynamic(list.key, 0, flag = true)
             if (dynamic.timestamp == 0L) continue
-
-            val time = SimpleDateFormat("yy-MM-dd HH:mm", Locale.CHINA).format(dynamic.timestamp)
             val dbObject = SQLiteJDBC(resolveDataPath("User.db"))
             val groupList = nameOfDynamic[list.key]?.let {
                 if (LocalDateTime.now().hour in MySetting.undisturbed) { // 免打扰模式判断
@@ -458,16 +378,13 @@ object PluginMain : KotlinPlugin(
                 val g = bot.getGroup((it["group_id"] as Int).toLong())
                 if ((g != null) && (g.botMuteRemaining <= 0)) gList.add(g)
             }
-            val forwardMessage = dynamic.getMessage(
-                gList.random(), bot, time,
-                nameOfDynamic.getOrDefault(list.key, "动态更新")
-            )
+            val forwardMessage = dynamic.message2jpg().uploadAsImage(gList.random())
 
             for (g in gList) {
                 runCatching {
                     g.sendMessage(forwardMessage)
                 }.onFailure {
-                    logger.warning { "File:PluginMain.kt\tLine:418\nGroup:${g.id}\n${it.message}" }
+                    logger.warning { "File:PluginMain.kt\tLine:475\nGroup:${g.id}\n${it.message}" }
                 }
             }
         }
@@ -566,120 +483,5 @@ object PluginMain : KotlinPlugin(
         CalculationExp.unregister()     // 经验计算器
         AI.unregister()                 // 图灵数据库增删改查
         PluginMain.cancel()
-    }
-}
-
-// 定义插件数据
-// 插件
-
-
-object MyPluginData : AutoSavePluginData("TB_Data") { // "name" 是保存的文件名 (不带后缀)
-    @ValueDescription("初始化状态,如果为True则会初始化重置所有用户数据")
-    var initialization: Boolean by value(true)
-
-    @ValueDescription("历史动态时间戳")
-    val timeStampOfDynamic: MutableMap<Int, Long> by value(
-        mutableMapOf(
-            233114659 to 1L,
-            161775300 to 1L,
-            233108841 to 1L,
-            401742377 to 1L
-        )
-    )
-
-    @ValueDescription("UID对照表")
-    val nameOfDynamic: MutableMap<Int, String> by value(
-        mutableMapOf(
-            233114659 to "AzurLane",
-            161775300 to "ArKnights",
-            233108841 to "FateGrandOrder",
-            401742377 to "GenShin"
-        )
-    )
-
-    @ValueDescription("报时模式对照表")
-    val tellTimeMode: MutableMap<Int, String> by value(
-        mutableMapOf(
-            0 to "关闭",
-            -1 to "标准",
-            1 to "舰队Collection-中文",
-            3 to "舰队Collection-日文",
-            5 to "明日方舟",
-            7 to "碧蓝航线",
-            2 to "舰队Collection-音频",
-            4 to "千恋*万花-音频(芳乃/茉子/丛雨/蕾娜)-音频"
-        )
-    )
-
-    @ValueDescription("群邀请白名单")
-    val groupIdList: MutableMap<Long, GroupCertificate> by value(
-        mutableMapOf()
-    )
-
-    @ValueDescription("群继承信息")
-    val pactList: MutableList<Long> by value(
-        mutableListOf()
-    )
-
-    @ValueDescription("对决功能状态")
-    val duelTime: MutableMap<Long, Long> by value(
-        mutableMapOf()
-    )
-
-    @ValueDescription("随机图片功能状态")
-    val AcgImageRun: MutableSet<Long> by value(
-        mutableSetOf()
-    )
-//    var long: Long by value(0L) // 允许 var
-//    var int by value(0) // 可以使用类型推断, 但更推荐使用 `var long: Long by value(0)` 这种定义方式.
-
-//     带默认值的非空 map.
-//     notnullMap[1] 的返回值总是非 null 的 MutableMap<Int, String>
-//    var notnullMap by value<MutableMap<Int, MutableMap<Int, String>>>().withEmptyDefault()
-
-//     可将 MutableMap<Long, Long> 映射到 MutableMap<Bot, Long>.
-//    val botToLongMap: MutableMap<Bot, Long> by value<MutableMap<Long, Long>>().mapKeys(Bot::getInstance, Bot::id)
-}
-
-object MySetting : AutoSavePluginConfig("TB_Setting") {
-    @ValueDescription("名字")
-    val name by value("领航员-TB")
-
-    @ValueDescription("Bot 账号")
-    val BotID by value(123456L)
-
-    @ValueDescription("SauceNAO 的 API Key")
-    val SauceNAOKey by value("")
-
-    @ValueDescription("超级管理员账号")
-    val AdminID by value(123456L)
-
-//    @ValueDescription("图床API")
-//    val ImageHostingService by value("")
-
-    @ValueDescription("违禁词")
-    val prohibitedWord by value("")
-
-    @ValueDescription("免打扰时间段:0-23")
-    val undisturbed: List<Int> by value(listOf(-1))
-
-    @ValueDescription("启用常驻定时任务")
-    val resident: Boolean by value(false)
-    //    @ValueDescription("数量") // 注释写法, 将会保存在 MySetting.yml 文件中.
-//    var count by value(0)
-//    val nested by value<MyNestedData>() // 嵌套类型是支持的
-}
-
-object UsageStatistics : AutoSavePluginData("TB_UsageStatistics") {
-    @ValueDescription("功能使用频率记录")
-    private val tellTimeMode: MutableMap<Int, MutableMap<String, Int>> by value(
-        mutableMapOf()
-    )
-
-    fun record(name: String) {
-        val v = tellTimeMode.getOrPut(LocalDateTime.now().dayOfYear / 7) {
-            mutableMapOf()
-        }
-        v[name] = v.getOrDefault(name, 0) + 1
     }
 }

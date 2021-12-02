@@ -10,21 +10,18 @@ import com.beust.klaxon.JsonObject
 import com.beust.klaxon.Parser
 import com.example.navigatorTB_Nymph.UsageStatistics.record
 import net.mamoe.mirai.console.command.CommandManager
-import net.mamoe.mirai.console.command.CompositeCommand
 import net.mamoe.mirai.console.command.MemberCommandSenderOnMessage
-import net.mamoe.mirai.contact.Contact.Companion.sendImage
+import net.mamoe.mirai.console.command.SimpleCommand
 import net.mamoe.mirai.contact.Group
-import net.mamoe.mirai.contact.UserOrBot
 import net.mamoe.mirai.message.data.Message
 import net.mamoe.mirai.message.data.PlainText
+import net.mamoe.mirai.utils.ExternalResource.Companion.uploadAsImage
 import org.jsoup.Jsoup
 import java.io.InputStream
 import java.net.URL
-import java.text.SimpleDateFormat
-import java.util.*
 
 
-object SendDynamic : CompositeCommand(
+object SendDynamic : SimpleCommand(
     PluginMain, "SendDynamic", "动态查询",
     description = "B站动态查询"
 ) {
@@ -37,48 +34,27 @@ object SendDynamic : CompositeCommand(
                 "*4* 派蒙,原神公告\n" +
                 "*5* UID,其他"
 
-    @SubCommand("小加加", "碧蓝公告")
-    suspend fun MemberCommandSenderOnMessage.azurLane(index: Int = 0) {
+    @Handler
+    suspend fun MemberCommandSenderOnMessage.all(name: String, index: Int = 0) {
         if (group.botMuteRemaining > 0) return
-
-        sendMessage(main(group, bot, 233114659, index))
+        sendMessage(
+            when (name) {
+                "碧蓝" -> core(group, 233114659, index)
+                "方舟" -> core(group, 161775300, index)
+                "FGO" -> core(group, 233108841, index)
+                "原神" -> core(group, 401742377, index)
+                else -> PlainText(usage)
+            }
+        )
     }
 
-    @SubCommand("阿米娅", "方舟公告")
-    suspend fun MemberCommandSenderOnMessage.arKnights(index: Int = 0) {
-        if (group.botMuteRemaining > 0) return
-
-        sendMessage(main(group, bot, 161775300, index))
-    }
-
-    @SubCommand("呆毛王", "FGO公告")
-    suspend fun MemberCommandSenderOnMessage.fateGrandOrder(index: Int = 0) {
-        if (group.botMuteRemaining > 0) return
-
-        sendMessage(main(group, bot, 233108841, index))
-    }
-
-    @SubCommand("派蒙", "原神公告")
-    suspend fun MemberCommandSenderOnMessage.genShin(index: Int = 0) {
-        if (group.botMuteRemaining > 0) return
-
-        sendMessage(main(group, bot, 401742377, index))
-    }
-
-    @SubCommand("UID", "其他")
+    @Handler
     suspend fun MemberCommandSenderOnMessage.other(uid: Int, index: Int = 0) {
         if (group.botMuteRemaining > 0) return
-        sendMessage(main(group, bot, uid, index))
+        sendMessage(core(group, uid, index))
     }
 
-    @SubCommand("测试")
-    suspend fun MemberCommandSenderOnMessage.test(uid: Int, index: Int = 0) {
-        if (group.botMuteRemaining > 0) return
-        group.sendImage(getDynamic(uid, index).message2jpg())
-//        sendMessage(main(group, bot, uid, index))
-    }
-
-    suspend fun main(subject: Group, bot: UserOrBot, uid: Int, index: Int): Message {
+    private suspend fun core(group: Group, uid: Int, index: Int): Message {
         record(primaryName)
         if (index >= 10) {
             return PlainText("最多只能往前10条哦\n(￣﹃￣)")
@@ -86,8 +62,7 @@ object SendDynamic : CompositeCommand(
             return PlainText("未来的事情我怎么会知道\n=￣ω￣=")
         }
         val dynamic = getDynamic(uid, index)
-        val time = SimpleDateFormat("yy-MM-dd HH:mm", Locale.getDefault()).format(dynamic.timestamp)
-        return dynamic.getMessage(subject, bot, time, "")
+        return dynamic.message2jpg().uploadAsImage(group, null)
     }
 
     fun getDynamic(uid: Int, index: Int, flag: Boolean = false): Dynamic {
@@ -95,10 +70,10 @@ object SendDynamic : CompositeCommand(
             .ignoreContentType(true)
             .execute().body().toString()
         val jsonObj = Parser.default().parse(StringBuilder(doc)) as JsonObject
-        val desc = jsonObj.obj("data")
+        val dynamicObj = jsonObj.obj("data")
             ?.array<JsonObject>("cards")?.get(index)
-            ?.obj("desc")!!
-
+        val desc = dynamicObj?.obj("desc")!!
+        val card = Parser.default().parse(StringBuilder(dynamicObj.string("card"))) as JsonObject
         val typeCode = desc.int("type") ?: 0
         val timestamp = desc.long("timestamp")?.times(1000) ?: 0
 
@@ -108,7 +83,7 @@ object SendDynamic : CompositeCommand(
             MyPluginData.timeStampOfDynamic[uid] = timestamp
         }
 
-        return analysis(timestamp, typeCode, desc)
+        return analysis(timestamp, typeCode, card)
     }
 
     private fun analysis(timestamp: Long, typeCode: Int, card: JsonObject): Dynamic {
@@ -134,8 +109,9 @@ object SendDynamic : CompositeCommand(
                 // 获取所有图片
                 val imgSrcList = mutableListOf<InputStream>()
                 card.obj("item")?.array<JsonObject>("pictures")?.forEach { it ->
-                    it.string("img_src")
-                        ?.let { imgSrc -> imgSrcList.add(URL(imgSrc).openConnection().getInputStream()) }
+                    it.string("img_src")?.let { imgSrc ->
+                        imgSrcList.add(URL(imgSrc).openConnection().getInputStream())
+                    }
                 }
                 d.text = if (description.isNullOrEmpty()) "含图动态:" else "含图动态:\n$description"
                 d.imageStream = imgSrcList
