@@ -16,6 +16,8 @@ import kotlinx.coroutines.launch
 import net.mamoe.mirai.Bot
 import net.mamoe.mirai.console.command.CommandManager.INSTANCE.register
 import net.mamoe.mirai.console.command.CommandManager.INSTANCE.unregister
+import net.mamoe.mirai.console.plugin.PluginManager
+import net.mamoe.mirai.console.plugin.id
 import net.mamoe.mirai.console.plugin.jvm.JvmPluginDescription
 import net.mamoe.mirai.console.plugin.jvm.KotlinPlugin
 import net.mamoe.mirai.contact.Contact
@@ -41,7 +43,7 @@ object PluginMain : KotlinPlugin(
     JvmPluginDescription(
         id = "MCP.navigatorTB_Nymph",
         name = "navigatorTB",
-        version = "0.14.5"
+        version = "0.15.1"
     )
 ) {
     // 分词功能
@@ -60,6 +62,7 @@ object PluginMain : KotlinPlugin(
     val BothSidesDuel = mutableMapOf<Member, Gun>()
     val CRON = CronJob()
 
+    var DLC_MirrorWorld = false
 
     @OptIn(MiraiExperimentalApi::class)
     override fun onEnable() {
@@ -101,8 +104,9 @@ object PluginMain : KotlinPlugin(
         Roster.register()           // 碧蓝和谐名
         AssetDataAccess.register()  // 资源数据库处理
         AI.register()               // 图灵数据库增删改查
+        MirrorWorldGame.register()  // DLC_01
         MyHelp.register()           // 帮助功能
-//        CommandManager.registerCommand(MyHelp, true) // 帮助功能,需要覆盖内建指令
+
         // 动态更新
         PluginMain.launch {
             CRON.start()
@@ -246,6 +250,8 @@ object PluginMain : KotlinPlugin(
         if (MySetting.resident) {
             residentTask()
         }
+
+        DLC_MirrorWorld = PluginManager.plugins.find { plugin -> plugin.id == "MCP.TB_DLC" } != null
 
     }
 
@@ -454,6 +460,7 @@ object PluginMain : KotlinPlugin(
 
     override fun onDisable() {
 //        PluginMain.launch{ announcement("正在关闭") } // 关闭太快发不出来
+        MirrorWorldGame.unregister()  // DLC_01
         Tarot.unregister()              // 塔罗
         SignIn.unregister()             // 签到
         OneWord.unregister()            // 一言

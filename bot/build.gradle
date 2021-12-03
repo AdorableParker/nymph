@@ -22,6 +22,8 @@ dependencies {
     compileOnly("net.mamoe:mirai-core:2.8.2") // mirai-core 的 API
     compileOnly("net.mamoe:mirai-console:2.8.2") // 后端
 
+    compileOnly files("../lib/DLC_MirrorWorld.jar")
+
     implementation('com.beust:klaxon:5.5')
     implementation('org.jsoup:jsoup:1.14.3')
     implementation('com.mayabot.mynlp:mynlp-all:3.2.2') // 在有更好的分词库之前保持版本

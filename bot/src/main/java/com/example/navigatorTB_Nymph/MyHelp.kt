@@ -26,8 +26,6 @@ object MyHelp : SimpleCommand(
             }
         }
         sendMessage(helpDocs.joinToString("\n"))
-//        val commandList = PluginMain.allNames
-//        sendMessage("${}")
     }
 
     @Handler
