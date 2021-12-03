@@ -117,7 +117,7 @@ object Calculator : SimpleCommand(
                     }
                     stack.push(rpn[i])
                 }
-                else -> return "错误,意外的字符 '$i'"
+                else -> return "错误,意外的字符 '${rpn[i]}'"
             }
         }
         if (list.isNotEmpty()) {
