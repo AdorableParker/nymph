@@ -1,5 +1,6 @@
-# 导出 DLC_Perm 类
+# 导出类
 #
+#exports com.example.nymph_TB_DLC.DLC
 exports com.example.nymph_TB_DLC.MirrorWorld
 
 # 将整个插件放入保护域中
