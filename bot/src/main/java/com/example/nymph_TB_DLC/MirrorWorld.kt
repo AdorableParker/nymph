@@ -1,21 +1,20 @@
 package com.example.nymph_TB_DLC
 
-import net.mamoe.mirai.console.command.ConsoleCommandSender.sendMessage
 import net.mamoe.mirai.console.command.MemberCommandSenderOnMessage
 import net.mamoe.mirai.event.events.GroupMessageEvent
 import net.mamoe.mirai.event.nextEvent
 
 class MirrorWorld {
     private suspend fun yesOrNo(subject: MemberCommandSenderOnMessage, theme: String, no: String): Boolean {
-        sendMessage("[10秒/3次]$theme<是/否>")
+        subject.sendMessage("[10秒/3次]$theme<是/否>")
         for (i in 0..2) {
             when (nextEvent<GroupMessageEvent>(10_000) { it.sender == subject.user }.message.contentToString()) {
                 "否" -> {
-                    sendMessage(no)
+                    subject.sendMessage(no)
                     return true
                 }
                 "是" -> break
-                else -> if (i > 0) sendMessage("[20秒/${i}次]$theme<是/否>")
+                else -> if (i > 0) subject.sendMessage("[20秒/${i}次]$theme<是/否>")
             }
         }
         return false
@@ -72,14 +71,17 @@ class MirrorWorld {
             return
         }
         // 开始分配点数
-        subject.sendMessage("[30秒]请按照以下顺序输入点数分配方案(各项之间使用冒号分割)：\n力量：法力：智力:体质：速度：运气")
-        val lt = arrayOf(6)
-        val enter = false
-        GetPlan@ while (!enter) {
+        subject.sendMessage("[30秒]请按照以下顺序输入点数分配方案(各项之间使用冒号分割)：\n力量:法力:智力:体质:速度:运气")
+        val lt = Array(6) { 0 }
+        GetPlan@ while (true) {
             // 获取用户输入
-            val plan =
+            val plan = kotlin.runCatching {
                 nextEvent<GroupMessageEvent>(30_000) { it.sender == subject.user }.message.contentToString()
                     .split(":", "：", limit = 7)
+            }.onFailure {
+                subject.sendMessage("输入超时,点数分配取消")
+                return
+            }.getOrDefault(listOf())
             // 判断输入数量
             if (plan.size < 6) {
                 subject.sendMessage("[30秒]参数数量不匹配,请重新输入")
@@ -89,7 +91,7 @@ class MirrorWorld {
             for (i in 0..5) {
                 when (val apv = plan[i].toIntOrNull()) { //检查输入合法性
                     null -> {
-                        subject.sendMessage("属性值必须为整数")
+                        subject.sendMessage("属性值必须为整数,请重新输入")
                         continue@GetPlan
                     }
                     in 0..7 -> lt[i] = apv
@@ -100,21 +102,14 @@ class MirrorWorld {
                 }
             }
             // 检查点数用量
-            if (ap < lt.sum()) {
-                subject.sendMessage("该方案所用点数超出可用点数总量,请重新输入")
-            }
-            // 输出汇报
-            val mod = Tool(lt)
-            subject.sendMessage(
-                """
-                方案有效,生成角色属性预览如下
-                等级: 1
-                HP:${mod.draftHP()}\tMP:${mod.draftMP()}
-                ATK:${mod.draftATK()}\tMAT:${mod.draftMAT()}
-                ${mod.show6D()}
-                """.trimIndent()
-            )
+            if (ap < lt.sum()) subject.sendMessage("该方案所用点数超出可用点数总量,请重新输入") else break
         }
+        // 输出汇报
+        val mod = Tool(lt)
+        subject.sendMessage(
+            "方案有效,生成角色属性预览如下\n等级: 1\nHP: ${mod.draftHP()}\tMP: ${mod.draftMP()}\nATK: ${mod.draftATK()}\tMAT: ${mod.draftMAT()}\n${mod.show6D()}"
+        )
+
         // 用户确定
         if (yesOrNo(
                 subject,
@@ -122,7 +117,6 @@ class MirrorWorld {
                 "点数分配取消"
             )
         ) return
-
         userData.pc!!.set6D(lt)
         subject.sendMessage("点数设定完成,可进行特性/技能学习")
     }

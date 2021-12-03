@@ -108,17 +108,17 @@ class PlayerCharacter {
             buffer.append(if (i % 2 == 1) "\t${element}" else "\n${element}")
         }
         return """
-            等级:$lv\t金币:${gold}枚
-            HP:${hp.current}/${hp.Max}\tMP:${mp.current}/${mp.Max}
-            ATK:$atk\tMAT:${mat}
+            等级:$lv  金币:${gold}枚
+            HP:${hp.current}/${hp.Max}  MP:${mp.current}/${mp.Max}
+            ATK:$atk    MAT:${mat}
             经验:$userExp/${lv * lv}
             闲置技能点:$skillPrint
             拥有特质:$buffer
             拥有技能:$buffer
             ------六维加点------
-            力量:$_str\t法力:$_men
-            智力:$_int\t体质:$_vit
-            速度:$_agi\t运气:$_lck
+            力量:$_str    法力:$_men
+            智力:$_int    体质:$_vit
+            速度:$_agi    运气:$_lck
             """.trimIndent()
     }
 
@@ -260,7 +260,7 @@ class Tool(sixD: Array<Int>) {
     private val _lck = sixD[5] + 1  //运
 
     fun draftHP(lv: Int = 1, profession: Double = 1.0) =
-        ((9 * _vit + _str + 45) / 8.0 * 54 * profession + sqrt(lv * 235.7) * 5).roundToInt()
+        ((9 * _vit + _str + 45) / 8.0 * 5.4 * profession + sqrt(lv * 235.7) * 5).roundToInt()
 
     fun draftMP(lv: Int = 1, profession: Double = 1.0) =
         ((9 * _men + _vit + 45) / 8.0 * 7 * profession + sqrt(lv * 75.3) * 5).roundToInt()
@@ -276,9 +276,9 @@ class Tool(sixD: Array<Int>) {
 
     fun show6D(): String = """
     ------六维加点------
-    力量:$_str\t法力:$_men
-    智力:$_int\t体质:$_vit
-    速度:$_agi\t运气:$_lck
+    力量:$_str    法力:$_men
+    智力:$_int    体质:$_vit
+    速度:$_agi    运气:$_lck
     """.trimIndent()
 }
 
