@@ -44,7 +44,6 @@ object PluginMain : KotlinPlugin(
         version = "0.14.5"
     )
 ) {
-
     // 分词功能
     val LEXER = coreBuilder()
         .withPos() //词性标注功能

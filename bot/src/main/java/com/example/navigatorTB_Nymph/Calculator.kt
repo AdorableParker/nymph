@@ -117,13 +117,15 @@ object Calculator : SimpleCommand(
                     }
                     stack.push(rpn[i])
                 }
+                else -> return "错误,意外的字符 '$i'"
             }
         }
         if (list.isNotEmpty()) {
             charToNum(list)?.let { stackRPN.push(it) } ?: let { return "Error,illegal Number" }
             list.clear()
         }
-        while (!stack.isEmpty()) {
+
+        while (stack.isNotEmpty()) {
             val sign = stack.pop()
             operation(
                 stackRPN.pop(),

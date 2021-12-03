@@ -17,7 +17,7 @@ data class Dynamic(
         //计算文本区域高度
         val textList = arrayListOf<String>()
         text?.split("\n")?.forEach { textList.addAll(it.chunked(24)) }
-        val textHeight = textList.size * 45 + 60
+        val textHeight = textList.size * 44 + 60
         //计算图片区域高度
         var imageWidth = 0
         var imageHeight = 0
@@ -32,7 +32,9 @@ data class Dynamic(
             }
         }
         //生成画布
-        val height = (1080.0 / imageWidth * imageHeight + textHeight).toInt()// 计算高度
+
+        val height = if (imageHeight + imageHeight == 0) textHeight
+        else (1080.0 / imageWidth * imageHeight).toInt() + textHeight // 计算高度
         val image = BufferedImage(1080, height, BufferedImage.TYPE_INT_RGB)
         val graphics = image.createGraphics()
         // 绘制背景色
@@ -40,13 +42,13 @@ data class Dynamic(
         graphics.fillRect(0, 0, 1080, height)
         // 绘制配图
         var cumulativeHeight = 0
-        var maxHeigh = 0
+        var maxHeight = 0
         for ((index, img) in imageList.withIndex()) {
             val w = if (imageList.size / 3 * 3 >= index + 1) 360 else 1080 / (imageList.size % 3)
             val h = (w * 1.0 / img.width * img.height).toInt()
             graphics.drawImage(img, index % 3 * w, cumulativeHeight + textHeight, w, h, null)
-            if (maxHeigh < h) maxHeigh = h
-            if (index % 3 == 2) cumulativeHeight += maxHeigh
+            if (maxHeight < h) maxHeight = h
+            if (index % 3 == 2) cumulativeHeight += maxHeight
         }
         // 绘制透明白色遮罩
         graphics.color = Color(240, 240, 255, 192)
@@ -56,7 +58,7 @@ data class Dynamic(
         graphics.color = Color(0, 0, 0, 192)
         graphics.font = Font("大签字笔体", Font.PLAIN, 45)
         for ((line, str) in textList.withIndex()) {
-            graphics.drawString(str, 30, 60 + line * 45)
+            graphics.drawString(str, 15, 60 + line * 45)
         }
         graphics.dispose()
         // 输出图片
