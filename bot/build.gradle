@@ -4,9 +4,11 @@ plugins {
     id 'org.jetbrains.kotlin.plugin.serialization' version '1.5.30'
 }
 
+
 mirai {
     coreVersion = "2.8.2" // mirai-core version
 }
+
 
 repositories {
     mavenLocal()
@@ -24,4 +26,3 @@ dependencies {
 
 //    implementation("org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version")
 }
-
