@@ -8,13 +8,27 @@ class MirrorWorld {
     private suspend fun yesOrNo(subject: MemberCommandSenderOnMessage, theme: String, no: String): Boolean {
         subject.sendMessage("[10秒/3次]$theme<是/否>")
         for (i in 0..2) {
-            when (nextEvent<GroupMessageEvent>(10_000) { it.sender == subject.user }.message.contentToString()) {
+            val judge = runCatching {
+                nextEvent<GroupMessageEvent>(10_000) { it.sender == subject.user }.message.contentToString()
+            }.onFailure {
+                subject.sendMessage("输入超时")
+                return true
+            }.getOrNull()
+
+            when (judge) {
+                "是" -> return true
                 "否" -> {
                     subject.sendMessage(no)
-                    return true
+                    break
                 }
-                "是" -> break
-                else -> if (i > 0) subject.sendMessage("[20秒/${i}次]$theme<是/否>")
+                else -> {
+                    if (i > 0) {
+                        subject.sendMessage("[10秒/${i}次]$theme<是/否>")
+                    } else {
+                        subject.sendMessage("次数用尽,$no")
+                        break
+                    }
+                }
             }
         }
         return false
