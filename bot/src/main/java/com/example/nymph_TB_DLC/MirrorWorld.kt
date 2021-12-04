@@ -11,7 +11,7 @@ class MirrorWorld {
             val judge = runCatching {
                 nextEvent<GroupMessageEvent>(10_000) { it.sender == subject.user }.message.contentToString()
             }.onFailure {
-                subject.sendMessage("输入超时")
+                subject.sendMessage("输入超时,$no")
                 return true
             }.getOrNull()
 
@@ -36,7 +36,6 @@ class MirrorWorld {
 
     /** 玩家数据汇报 */
     suspend fun gamerInfo(subject: MemberCommandSenderOnMessage) {
-        subject.sendMessage("测试通过")
         val userData = MirrorWorldUser.userPermanent.getOrPut(subject.user.id) {
             PermanentData()
         }
@@ -45,7 +44,6 @@ class MirrorWorld {
 
     /** 玩家角色建立 */
     suspend fun characterCreation(subject: MemberCommandSenderOnMessage) {
-        subject.sendMessage("测试开始")
         val userData = MirrorWorldUser.userPermanent.getOrPut(subject.user.id) {
             PermanentData()
         }
@@ -133,5 +131,107 @@ class MirrorWorld {
         ) return
         userData.pc!!.set6D(lt)
         subject.sendMessage("点数设定完成,可进行特性/技能学习")
+    }
+
+    /** 选择特质及职业 */
+    suspend fun chooseCareer(subject: MemberCommandSenderOnMessage) {
+        val userData = MirrorWorldUser.userPermanent.getOrPut(subject.user.id) { PermanentData() }
+        // 判断角色是否存在
+        if (userData.pc == null) {
+            subject.sendMessage("角色不存在，请建立角色后操作")
+            return
+        }
+        // 判断是否可分配点数
+        var sp = userData.pc!!.showSP()
+        if (sp == 0) {
+            subject.sendMessage("无可分配点数")
+            return
+        }
+        var kill1: Int? = 0
+        subject.sendMessage("[30秒/3次]现拥有 $sp SP\n请选择特性(单选)\n1:奴隶出身(+1SP)\n2：平民出身(-1SP)\n3:商贾世家(-2SP)\n4:皇室出身(-3SP)")
+        for (i in 0..2) {
+            kill1 = runCatching {
+                nextEvent<GroupMessageEvent>(30_000) { it.sender == subject.user }.message.contentToString()
+                    .toIntOrNull()
+            }.onFailure {
+                subject.sendMessage("输入超时,特性选择取消")
+                return
+            }.getOrNull()
+            when (kill1) {
+                1 -> sp += 1
+                2 -> sp -= 1
+                3 -> sp -= 2
+                4 -> sp -= 3
+                else -> {
+                    if (i > 0) {
+                        subject.sendMessage("[30秒/${i}次]请选择特性(输入序号:单选)\nA:奴隶出身(+1SP)\nB：平民出身(-1SP)\nC:商贾世家(-2SP)\nD:皇室出身(-3SP)")
+                        continue
+                    } else {
+                        subject.sendMessage("次数用尽,特性选择取消")
+                        return
+                    }
+                }
+            }
+            if (sp > 0) break
+            subject.sendMessage("点数不足,请重新选择")
+        }
+        subject.sendMessage("[30秒/3次]现拥有 $sp SP\n请选择特性(单选)\n1:恶名远扬(+1SP)\n2：默默无闻(-1SP)\n3:小有名气(-2SP)\n4:声名远扬(-3SP)")
+        var kill2: Int? = 0
+        for (i in 0..2) {
+            kill2 = runCatching {
+                nextEvent<GroupMessageEvent>(30_000) { it.sender == subject.user }.message.contentToString()
+                    .toIntOrNull()
+            }.onFailure {
+                subject.sendMessage("输入超时,特性选择取消")
+                return
+            }.getOrNull()
+            when (kill2) {
+                1 -> sp += 1
+                2 -> sp -= 1
+                3 -> sp -= 2
+                4 -> sp -= 3
+                else -> {
+                    if (i > 0) {
+                        subject.sendMessage("[30秒/${i}次]请选择特性(输入序号:单选)\n1:恶名远扬(+1SP)\n2：默默无闻(-1SP)\n3:小有名气(-2SP)\n4:声名远扬(-3SP)")
+                        continue
+                    } else {
+                        subject.sendMessage("次数用尽,特性选择取消")
+                        return
+                    }
+                }
+            }
+            if (sp > 0) break
+            subject.sendMessage("点数不足,请重新选择")
+        }
+        if (sp >= 2) subject.sendMessage("[30秒/1次]现拥有 $sp SP\n请选择职业(可选)\n1:骑士(-2SP)\n2：猎手(-2SP)\n3牧师(-2SP)\n4:法师(-2SP)\n[除选项外任意输入放弃职业选择]")
+        val kill3 = runCatching {
+            nextEvent<GroupMessageEvent>(30_000) { it.sender == subject.user }.message.contentToString().toIntOrNull()
+        }.onFailure { subject.sendMessage("输入超时,放弃职业选择") }.getOrNull()
+        if (kill3 != null) sp -= 2
+        userData.pc!!.newRole(kill1, kill2, kill3, sp)
+        // 输出汇报
+        subject.sendMessage("角色创建全部完成")
+    }
+
+    /** PvP */
+    suspend fun pvp(subject: MemberCommandSenderOnMessage) {
+        subject.sendMessage(
+            """
+        PvP挑战须知:\n挑战依据战败惩罚分为[练习][切磋][死斗]三类
+        [练习]
+        1、生命值降至0即判负
+        2、对战结束后双方状态将恢复至对战前状态
+        3、开启练习对战将会消耗双方金币各10枚
+        4、练习场经验收益为正常的20%
+        [切磋]
+        1、生命值降至40%以下即判断负
+        2、对战结束后双方状态将会保留
+        3、败方将会付出至少50枚金币给予胜方
+        [死斗]
+        1、生命值降至0即判负
+        2、败方将会进行角色清算（结算分数，删除角色）
+        3、胜方获得败方10%的金币
+        """.trimIndent()
+        )
     }
 }

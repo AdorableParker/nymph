@@ -60,15 +60,13 @@ class PlayerCharacter {
 
     private var lv: Int = 1                                         //等级
     private var userExp: Int = 0                                    //经验
-    private var ship = arrayOfNulls<Int>(5)                    //同伴
     private var bag = arrayOfNulls<Int>(16)                    //物品
     private var traitsList: MutableSet<String> = mutableSetOf()     //特质
     private var skillList: MutableSet<String> = mutableSetOf()      //技能
-    private var skillPrint: Int = 0                                 //技能点
+    private var skillPrint: Int = 6                                 //技能点
     private var attributePrint: Int = 22                            //属性点
 
     //六维
-
     /**力量: 1..8*/
     private var _str = 1
 
@@ -86,7 +84,10 @@ class PlayerCharacter {
 
     /**运气: 1..8*/
     private var _lck = 1
-    private var profession = arrayOf<Double>()  //职业属性曲线
+
+    /**职业属性曲线
+     *0:atk 1:mat 2:spd 3:hp 4:mp*/
+    private var profession = arrayOf<Double>()
 
     /* 成长曲线
                 atk   mat    spd     hp    mp
@@ -123,23 +124,24 @@ class PlayerCharacter {
     }
 
     fun showAP() = attributePrint
+    fun showSP() = skillPrint
 
-    fun newRole(origin: Int, reputation: Int, prof: Int, traitsPrint: Int) {
+    fun newRole(origin: Int?, reputation: Int?, prof: Int?, traitsPrint: Int) {
         when (origin) {
-            0 -> traitsList.add("-被剥削者-")
-            2 -> {
+            1 -> traitsList.add("-被剥削者-")
+            3 -> {
                 traitsList.add("-钞能力-")
                 traitsList.add("-精打细算-")
             }
-            3 -> {
+            4 -> {
                 traitsList.add("-皇室荣光-")
                 gold += 500
             }
         }
         when (reputation) {
-            0 -> traitsList.add("-被通缉者-")
-            2 -> traitsList.add("-名人效应-")
-            3 -> traitsList.add("-被传颂者-")
+            1 -> traitsList.add("-被通缉者-")
+            3 -> traitsList.add("-名人效应-")
+            4 -> traitsList.add("-被传颂者-")
         }
         profession = when (prof) {
             1 -> {      //骑士
@@ -163,6 +165,7 @@ class PlayerCharacter {
             }
         }
         skillPrint = traitsPrint
+        setCAV()
     }
 
     private fun judge(goal: Int) = (0..100).random() + _lck - 4 + 5 / (2 + _lck) >= goal
@@ -239,8 +242,7 @@ class PlayerCharacter {
         return "你死了,本局游戏结束,角色数据删除,你获得${pt}积分"
     }
 
-    //战斗序列计算
-    fun getAPS() = 40 / (_agi + 2)
+    //设置六围
     fun set6D(plan: Array<Int>) {
         _str += plan[0]
         _men += plan[1]
@@ -248,6 +250,15 @@ class PlayerCharacter {
         _vit += plan[3]
         _agi += plan[4]
         _lck += plan[5]
+    }
+
+    //设置属性
+    fun setCAV() {
+        hp = Bar(((9 * _vit + _str + 45) / 8.0 * 5.4 * profession[3] + sqrt(lv * 235.7) * 5).roundToInt())
+        mp = Bar(((9 * _men + _vit + 45) / 8.0 * 7 * profession[4] + sqrt(lv * 75.3) * 5).roundToInt())
+        atk = (sqrt(_str / 8.0 * 314 * profession[0] * lv) * 1.5).roundToInt()
+        mat = (sqrt(_men / 8.0 * 314 * profession[1] * lv) * 1.5).roundToInt()
+        spd = (sqrt(31.4 * lv) / (4.13 * _agi) * profession[2] + 10 - _agi).roundToInt()
     }
 }
 
