@@ -19,7 +19,7 @@ class MirrorWorld {
             }.getOrNull()
 
             when (judge) {
-                "是" -> return true
+                "是" -> return false
                 "否" -> {
                     subject.sendMessage(no)
                     break
@@ -34,7 +34,7 @@ class MirrorWorld {
                 }
             }
         }
-        return false
+        return true
     }
 
     /** 玩家数据汇报 */
