@@ -1,15 +1,18 @@
 package com.example.nymph_TB_DLC
 
 import net.mamoe.mirai.console.command.MemberCommandSenderOnMessage
+import net.mamoe.mirai.contact.User
+import net.mamoe.mirai.contact.nameCardOrNick
 import net.mamoe.mirai.event.events.GroupMessageEvent
 import net.mamoe.mirai.event.nextEvent
+import net.mamoe.mirai.message.data.content
 
 class MirrorWorld {
     private suspend fun yesOrNo(subject: MemberCommandSenderOnMessage, theme: String, no: String): Boolean {
         subject.sendMessage("[10秒/3次]$theme<是/否>")
         for (i in 0..2) {
             val judge = runCatching {
-                nextEvent<GroupMessageEvent>(10_000) { it.sender == subject.user }.message.contentToString()
+                nextEvent<GroupMessageEvent>(10_000) { it.sender == subject.user }.message.content
             }.onFailure {
                 subject.sendMessage("输入超时,$no")
                 return true
@@ -50,7 +53,7 @@ class MirrorWorld {
         if (userData.pc != null) {
             if (yesOrNo(subject, "创建新角色？\n清除存档,不可恢复", "角色建立取消")) return
         }
-        userData.pc = PlayerCharacter()
+        userData.pc = PlayerCharacter(subject.user.nameCardOrNick)
         subject.sendMessage(
             """
         角色已建立,可以开始分配属性点
@@ -68,9 +71,7 @@ class MirrorWorld {
 
     /** 分配属性点 */
     suspend fun apAllotted(subject: MemberCommandSenderOnMessage) {
-        val userData = MirrorWorldUser.userPermanent.getOrPut(subject.user.id) {
-            PermanentData()
-        }
+        val userData = MirrorWorldUser.userPermanent.getOrPut(subject.user.id) { PermanentData() }
         // 判断角色是否存在
         if (userData.pc == null) {
             subject.sendMessage("角色不存在，请建立角色后操作")
@@ -88,7 +89,7 @@ class MirrorWorld {
         GetPlan@ while (true) {
             // 获取用户输入
             val plan = kotlin.runCatching {
-                nextEvent<GroupMessageEvent>(30_000) { it.sender == subject.user }.message.contentToString()
+                nextEvent<GroupMessageEvent>(30_000) { it.sender == subject.user }.message.content
                     .split(":", "：", limit = 7)
             }.onFailure {
                 subject.sendMessage("输入超时,点数分配取消")
@@ -130,7 +131,9 @@ class MirrorWorld {
             )
         ) return
         userData.pc!!.set6D(lt)
-        subject.sendMessage("点数设定完成,可进行特性/技能学习")
+        userData.pc!!.giveGold(lt.sum() * 10)
+        userData.creationSteps = 1
+        subject.sendMessage("点数设定完成,请进行特性/技能学习")
     }
 
     /** 选择特质及职业 */
@@ -140,6 +143,16 @@ class MirrorWorld {
         if (userData.pc == null) {
             subject.sendMessage("角色不存在，请建立角色后操作")
             return
+        }
+        when (userData.creationSteps) {
+            0 -> {
+                subject.sendMessage("角色尚未分配属性点,请分配后操作")
+                return
+            }
+            2 -> {
+                subject.sendMessage("角色创建已全部完成")
+                return
+            }
         }
         // 判断是否可分配点数
         var sp = userData.pc!!.showSP()
@@ -151,7 +164,7 @@ class MirrorWorld {
         subject.sendMessage("[30秒/3次]现拥有 $sp SP\n请选择特性(单选)\n1:奴隶出身(+1SP)\n2：平民出身(-1SP)\n3:商贾世家(-2SP)\n4:皇室出身(-3SP)")
         for (i in 0..2) {
             kill1 = runCatching {
-                nextEvent<GroupMessageEvent>(30_000) { it.sender == subject.user }.message.contentToString()
+                nextEvent<GroupMessageEvent>(30_000) { it.sender == subject.user }.message.content
                     .toIntOrNull()
             }.onFailure {
                 subject.sendMessage("输入超时,特性选择取消")
@@ -179,7 +192,7 @@ class MirrorWorld {
         var kill2: Int? = 0
         for (i in 0..2) {
             kill2 = runCatching {
-                nextEvent<GroupMessageEvent>(30_000) { it.sender == subject.user }.message.contentToString()
+                nextEvent<GroupMessageEvent>(30_000) { it.sender == subject.user }.message.content
                     .toIntOrNull()
             }.onFailure {
                 subject.sendMessage("输入超时,特性选择取消")
@@ -205,33 +218,118 @@ class MirrorWorld {
         }
         if (sp >= 2) subject.sendMessage("[30秒/1次]现拥有 $sp SP\n请选择职业(可选)\n1:骑士(-2SP)\n2：猎手(-2SP)\n3牧师(-2SP)\n4:法师(-2SP)\n[除选项外任意输入放弃职业选择]")
         val kill3 = runCatching {
-            nextEvent<GroupMessageEvent>(30_000) { it.sender == subject.user }.message.contentToString().toIntOrNull()
+            nextEvent<GroupMessageEvent>(30_000) { it.sender == subject.user }.message.content.toIntOrNull()
         }.onFailure { subject.sendMessage("输入超时,放弃职业选择") }.getOrNull()
         if (kill3 != null) sp -= 2
         userData.pc!!.newRole(kill1, kill2, kill3, sp)
+        userData.creationSteps = 2
         // 输出汇报
         subject.sendMessage("角色创建全部完成")
     }
 
     /** PvP */
-    suspend fun pvp(subject: MemberCommandSenderOnMessage) {
-        subject.sendMessage(
-            """
-        PvP挑战须知:\n挑战依据战败惩罚分为[练习][切磋][死斗]三类
-        [练习]
-        1、生命值降至0即判负
-        2、对战结束后双方状态将恢复至对战前状态
-        3、开启练习对战将会消耗双方金币各10枚
-        4、练习场经验收益为正常的20%
-        [切磋]
-        1、生命值降至40%以下即判断负
-        2、对战结束后双方状态将会保留
-        3、败方将会付出至少50枚金币给予胜方
-        [死斗]
-        1、生命值降至0即判负
-        2、败方将会进行角色清算（结算分数，删除角色）
-        3、胜方获得败方10%的金币
-        """.trimIndent()
-        )
+    suspend fun pvp(subject: MemberCommandSenderOnMessage, blue: User) {
+        val userData = MirrorWorldUser.userPermanent.getOrPut(subject.user.id) { PermanentData() }
+        val blueData = MirrorWorldUser.userPermanent.getOrPut(blue.id) { PermanentData() }
+        if (userData.pc == null || userData.creationSteps <= 4) {
+            subject.sendMessage("你的角色未创建完成，请建立角色、分配属性点且完成特性选择后操作")
+            return
+        }
+        if (blueData.pc == null || blueData.creationSteps <= 4) {
+            subject.sendMessage("对方角色未创建完成，请建立角色、分配属性点且完成特性选择后操作")
+            return
+        }
+        if (userData.PvPUA.not()) {
+            subject.sendMessage(
+                """
+            PvP挑战须知:\n挑战依据战败惩罚分为[练习][切磋][死斗]三类
+            [练习]
+            1、生命值降至0即判负
+            2、对战结束后双方状态将恢复至对战前状态
+            3、开启练习对战将会消耗双方金币各10枚
+            4、练习场经验收益为正常的20%
+            [切磋]
+            1、生命值降至总生命值40%以下即判负
+            2、对战结束后双方状态将会保留
+            3、胜方获得败方10%的金币(加成前)
+            [死斗]
+            1、生命值降至0即判负
+            2、败方将会进行角色清算（结算分数，删除角色）
+            3、胜方获得败方25%的金币(加成前)
+            """.trimIndent()
+            )
+            if (yesOrNo(subject, "已知上述情况？", "拒绝")) return
+            userData.PvPUA = true
+        }
+        subject.sendMessage("[30秒/1次]请选择模式\n1:练习\n2：切磋\n3:死斗")
+        val mods = runCatching {
+            nextEvent<GroupMessageEvent>(30_000) { it.sender == subject.user }.message.content
+                .toIntOrNull()
+        }.onFailure {
+            subject.sendMessage("输入超时,对战取消")
+            return
+        }.getOrNull()
+        when (mods) {
+            1 -> {
+                val ud = userData.pc!!.backup()
+                val bd = blueData.pc!!.backup()
+                subject.sendMessage(battleSequence(userData.pc!!, blueData.pc!!, mods))
+                userData.pc!!.recover(ud)
+                blueData.pc!!.recover(bd)
+            }
+            2, 3 -> {
+                subject.sendMessage(battleSequence(userData.pc!!, blueData.pc!!, mods))
+                userData.destruction()
+                blueData.destruction()
+            }
+            else -> {
+                subject.sendMessage("未选择模式,对战取消")
+                return
+            }
+        }
+
+    }
+
+    fun battleSequence(red: PlayerCharacter, blue: PlayerCharacter, mods: Int): String {
+        var redRounds = 1
+        var blueRounds = 1
+        val boundaryLine = if (mods == 2) 0.4 else 0.0
+        val logs = StringBuilder()
+        while (true) {
+            when {
+                red.showTPA() * redRounds > blue.showTPA() * blueRounds -> {
+                    logs.append("${blue.name} 攻击了\n")
+                    blueRounds++
+                    when (val v = blue.attack(red, boundaryLine)) {
+                        -2 -> logs.append("${red.name}闪避了\n")
+                        -1 -> {
+                            logs.append("${red.name}被击败了\n")
+                            val t = blue.settlement(red, mods)
+                            logs.append("${blue.name}${t.first}\n${red.name}${t.second}")
+                            return logs.toString()
+                        }
+                        else -> logs.append("${red.name}受到了${v}点伤害\n")
+                    }
+                }
+                red.showTPA() * redRounds < blue.showTPA() * blueRounds -> {
+                    logs.append("${red.name} 攻击了,")
+                    redRounds++
+                    when (val v = red.attack(blue, boundaryLine)) {
+                        -2 -> logs.append("${blue.name}闪避了\n")
+                        -1 -> {
+                            logs.append("${blue.name}被击败了\n")
+                            val t = red.settlement(blue, mods)
+                            logs.append("${red.name}${t.first}\n${blue.name}${t.second}")
+                            return logs.toString()
+                        }
+                        else -> logs.append("${blue.name}受到了${v}点伤害\n")
+                    }
+                }
+                else -> { // 相同跳过至下回合
+                    redRounds++
+                    blueRounds++
+                }
+            }
+        }
     }
 }

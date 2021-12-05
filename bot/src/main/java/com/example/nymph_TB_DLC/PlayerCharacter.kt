@@ -2,13 +2,18 @@ package com.example.nymph_TB_DLC
 
 import com.example.nymph_TB_DLC.MirrorWorldAssets.PositiveCorrection
 import com.example.nymph_TB_DLC.MirrorWorldConfig.AttackModifier
-import com.example.nymph_TB_DLC.MirrorWorldUser.userPermanent
 import kotlinx.serialization.Serializable
+import kotlin.math.absoluteValue
 import kotlin.math.roundToInt
 import kotlin.math.sqrt
 
 @Serializable
-data class PermanentData(var pt: Int = 0, var pc: PlayerCharacter? = null) {
+data class PermanentData(
+    var pt: Int = 0,
+    var pc: PlayerCharacter? = null,
+    var PvPUA: Boolean = false,
+    var creationSteps: Int = 0
+) {
     fun outInfo(): String {
         return """
         拥有Pt:   $pt
@@ -17,27 +22,23 @@ data class PermanentData(var pt: Int = 0, var pc: PlayerCharacter? = null) {
         ${pc?.info() ?: "角色未建立"}
         """.trimIndent()
     }
+
+    fun destruction() {
+        if (pc?.showDestruction() == true) {
+            pt = pc!!.valuation()
+            pc = null
+        }
+    }
 }
-/*
-val traits = mapOf(
-    "-钞能力-"  to "可以通过花费金币改变判定结果",
-    "-被剥削者-" to "金币收入-60%",
-    "-皇室荣光-" to "可以终止对战或拒绝终止对战",
-    "-被通缉者-" to "击败惩罚+50%",
-    "-名人效应-" to "所有奖励和惩罚加成+50%",
-    "-被传颂者-" to "所有惩罚-10%,所有奖励+10%",
-    "-精打细算-" to "金币收入+50%"
-)
- */
 
 
 @Serializable
 data class Bar(var Max: Int) {
     var current: Int = Max
-    fun harm(v: Int): Boolean {
+    fun harm(v: Int, boundaryLine: Double): Boolean {
         return if (current >= v) {
             current -= v
-            true
+            current > boundaryLine * Max
         } else {
             current = 0
             false
@@ -55,17 +56,18 @@ data class Bar(var Max: Int) {
 
 /**角色对象 */
 @Serializable
-class PlayerCharacter {
+class PlayerCharacter(val name: String) {
     private var gold: Int = 0                                       //金币，需要保留
 
     private var lv: Int = 1                                         //等级
     private var userExp: Int = 0                                    //经验
-    private var bag = arrayOfNulls<Int>(16)                    //物品
+
+    //    private var bag = arrayOfNulls<Int>(16)                    //物品
     private var traitsList: MutableSet<String> = mutableSetOf()     //特质
     private var skillList: MutableSet<String> = mutableSetOf()      //技能
     private var skillPrint: Int = 6                                 //技能点
     private var attributePrint: Int = 22                            //属性点
-
+    private var destruction: Boolean = false
     //六维
     /**力量: 1..8*/
     private var _str = 1
@@ -86,22 +88,22 @@ class PlayerCharacter {
     private var _lck = 1
 
     /**职业属性曲线
-     *0:atk 1:mat 2:spd 3:hp 4:mp*/
+     *0:atk 1:mat 2:spd 3:hp 4:mp
+     *<pre> 成长曲线
+     * 职业  技能   atk   mat    spd     hp    mp
+     * 骑士：[`招架`] 1.3   0.9    0.7    1.4   0.7 = 5
+     * 猎手：[`闪避`] 0.9   0.8    1.3    1.2   0.8 = 5
+     * 牧师：[`回复`] 1.1   1.1    0.9    0.9   1.0 = 5
+     * 法师：[`附魔`] 0.8   1.3    0.9    0.8   1.2 = 5
+     *</pre> */
     private var profession = arrayOf<Double>()
 
-    /* 成长曲线
-                atk   mat    spd     hp    mp
-    2.骑士：[招架] 1.3   0.9    0.7    1.4   0.7 = 5
-    2.猎手：[闪避] 0.9   0.8    1.3    1.2   0.8 = 5
-    2.牧师：[回复] 1.1   1.1    0.9    0.9   1.0 = 5
-    2.法师：[附魔] 0.8   1.3    0.9    0.8   1.2 = 5
-     */
 
     private var hp = Bar(0)         // 生命值
     private var mp = Bar(0)         // 法力值
     private var atk = 0                  // 物理攻击
     private var mat = 0                  // 法术攻击
-    private var spd = 0                  // 行动速度
+    private var tpa = 0                  // 行动速度
 
     fun info(): String {
         val buffer = StringBuilder()
@@ -125,6 +127,8 @@ class PlayerCharacter {
 
     fun showAP() = attributePrint
     fun showSP() = skillPrint
+    fun showTPA() = tpa
+    fun showDestruction() = destruction
 
     fun newRole(origin: Int?, reputation: Int?, prof: Int?, traitsPrint: Int) {
         when (origin) {
@@ -165,15 +169,17 @@ class PlayerCharacter {
             }
         }
         skillPrint = traitsPrint
-        setCAV()
+        updateCAV()
     }
 
     private fun judge(goal: Int) = (0..100).random() + _lck - 4 + 5 / (2 + _lck) >= goal
 
-    //普通攻击计算
-    fun attack(foe: PlayerCharacter): String {
+    /**普通攻击计算
+     * @return [闪避: -2, 判负: -1, 伤害值: Any]
+     */
+    fun attack(foe: PlayerCharacter, boundaryLine: Double): Int {
         //闪避能力最先
-        if (foe.skillList.contains("[闪避]") && foe.judge(80)) return "闪避了这次攻击"
+        if (foe.skillList.contains("[闪避]") && foe.judge(80)) return -2
         //闪避计算完成
         //初始化值
         var ad = atk.toDouble()
@@ -192,58 +198,88 @@ class PlayerCharacter {
         if (foe.skillList.contains("[招架]") && judge(50)) {
             ad /= 7
         }
-        val damage = (ap + ad).roundToInt()
-        return if (foe.hp.harm(damage)) "最终受到了${damage}点伤害" else "被打败了"
+        val totalDamage = (ap + ad).roundToInt()
+        val damage = if (foe.skillList.contains("[皇室荣光]")) {
+            if (totalDamage - foe.lv * 2 > 0) totalDamage - foe.lv * 2 else 0
+        } else totalDamage
+        return if (foe.hp.harm(damage, boundaryLine)) damage else -1
     }
 
-
-    private fun getTraits(type: String): Double {
+    /** 加成计算 */
+    private fun getTraits(type: String, mods: Boolean): Double {
         var negative = 0.0     //负面加成修正计算
         var positive = 0.0     //正面加成修正计算
 
-        for ((name, traits) in PositiveCorrection.getOrDefault("All", mutableMapOf())) {
-            if (traitsList.contains(name)) {
-                positive += traits.first
-                negative -= traits.second
+        if (mods) {  //收入加成
+            for ((name, traits) in PositiveCorrection.first.getOrDefault(type, mutableMapOf())) {
+                if (traitsList.contains(name)) {
+                    positive += traits.first
+                    negative -= traits.second
+                }
             }
-        }
-        for ((name, traits) in PositiveCorrection.getOrDefault(type, mutableMapOf())) {
-            if (traitsList.contains(name)) {
-                positive += traits.first
-                negative -= traits.second
+            for ((name, traits) in PositiveCorrection.first.getOrDefault("bonus", mutableMapOf())) {
+                if (traitsList.contains(name)) {
+                    positive *= traits.first
+                    negative *= traits.second
+                }
             }
-        }
-        for ((name, traits) in PositiveCorrection.getOrDefault("bonus", mutableMapOf())) {
-            if (traitsList.contains(name)) {
-                positive *= traits.first
-                negative *= traits.second
+        } else {      //支出加成
+            for ((name, traits) in PositiveCorrection.second.getOrDefault(type, mutableMapOf())) {
+                if (traitsList.contains(name)) {
+                    positive += traits.first
+                    negative -= traits.second
+                }
+            }
+            for ((name, traits) in PositiveCorrection.second.getOrDefault("bonus", mutableMapOf())) {
+                if (traitsList.contains(name)) {
+                    positive *= traits.first
+                    negative *= traits.second
+                }
             }
         }
         return negative + positive + 1
     }
 
-    //玩家战斗胜利结算
-    fun settlement(foe: PlayerCharacter): String {
-        val exp = (((foe.lv * foe.lv) - (lv * lv)) * 0.2 * ((_int * 0.1) + 1) * getTraits("Exp")).toInt()
-        val getGold = (getTraits("Gold") * foe.gold * 0.1).toInt()
-        userExp += exp
+    fun addExp(getExp: Int) {
+        userExp += getExp
         while (userExp >= lv * lv) {
             userExp -= lv * lv
-            lv++
+            upLv()
         }
-        gold += getGold
-        return "获得了${exp}点经验,${getGold}枚金币"
     }
 
-    //玩家战斗失败结算
-    fun destroy(id: Long): String {
-        val pt = gold / 3 + lv
-        userPermanent[id]!!.pt = pt
-        return "你死了,本局游戏结束,角色数据删除,你获得${pt}积分"
+    private fun upLv() {
+        lv++
+        updateCAV()
+    }
+
+    /** 玩家战斗胜利结算*/
+    fun settlement(foe: PlayerCharacter, mods: Int): Pair<String, String> {
+        var expModBuff = 1.0
+        var goalModBuff = 0.0
+        val expBase = ((foe.lv - lv) * (foe.lv + lv) * 0.2).absoluteValue
+        when (mods) {
+            1 -> expModBuff = 0.2
+            2 -> goalModBuff = 0.1
+            3 -> goalModBuff = 0.25
+        }
+        // 计算所得
+        val winnerExp = (expBase * (_int * 0.01 + 1) * getTraits("Exp", true) * expModBuff).toInt()
+        val loserExp = (expBase * (foe._int * 0.01 + 1) * foe.getTraits("Exp", true) * expModBuff).toInt()
+        val winnerGold = (getTraits("Gold", true) * foe.gold * goalModBuff).toInt()
+        val loserGold = (foe.getTraits("Gold", false) * foe.gold * goalModBuff).toInt()
+        // 给予所得
+        addExp(winnerExp)
+        addExp(loserExp)
+        gold += winnerGold
+        foe.gold -= loserGold
+        if (mods == 3) foe.destruction = true
+        return Pair("获得了 $winnerExp 点经验,$winnerGold 枚金币", "获得了 $winnerExp 点经验,失去了 $loserGold 枚金币")
     }
 
     //设置六围
     fun set6D(plan: Array<Int>) {
+        attributePrint = 0
         _str += plan[0]
         _men += plan[1]
         _int += plan[2]
@@ -252,14 +288,27 @@ class PlayerCharacter {
         _lck += plan[5]
     }
 
-    //设置属性
-    fun setCAV() {
+    /**设置属性*/
+    fun updateCAV() {
         hp = Bar(((9 * _vit + _str + 45) / 8.0 * 5.4 * profession[3] + sqrt(lv * 235.7) * 5).roundToInt())
         mp = Bar(((9 * _men + _vit + 45) / 8.0 * 7 * profession[4] + sqrt(lv * 75.3) * 5).roundToInt())
         atk = (sqrt(_str / 8.0 * 314 * profession[0] * lv) * 1.5).roundToInt()
         mat = (sqrt(_men / 8.0 * 314 * profession[1] * lv) * 1.5).roundToInt()
-        spd = (sqrt(31.4 * lv) / (4.13 * _agi) * profession[2] + 10 - _agi).roundToInt()
+        tpa = (sqrt(31.4 * lv) / (4.13 * _agi) * profession[2] + 10 - _agi).roundToInt()
     }
+
+    fun giveGold(v: Int) {
+        gold += v
+    }
+
+    fun backup() = Pair(hp, mp)
+
+    fun recover(archive: Pair<Bar, Bar>) {
+        hp = archive.first
+        mp = archive.second
+    }
+
+    fun valuation(): Int = (gold * 0.1 + lv * lv / 60).toInt()
 }
 
 class Tool(sixD: Array<Int>) {

@@ -30,20 +30,36 @@ object MirrorWorldAssets : AutoSavePluginData("DLC_AssetsData") { // "name" 是�
     )
 
     @ValueDescription("加成特性")
-    val PositiveCorrection: Map<String, MutableMap<String, Triple<Double, Double, String>>> by value(
-        mapOf(
-            "All" to mutableMapOf(),
-            "Gold" to mutableMapOf(
-                "-精打细算-" to Triple(0.5, 0.0, "金币收入+50%"),
-                "-被剥削者-" to Triple(0.0, 0.6, "金币收入-60%")
+    val PositiveCorrection: Pair<
+            Map<String, MutableMap<String, Triple<Double, Double, String>>>,
+            Map<String, MutableMap<String, Triple<Double, Double, String>>>> by value(
+        Pair(
+            mapOf(
+                "Gold" to mutableMapOf(
+                    "-被剥削者-" to Triple(0.0, 0.6, "金币收入-60%"),
+                    "-精打细算-" to Triple(0.2, 0.0, "金币收入+20%"),
+                    "-被传颂者-" to Triple(0.2, 0.0, "金币支出-20%,金币经验收入+20%")
+                ),
+                "Exp" to mutableMapOf(
+                    "-天资聪颖-" to Triple(0.25, 0.0, "经验获取+25%"),
+                    "-高人指路-" to Triple(0.2, 0.0, "经验获取+20%"),
+                    "-被传颂者-" to Triple(0.2, 0.0, "所有支出-20%,所有收入+20%")
+                ),
+                "bonus" to mutableMapOf(
+                    "-名人效应-" to Triple(1.5, 1.5, "所有加成影响+50%")
+                )
             ),
-            "Exp" to mutableMapOf(
-                "-高人指路-" to Triple(0.2, 0.0, "经验获取+20%")
-            ),
-            "bonus" to mutableMapOf(
-                "-被通缉者-" to Triple(0.0, 1.5, "所有惩罚+50%"),
-                "-被传颂者-" to Triple(1.2, 0.8, "所有惩罚-20%,所有奖励+20%"),
-                "-名人效应-" to Triple(1.5, 1.5, "所有奖励和惩罚加成+50%")
+            mapOf(
+                "Gold" to mutableMapOf(
+                    "-被通缉者-" to Triple(0.5, 0.0, "金币花费+50%"),
+                    "-被传颂者-" to Triple(0.0, 0.2, "金币支出-20%,金币经验收入+20%"),
+                ),
+                "Exp" to mutableMapOf(
+                    "-天生愚钝-" to Triple(0.25, 0.0, "经验获取-25%")
+                ),
+                "bonus" to mutableMapOf(
+                    "-名人效应-" to Triple(1.5, 1.5, "所有加成影响+50%")
+                )
             )
         )
     )
