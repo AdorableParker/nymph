@@ -11,21 +11,22 @@
 PRG="$0"
 # Need this for relative symlinks.
 while [ -h "$PRG" ] ; do
-    ls=`ls -ld "$PRG"`
-    link=`expr "$ls" : '.*-> \(.*\)$'`
+    ls=$(ls -ld "$PRG")
+    link=$(expr "$ls" : '.*-> \(.*\)$')
     if expr "$link" : '/.*' > /dev/null; then
         PRG="$link"
     else
         PRG=`dirname "$PRG"`"/$link"
     fi
 done
+# shellcheck disable=SC2006
 SAVED="`pwd`"
-cd "`dirname \"$PRG\"`/" >/dev/null
-APP_HOME="`pwd -P`"
-cd "$SAVED" >/dev/null
+cd "$(dirname \""$PRG"\")/" >/dev/null || exit
+APP_HOME="$(pwd -P)"
+cd "$SAVED" >/dev/null || exit
 
 APP_NAME="Gradle"
-APP_BASE_NAME=`basename "$0"`
+APP_BASE_NAME=$(basename "$0")
 
 # 在此处添加默认 JVM 选项。 您还可以使用 JAVA_OPTS 和 GRADLE_OPTS 将 JVM 选项传递给此脚本.
 DEFAULT_JVM_OPTS=""

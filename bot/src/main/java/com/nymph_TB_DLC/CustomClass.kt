@@ -1,4 +1,4 @@
-package com.example.nymph_TB_DLC
+package com.nymph_TB_DLC
 
 import net.mamoe.mirai.console.data.AutoSavePluginConfig
 import net.mamoe.mirai.console.data.AutoSavePluginData
@@ -11,9 +11,25 @@ object MirrorWorldUser : AutoSavePluginData("DLC_PlayerData") { // "name" 是保
     var initialization: Int by value(0)
 
     @ValueDescription("玩家数据")
-    val userPermanent: MutableMap<Long, PermanentData> by value(
+    val userData: MutableMap<Long, PermanentData> by value(
         mutableMapOf()
     )
+
+    @ValueDescription("玩家数据")
+    val userRole: MutableMap<Long, GameRole> by value(
+        mutableMapOf()
+    )
+
+    fun outInfo(uid: Long): String {
+        val data = userData.getOrPut(uid) { PermanentData() }
+        val role = userRole[uid]
+        return """
+                |拥有Pt: ${data.pt}
+                |==========
+                |玩家角色:${role?.info() ?: "角色未建立"}
+                """.trimMargin("|")
+
+    }
 }
 
 object MirrorWorldAssets : AutoSavePluginData("DLC_AssetsData") { // "name" 是保存的文件名 (不带后缀)
@@ -21,11 +37,11 @@ object MirrorWorldAssets : AutoSavePluginData("DLC_AssetsData") { // "name" 是�
     val skillList: MutableMap<String, String> by value(
         mutableMapOf(
             "[招架]" to "50%的概率降低30%的物理伤害",
-            "[回复]" to "每3回合恢复已损失生命值的20%",
+            "[回复]" to "每次攻击有30%几率回复已损失生命值的10%",
             "[闪避]" to "20%的概率闪避任何伤害",
             "[附魔]" to "物理攻击的50%作为法术伤害计算",
-            "[钞能力]" to "通过花费金币改变判定结果",
-            "[皇室荣光]" to "可以终止对战或拒绝终止对战"
+            "[皇室荣光]" to "吸收两倍于自身等级值的伤害"
+//            "[钞能力]" to "通过花费金币改变判定结果",
         )
     )
 
@@ -71,4 +87,43 @@ object MirrorWorldConfig : AutoSavePluginConfig("DLC_Config") {
 
     @ValueDescription("属性点汇率")
     var ExchangeRate: Int by value(10)
+}
+
+object CharacterLineDictionary : AutoSavePluginConfig("DLC_CLD") {
+    @ValueDescription("通用攻击台词")
+    var AttackLine: Array<String> by value(
+        arrayOf(
+            "进攻了",
+            "打了一套王八拳",
+            "手一滑,武器飞了出去",
+            "不知道从什么地方掏了枚臭鸡蛋丢了过去",
+            "带着一道刀光冲了过去",
+            "大喊一声'偷袭',并掏出了手枪",
+        )
+    )
+
+    @ValueDescription("通用防御台词")
+    var DefenseLine: Array<String> by value(
+        arrayOf(
+            "接中了",
+            "吃下了这顿",
+            "结结实实的挨了这一下",
+            "硬吃了这次攻击",
+            "没能够躲开",
+            "抱头蹲防"
+        )
+    )
+
+    @ValueDescription("法师攻击台词")
+    var WizardAttackLine: Array<String> by value(
+        arrayOf(
+            "的法球发出了耀眼的闪光",
+            "搓出了一发火球",
+            "喊出-奥术飞弹-,却释放了落雷术",
+            "丢出了一堆不稳定法力水晶",
+            "高举法杖:Explosion!! ",
+            "把水晶球当板砖丢了出去"
+        )
+    )
+
 }
