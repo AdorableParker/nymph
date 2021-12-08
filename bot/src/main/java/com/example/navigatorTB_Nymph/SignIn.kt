@@ -2,6 +2,7 @@ package com.example.navigatorTB_Nymph
 
 import com.example.navigatorTB_Nymph.OneWord.hitokoto
 import com.example.navigatorTB_Nymph.Tarot.divineTarot
+import com.nymph_TB_DLC.MirrorWorld
 import net.mamoe.mirai.console.command.CommandManager
 import net.mamoe.mirai.console.command.MemberCommandSenderOnMessage
 import net.mamoe.mirai.console.command.SimpleCommand
@@ -25,10 +26,15 @@ object SignIn : SimpleCommand(
     @Handler
     suspend fun MemberCommandSenderOnMessage.main() {
         if (group.botMuteRemaining > 0) return
-        group.sendImage(sing(user.id))
+        if (PluginMain.DLC_MirrorWorld) {
+            val s = MirrorWorld().pay(user.id, (1..20).random())
+            group.sendImage(sing(user.id, s))
+        } else {
+            group.sendImage(sing(user.id))
+        }
     }
 
-    private fun sing(uid: Long): ByteArrayInputStream {
+    private fun sing(uid: Long, s: String? = null): ByteArrayInputStream {
         val oneWord = hitokoto()
         val tarot = divineTarot(uid)
 
@@ -75,6 +81,8 @@ object SignIn : SimpleCommand(
             graphics.drawString(str, 20, 95 + i * 25)
         }
 
+
+
         graphics.font = Font("华康翩翩体W5-A", Font.PLAIN, 23)
         val fontMetrics1 = graphics.getFontMetrics(Font("华康翩翩体W5-A", Font.PLAIN, 23)) // 创建一个FontMetrics对象
         val l = oneWord.first.chunked(18)
@@ -89,6 +97,11 @@ object SignIn : SimpleCommand(
         graphics.drawString("今年还剩", 470, 150)
         graphics.drawString("${365 - LocalDateTime.now().dayOfYear}", 570, 220)
         graphics.drawString("天", 650, 290)
+
+        if (s != null) {
+            graphics.font = Font("方正剪纸简体", Font.PLAIN, 45)
+            graphics.drawString(s, 500, 320)
+        }
 
         graphics.color = Color.decode("#9a9a9a")
         graphics.font = Font("Zpix", Font.PLAIN, 15)

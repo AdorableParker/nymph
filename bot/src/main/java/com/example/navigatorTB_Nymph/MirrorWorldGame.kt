@@ -13,12 +13,19 @@ object MirrorWorldGame {
         PlayerInfo.register()
         PlayerBuild.register()
         PvPBattle.register()
+        PlayerTransfer.register()
+        GMtoBestow.register()
+        GMStrip.register()
+
     }
 
     fun unregister() {
         PlayerInfo.unregister()
         PlayerBuild.unregister()
         PvPBattle.unregister()
+        PlayerTransfer.unregister()
+        GMtoBestow.unregister()
+        GMStrip.unregister()
     }
 
     object PlayerInfo : SimpleCommand(
@@ -71,6 +78,32 @@ object MirrorWorldGame {
             if (group.botMuteRemaining > 0) return
             if (PluginMain.DLC_MirrorWorld) {
                 MirrorWorld().transfer(this, user, amount)
+            } else sendMessage("缺少依赖DLC")
+        }
+    }
+
+    object GMtoBestow : SimpleCommand(
+        PluginMain, "toBestow", "金币",
+        description = "金币增加"
+    ) {
+        @Handler
+        suspend fun MemberCommandSenderOnMessage.main(foe: User, amount: Int) {
+            if (group.botMuteRemaining > 0 || user.id != MySetting.AdminID) return
+            if (PluginMain.DLC_MirrorWorld) {
+                MirrorWorld().toBestow(foe.id, amount)
+            } else sendMessage("缺少依赖DLC")
+        }
+    }
+
+    object GMStrip : SimpleCommand(
+        PluginMain, "GMStrip", "金币",
+        description = "GM金币减少"
+    ) {
+        @Handler
+        suspend fun MemberCommandSenderOnMessage.main(foe: User, amount: Int) {
+            if (group.botMuteRemaining > 0 || user.id != MySetting.AdminID) return
+            if (PluginMain.DLC_MirrorWorld) {
+                MirrorWorld().strip(foe.id, amount)
             } else sendMessage("缺少依赖DLC")
         }
     }
