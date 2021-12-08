@@ -7,6 +7,7 @@ import net.mamoe.mirai.event.events.GroupMessageEvent
 import net.mamoe.mirai.event.nextEvent
 import net.mamoe.mirai.message.data.content
 import java.lang.System.currentTimeMillis
+import java.time.LocalDateTime
 import kotlin.math.roundToInt
 
 class MirrorWorld {
@@ -315,9 +316,14 @@ class MirrorWorld {
     }
 
     /** 收益 */
-    fun pay(uid: Long, amount: Int): String {
-        val userRole = MirrorWorldUser.userRole[uid] ?: return "你的角色未创建完成，请建立角色后操作"
-        return "获得${userRole.getPaid(amount)}枚金币"
+    fun pay(uid: Long, amount: Int): String? {
+        val userRole = MirrorWorldUser.userRole[uid] ?: return null
+        val userData = MirrorWorldUser.userData.getOrPut(uid) { PermanentData() }
+        val today = LocalDateTime.now().dayOfYear
+        return if (today == userData.signIn) {
+            userData.signIn = today
+            "获得${userRole.getPaid(amount)}枚金币"
+        } else "你今天已经签到过了"
     }
 
     fun toBestow(uid: Long, amount: Int) {

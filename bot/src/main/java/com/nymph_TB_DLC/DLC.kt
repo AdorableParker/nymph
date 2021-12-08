@@ -17,7 +17,7 @@ object DLC : KotlinPlugin(
         id = "MCP.TB_DLC",
         version = "0.0.2",
         name = "TB_DLC-MirrorWorld"
-    ) { dependsOn("MCP.navigatorTB_Nymph", "0.15.0") }) {
+    ) { dependsOn("MCP.navigatorTB_Nymph", "0.15.4") }) {
 
     override fun onEnable() {
         MirrorWorldUser.reload()
