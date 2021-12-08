@@ -320,7 +320,7 @@ class MirrorWorld {
         val userRole = MirrorWorldUser.userRole[uid] ?: return null
         val userData = MirrorWorldUser.userData.getOrPut(uid) { PermanentData() }
         val today = LocalDateTime.now().dayOfYear
-        return if (today == userData.signIn) {
+        return if (today != userData.signIn) {
             userData.signIn = today
             "获得${userRole.getPaid(amount)}枚金币"
         } else "你今天已经签到过了"
