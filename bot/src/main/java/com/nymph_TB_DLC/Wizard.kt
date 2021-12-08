@@ -1,6 +1,7 @@
 package com.nymph_TB_DLC
 
 import com.nymph_TB_DLC.CharacterLineDictionary.WizardAttackLine
+import kotlinx.serialization.Serializable
 
 /**# 法师
  *  HP  MP  ATK MAT TPA
@@ -8,6 +9,7 @@ import com.nymph_TB_DLC.CharacterLineDictionary.WizardAttackLine
  * 0.8  1.2 0.8 1.3 0.9
  * * 物理攻击的50%作为法术伤害计算
  */
+@Serializable
 class Wizard(override val name: String) : GameRole() {
     override val professionHP = 0.8
     override val professionMP = 1.2

@@ -1,5 +1,6 @@
 package com.nymph_TB_DLC
 
+import kotlinx.serialization.Serializable
 import com.nymph_TB_DLC.CharacterLineDictionary as CLD
 
 /**# 牧师
@@ -8,6 +9,7 @@ import com.nymph_TB_DLC.CharacterLineDictionary as CLD
  * 1.1  1.1 0.9 0.9 1.0
  * * 每次攻击都有30%几率回复已损失生命值的10%
  */
+@Serializable
 class Priest(override val name: String) : GameRole() {
 
     override val professionHP = 1.1

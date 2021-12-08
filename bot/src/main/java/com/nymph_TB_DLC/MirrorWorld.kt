@@ -314,6 +314,20 @@ class MirrorWorld {
         blueRole.loseGold(v - amount)
     }
 
+    /** 收益 */
+    fun pay(uid: Long, amount: Int): String {
+        val userRole = MirrorWorldUser.userRole[uid] ?: return "你的角色未创建完成，请建立角色后操作"
+        return "获得${userRole.getPaid(amount)}枚金币"
+    }
+
+    fun toBestow(uid: Long, amount: Int) {
+        MirrorWorldUser.userRole[uid]?.giveGold(amount)
+    }
+
+    fun strip(uid: Long, amount: Int) {
+        MirrorWorldUser.userRole[uid]?.snatch(amount)
+    }
+
 
     /** 自定义场获取判定线数据 */
     private suspend fun getBoundaryLine(subject: MemberCommandSenderOnMessage): Double? {

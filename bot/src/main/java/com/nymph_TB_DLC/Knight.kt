@@ -1,5 +1,6 @@
 package com.nymph_TB_DLC
 
+import kotlinx.serialization.Serializable
 import kotlin.math.roundToInt
 import com.nymph_TB_DLC.CharacterLineDictionary as CLD
 
@@ -10,6 +11,7 @@ import com.nymph_TB_DLC.CharacterLineDictionary as CLD
  * 1.3  0.7 1.3 0.9 0.7
  * * 每次防御都有50%几率抵挡30%的AD伤害
  */
+@Serializable
 class Knight(override val name: String) : GameRole() {
     override val professionHP = 1.3
     override val professionMP = 0.7

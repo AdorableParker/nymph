@@ -8,7 +8,7 @@ import com.nymph_TB_DLC.CharacterLineDictionary as CLD
 
 /**角色对象 */
 @Serializable
-abstract class GameRole {
+sealed class GameRole {
     abstract val name: String                               // 名字,使用昵称
     private var gold: Int = 0                               //金币
 
@@ -51,7 +51,7 @@ abstract class GameRole {
     private var skillList: MutableSet<String> = mutableSetOf()     //特质
 
     //    private var skillList: MutableSet<String> = mutableSetOf()      //技能
-    open var skillPrint: Int = 6                                 //技能点
+    abstract var skillPrint: Int                                           //技能点
     private var attributePrint: Int = 22                            //属性点
 
     fun showTPA() = tpa
@@ -140,6 +140,10 @@ abstract class GameRole {
         gold -= v
         true
     } else false
+
+    /** 移除 */
+    fun snatch(v: Int) = if (v <= gold) gold -= v else gold = 0
+
 
     fun transfer(joe: GameRole, amount: Int) = if (gold <= amount) false
     else {
@@ -237,6 +241,12 @@ abstract class GameRole {
         // 移除所罚金币
         foe.loseGold(loserGold)
         return Pair(winnerGold, loserGold)
+    }
+
+    fun getPaid(salary: Int): Int {
+        val income = (getTraits("Gold", true) * salary).toInt()
+        giveGold(income)
+        return income
     }
 
     /** 加成计算
