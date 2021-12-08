@@ -21,9 +21,9 @@ java {
 }
 
 dependencies {
-    implementation 'org.junit.jupiter:junit-jupiter:5.8.2'
     compileOnly("net.mamoe:mirai-core:2.8.2") // mirai-core 的 API
     compileOnly("net.mamoe:mirai-console:2.8.2") // 后端
 
+    testImplementation( 'org.junit.jupiter:junit-jupiter:5.8.2')
 //    implementation("org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version")
 }

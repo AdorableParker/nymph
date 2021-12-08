@@ -4,13 +4,13 @@ plugins {
 }
 
 android {
-    compileSdkVersion 29
+    compileSdkVersion 30
 
     defaultConfig {
         // 请在这里更改你的应用id
         applicationId "com.navigatorTB_nymph"
         minSdkVersion 26
-        targetSdkVersion 29
+        targetSdkVersion 30
         // 版本设置， 低versionCode的apk不可以覆盖高版本的apk
         versionCode 10501
         versionName "0.5.1:Beta"
@@ -40,7 +40,7 @@ dependencies {
 //    implementation 'androidx.appcompat:appcompat:1.2.0'
 //    implementation 'com.google.android.material:material:1.3.0'
     implementation project(":bot")
-    testImplementation 'junit:junit:4.+'
+    testImplementation 'junit:junit:'
 //    androidTestImplementation 'androidx.test.ext:junit:1.1.2'
 //    androidTestImplementation 'androidx.test.espresso:espresso-core:3.3.0'
 }

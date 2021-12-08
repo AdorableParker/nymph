@@ -332,7 +332,7 @@ class MirrorWorld {
     }
 
     /** 练习场 */
-    fun drillBattleSequence(red: GameRole, blue: GameRole): String {
+    private fun drillBattleSequence(red: GameRole, blue: GameRole): String {
         // 支付费用
         red.loseGold(10)
         blue.loseGold(10)
@@ -372,7 +372,7 @@ class MirrorWorld {
     }
 
     /** 切磋场 */
-    fun battleSequence(red: GameRole, blue: GameRole): String {
+    private fun battleSequence(red: GameRole, blue: GameRole): String {
         // 设定回合计数器
         var redRounds = 1
         var blueRounds = 1
@@ -413,7 +413,7 @@ class MirrorWorld {
     }
 
     /** 死斗场 */
-    fun battleSequence(red: GameRole, redID: Long, blue: GameRole, blueID: Long): String {
+    private fun battleSequence(red: GameRole, redID: Long, blue: GameRole, blueID: Long): String {
         // 设定回合计数器
         var redRounds = 1
         var blueRounds = 1
@@ -458,7 +458,7 @@ class MirrorWorld {
     }
 
     /** 自定义场 */
-    fun battleSequence(red: GameRole, blue: GameRole, boundaryLine: Double): String {
+    private fun battleSequence(red: GameRole, blue: GameRole, boundaryLine: Double): String {
         // 支付场地费
         red.loseGold(20)
         red.loseGold(20)
