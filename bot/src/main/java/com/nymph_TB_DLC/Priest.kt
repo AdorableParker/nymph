@@ -17,7 +17,7 @@ class Priest(override val name: String) : GameRole() {
     override val professionATK = 0.9
     override val professionMAT = 0.9
     override val professionTPA = 1.0
-    override var skillPrint: Int = 4    //技能点
+    override var skillPrint = 4    //技能点
     override fun attack(foe: GameRole, logID: String): Pair<Double, Double> {
         if (judge(30)) {
             val nowHP = talentSkills()

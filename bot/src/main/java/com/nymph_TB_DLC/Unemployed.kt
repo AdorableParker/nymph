@@ -9,5 +9,5 @@ class Unemployed(override val name: String) : GameRole() {
     override val professionATK = 1.0
     override val professionMAT = 1.0
     override val professionTPA = 1.0
-    override var skillPrint: Int = 6
+    override var skillPrint = 6
 }

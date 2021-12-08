@@ -16,7 +16,7 @@ class Wizard(override val name: String) : GameRole() {
     override val professionATK = 0.8
     override val professionMAT = 1.3
     override val professionTPA = 0.9
-    override var skillPrint: Int = 4    //技能点
+    override var skillPrint = 4    //技能点
     override fun attack(foe: GameRole, logID: String): Pair<Double, Double> {
         val ad = atk.toDouble()
         val magicDif = (natureMen - foe.natureMen) * MirrorWorldConfig.AttackModifier + 1
