@@ -99,8 +99,12 @@ object SignIn : SimpleCommand(
         graphics.drawString("天", 650, 290)
 
         if (s != null) {
-            graphics.font = Font("方正剪纸简体", Font.PLAIN, 45)
-            graphics.drawString(s, 500, 320)
+            graphics.color = Color(0, 0, 0, 46)
+            graphics.font = Font("方正剪纸简体", Font.PLAIN, 26)
+            graphics.drawString(s, 470, 320)
+            graphics.color = Color(255, 255, 255, 200)
+            graphics.font = Font("方正剪纸简体", Font.PLAIN, 24)
+            graphics.drawString(s, 470, 320)
         }
 
         graphics.color = Color.decode("#9a9a9a")
