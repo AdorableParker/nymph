@@ -334,6 +334,7 @@ class MirrorWorld {
         MirrorWorldUser.userRole[uid]?.snatch(amount)
     }
 
+    fun treatment(uid: Long) = MirrorWorldUser.userRole[uid]?.treatment()
 
     /** 自定义场获取判定线数据 */
     private suspend fun getBoundaryLine(subject: MemberCommandSenderOnMessage): Double? {

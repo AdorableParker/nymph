@@ -32,4 +32,8 @@ data class Bar(var max: Int) {
         }
         return current
     }
+
+    fun full() {
+        current = max
+    }
 }

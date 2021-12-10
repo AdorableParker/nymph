@@ -28,7 +28,7 @@ class Knight(override val name: String) : GameRole() {
             t += "$name${CLD.DefenseLine.random()},"
             damage.first
         }
-        val d = (damage.second + k).roundToInt()
+        val d = (damage.second + k).roundToInt() + (8 - natureAgi..natureAgi).random()
         return if (MirrorWorldAssets.skillList.contains("[皇室荣光]")) {
             if (d <= lv * 2) {
                 BattleRecord().write(logID, t + "并触发了技能[皇室荣光],护盾吸收了所有的伤害")

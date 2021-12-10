@@ -179,12 +179,12 @@ sealed class GameRole {
         BattleRecord().write(logID, "$name${CLD.AttackLine.random()}")
         val magicDif = (natureMen - foe.natureMen) * MirrorWorldConfig.AttackModifier + 1
         val intelligenceDif = (natureInt - foe.natureInt) * MirrorWorldConfig.AttackModifier + 1
-        return Pair(atk.toDouble() * magicDif * intelligenceDif, 0.0)
+        return Pair(atk * magicDif * intelligenceDif, 0.0)
     }
 
     /**通用防御能力*/
     open fun defense(damage: Pair<Double, Double>, logID: String): Int {
-        val d = (damage.first + damage.second).roundToInt()
+        val d = (damage.first + damage.second).roundToInt() + (8 - natureAgi..natureAgi).random()
         return if (skillList.contains("[皇室荣光]")) {
             if ((damage.first + damage.second).roundToInt() <= lv * 2) {
                 BattleRecord().write(logID, "${name}触发技能[皇室荣光],护盾吸收了所有的伤害")
@@ -288,6 +288,14 @@ sealed class GameRole {
             }
         }
         return negative + positive + 1
+    }
+
+    fun treatment(): String {
+        val medicalExpenses = (getTraits("Gold", false) * (hp.max - hp.current) / 20).toInt()
+        return if (loseGold(medicalExpenses)) {
+            hp.full()
+            "本次治疗花费${medicalExpenses}枚金币,欢迎下次再来"
+        } else "你没有足够的钱进行治疗"
     }
 }
 
