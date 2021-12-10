@@ -19,24 +19,21 @@ data class Dynamic(
         text?.split("\n")?.forEach { textList.addAll(it.chunked(24)) }
         val textHeight = textList.size * 44 + 60
         //计算图片区域高度
-        var imageWidth = 0
-        var imageHeight = 0
         val imageList = arrayListOf<BufferedImage>()
         imageStream?.forEach { imageList.add(ImageIO.read(it)) }
-        if (imageList.size >= 4) {
-            for ((index, img) in imageList.withIndex()) {
-                imageWidth = img.width
-                when (index % 3) {
-                    0 -> imageHeight += img.height
-                    1 -> imageHeight -= img.height / 2
-                    2 -> imageHeight -= img.height / 6
+
+        val height = if (imageList.size > 0) {
+            var imageHeight = 0
+            if (imageList.size == 9) {
+                imageHeight = imageList[0].height * 3
+            } else {
+                imageList.forEach { img ->
+                    imageHeight += 1080 / img.width * img.height
                 }
             }
-        } else imageList.forEach { img -> imageHeight += img.height }
+            imageHeight + textHeight // 计算高度
+        } else textHeight
         //生成画布
-
-        val height = if (imageHeight + imageHeight == 0) textHeight
-        else (1080.0 / imageWidth * imageHeight).toInt() + textHeight // 计算高度
         val image = BufferedImage(1080, height, BufferedImage.TYPE_INT_RGB)
         val graphics = image.createGraphics()
         // 绘制背景色
@@ -44,14 +41,17 @@ data class Dynamic(
         graphics.fillRect(0, 0, 1080, height)
         // 绘制配图
         var cumulativeHeight = 0
-        if (imageList.size >= 4) {
-            var maxHeight = 0
+        if (imageList.size == 9) {
             for ((index, img) in imageList.withIndex()) {
-                val w = if (imageList.size / 3 * 3 >= index + 1) 360 else 1080 / (imageList.size % 3)
-                val h = (w * 1.0 / img.width * img.height).toInt()
-                graphics.drawImage(img, index % 3 * w, cumulativeHeight + textHeight, w, h, null)
-                if (maxHeight < h) maxHeight = h
-                if (index % 3 == 2) cumulativeHeight += maxHeight
+                graphics.drawImage(
+                    img,
+                    index % 3 * 360,
+                    cumulativeHeight + textHeight,
+                    360,
+                    (360.0 / img.width * img.height).toInt(),
+                    null
+                )
+                if (index % 3 == 2) cumulativeHeight += img.height / 3
             }
         } else {
             for (img in imageList) {

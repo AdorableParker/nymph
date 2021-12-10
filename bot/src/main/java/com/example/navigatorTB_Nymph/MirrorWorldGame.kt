@@ -16,7 +16,7 @@ object MirrorWorldGame {
         PlayerTransfer.register()
         GMtoBestow.register()
         GMStrip.register()
-
+        Inn.register()
     }
 
     fun unregister() {
@@ -26,6 +26,7 @@ object MirrorWorldGame {
         PlayerTransfer.unregister()
         GMtoBestow.unregister()
         GMStrip.unregister()
+        Inn.unregister()
     }
 
     object PlayerInfo : SimpleCommand(
