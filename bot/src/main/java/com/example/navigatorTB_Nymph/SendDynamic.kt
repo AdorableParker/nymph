@@ -92,7 +92,7 @@ object SendDynamic : SimpleCommand(
                 val imgSrcList = mutableListOf<InputStream>()
                 card.obj("item")?.array<JsonObject>("pictures")?.forEach { it ->
                     it.string("img_src")?.let { imgSrc ->
-                        imgSrcList.add(URL(imgSrc).openConnection().getInputStream())
+                        if (imgSrc.contains(".gif").not()) imgSrcList.add(URL(imgSrc).openConnection().getInputStream())
                     }
                 }
                 d.text = if (description.isNullOrEmpty()) "含图动态:" else "含图动态:\n$description"

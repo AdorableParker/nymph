@@ -147,20 +147,19 @@ object GroupPolicy : CompositeCommand(
     }
 
     @SubCommand("订阅模式")
-    suspend fun MemberCommandSenderOnMessage.subscription(mode: String) {
+    suspend fun MemberCommandSenderOnMessage.subscription(mode: Int) {
         if (group.botMuteRemaining > 0) return
 
         if (permissionCheck(user)) {
             sendMessage("权限不足")
             return
         }
-        val i = mode.toIntOrNull(16)
-        if (i != null && i >= 0) {
+        if (mode >= 0) {
             val dbObject = SQLiteJDBC(PluginMain.resolveDataPath("User.db"))
-            dbObject.update("SubscribeInfo", "group_id", group.id, "AzurLane", if (i and 1 == 1) 1 else 0)
-            dbObject.update("SubscribeInfo", "group_id", group.id, "ArKnights", if (i and 2 == 2) 1 else 0)
-            dbObject.update("SubscribeInfo", "group_id", group.id, "FateGrandOrder", if (i and 4 == 4) 1 else 0)
-            dbObject.update("SubscribeInfo", "group_id", group.id, "GenShin", if (i and 8 == 8) 1 else 0)
+            dbObject.update("SubscribeInfo", "group_id", group.id, "AzurLane", if (mode and 1 == 1) 1 else 0)
+            dbObject.update("SubscribeInfo", "group_id", group.id, "ArKnights", if (mode and 2 == 2) 1 else 0)
+            dbObject.update("SubscribeInfo", "group_id", group.id, "FateGrandOrder", if (mode and 4 == 4) 1 else 0)
+            dbObject.update("SubscribeInfo", "group_id", group.id, "GenShin", if (mode and 8 == 8) 1 else 0)
             sendMessage("订阅设定到模式$mode")
             dbObject.closeDB()
         } else {

@@ -39,18 +39,18 @@ object SignIn : SimpleCommand(
         val tarot = divineTarot(uid)
 
         val themeColor = when (tarot["Brand"]) {
-            "The Hanged Man(倒吊人)" -> Color.decode("#69b960")
-            "The Emperor(皇帝)", "Justice(正义)", "The Chariot(战车)", "The Magician(魔术师)" -> Color.decode("#ff9e3e")
-            "The Hierophant(教皇)", "Death(死神)", "The Sun(太阳)" -> Color.decode("#c4bcb9")
-            "Strength(力量)", "The Empress(女王)" -> Color.decode("#e7c653")
-            "The Devil(恶魔)", "The Tower(塔)" -> Color.decode("#553246")
-            "The Star(星星)" -> Color.decode("#4c557e")
-            "The High Priestess(女祭司)", "Judgement(审判)" -> Color.decode("#4c92c6")
-            "The Lovers(恋人)", "Wheel of Fortune(命运之轮)", "The World(世界)" -> Color.decode("#4ea4c5")
-            "Temperance(节制)" -> Color.decode("#c2b69e")
-            "The Hermit(隐者)" -> Color.decode("#2b5c56")
-            "The Fool(愚者)" -> Color.decode("#114e61")
-            "The Moon(月亮)" -> Color.decode("#8a677d")
+            "The Hanged Man(倒吊人)" -> Color(105, 185, 96)
+            "The Emperor(皇帝)", "Justice(正义)", "The Chariot(战车)", "The Magician(魔术师)" -> Color(255, 158, 62)
+            "The Hierophant(教皇)", "Death(死神)", "The Sun(太阳)" -> Color(196, 188, 185)
+            "Strength(力量)", "The Empress(女王)" -> Color(231, 198, 83)
+            "The Devil(恶魔)", "The Tower(塔)" -> Color(85, 50, 70)
+            "The Star(星星)" -> Color(76, 85, 126)
+            "The High Priestess(女祭司)", "Judgement(审判)" -> Color(76, 146, 198)
+            "The Lovers(恋人)", "Wheel of Fortune(命运之轮)", "The World(世界)" -> Color(78, 164, 197)
+            "Temperance(节制)" -> Color(194, 182, 158)
+            "The Hermit(隐者)" -> Color(43, 92, 86)
+            "The Fool(愚者)" -> Color(17, 78, 97)
+            "The Moon(月亮)" -> Color(138, 103, 125)
             else -> Color.WHITE
         }
 
@@ -100,14 +100,14 @@ object SignIn : SimpleCommand(
 
         if (s != null) {
             graphics.color = Color(0, 0, 0, 46)
-            graphics.font = Font("方正剪纸简体", Font.PLAIN, 26)
+            graphics.font = Font("方正剪纸简体", Font.BOLD, 26)
             graphics.drawString(s, 470, 320)
-            graphics.color = Color(255, 255, 255, 200)
-            graphics.font = Font("方正剪纸简体", Font.PLAIN, 24)
+            graphics.color = Color(220, 60, 40) //131,198,83
+            graphics.font = Font("方正剪纸简体", Font.PLAIN, 25)
             graphics.drawString(s, 470, 320)
         }
 
-        graphics.color = Color.decode("#9a9a9a")
+        graphics.color = Color(154, 154, 154)
         graphics.font = Font("Zpix", Font.PLAIN, 15)
         graphics.drawString("一言:https://hitokoto.cn", 5, 480)
         graphics.dispose()

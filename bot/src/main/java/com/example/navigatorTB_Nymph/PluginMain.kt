@@ -43,7 +43,7 @@ object PluginMain : KotlinPlugin(
     JvmPluginDescription(
         id = "MCP.navigatorTB_Nymph",
         name = "navigatorTB",
-        version = "0.15.5"
+        version = "0.15.6"
     )
 ) {
     // 分词功能
