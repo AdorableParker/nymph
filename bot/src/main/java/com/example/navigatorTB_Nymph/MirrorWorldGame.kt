@@ -83,8 +83,8 @@ object MirrorWorldGame {
     }
 
     object GMtoBestow : SimpleCommand(
-        PluginMain, "toBestow", "金币",
-        description = "金币增加"
+        PluginMain, "toBestow", "金币有",
+        description = "GM-金币增加"
     ) {
         @Handler
         suspend fun MemberCommandSenderOnMessage.main(foe: User, amount: Int) {
@@ -96,14 +96,29 @@ object MirrorWorldGame {
     }
 
     object GMStrip : SimpleCommand(
-        PluginMain, "GMStrip", "金币",
-        description = "GM金币减少"
+        PluginMain, "GMStrip", "金币没",
+        description = "GM-金币减少"
     ) {
         @Handler
         suspend fun MemberCommandSenderOnMessage.main(foe: User, amount: Int) {
             if (group.botMuteRemaining > 0 || user.id != MySetting.AdminID) return
             if (PluginMain.DLC_MirrorWorld) {
                 MirrorWorld().strip(foe.id, amount)
+            } else sendMessage("缺少依赖DLC")
+        }
+    }
+
+    object Inn : SimpleCommand(
+        PluginMain, "Inn", "旅店休息",
+        description = "恢复所有生命值和法力值"
+    ) {
+        @Handler
+        suspend fun MemberCommandSenderOnMessage.main() {
+            if (group.botMuteRemaining > 0) return
+            if (PluginMain.DLC_MirrorWorld) {
+                MirrorWorld().treatment(user.id)?.let { it ->
+                    sendMessage(it)
+                } ?: sendMessage("请先建立角色")
             } else sendMessage("缺少依赖DLC")
         }
     }
