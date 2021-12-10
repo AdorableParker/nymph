@@ -387,7 +387,7 @@ object PluginMain : KotlinPlugin(
 
             for (g in gList) {
                 runCatching {
-                    g.sendMessage(AtAll + forwardMessage)
+                    g.sendMessage(forwardMessage)
                 }.onFailure {
                     logger.warning { "File:PluginMain.kt\tLine:475\nGroup:${g.id}\n${it.message}" }
                 }
