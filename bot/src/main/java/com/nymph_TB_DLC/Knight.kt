@@ -34,7 +34,7 @@ class Knight(override val name: String) : GameRole() {
                 BattleRecord().write(logID, t + "并触发了技能[皇室荣光],护盾吸收了所有的伤害")
                 0
             } else {
-                val a = (damage.first + damage.second).roundToInt() - lv * 2
+                val a = d - lv * 2
                 BattleRecord().write(logID, t + "并触发了技能[皇室荣光],护盾吸收了${lv * 2}点伤害,最终受到了${a}点伤害")
                 a
             }

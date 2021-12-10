@@ -186,11 +186,11 @@ sealed class GameRole {
     open fun defense(damage: Pair<Double, Double>, logID: String): Int {
         val d = (damage.first + damage.second).roundToInt() + (8 - natureAgi..natureAgi).random()
         return if (skillList.contains("[皇室荣光]")) {
-            if ((damage.first + damage.second).roundToInt() <= lv * 2) {
+            if (d <= lv * 2) {
                 BattleRecord().write(logID, "${name}触发技能[皇室荣光],护盾吸收了所有的伤害")
                 0
             } else {
-                val k = (damage.first + damage.second).roundToInt() - lv * 2
+                val k = d - lv * 2
                 BattleRecord().write(logID, "${name}触发技能[皇室荣光],护盾吸收了${lv * 2}点伤害,最终受到了${k}点伤害")
                 k
             }
@@ -222,7 +222,7 @@ sealed class GameRole {
         val loserExp = (base * (foe.natureInt * 0.01 + 1) * foe.getTraits("Exp", true) * buff).toInt()
         // 给予所得经验
         addExp(winnerExp)
-        addExp(loserExp)
+        foe.addExp(loserExp)
         return Pair(winnerExp, loserExp)
     }
 
