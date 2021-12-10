@@ -17,7 +17,7 @@ data class Dynamic(
         //计算文本区域高度
         val textList = arrayListOf<String>()
         text?.split("\n")?.forEach { textList.addAll(it.chunked(24)) }
-        val textHeight = textList.size * 44 + 60
+        val textHeight = textList.size * 48 + 60
         //计算图片区域高度
         val imageList = arrayListOf<BufferedImage>()
         imageStream?.forEach { imageList.add(ImageIO.read(it)) }
@@ -25,10 +25,10 @@ data class Dynamic(
         val height = if (imageList.size > 0) {
             var imageHeight = 0
             if (imageList.size == 9) {
-                imageHeight = imageList[0].height * 3
+                imageHeight = (360.0 / imageList[0].width * imageList[0].height * 3).toInt()
             } else {
                 imageList.forEach { img ->
-                    imageHeight += 1080 / img.width * img.height
+                    imageHeight += (1080.0 / img.width * img.height).toInt()
                 }
             }
             imageHeight + textHeight // 计算高度
@@ -68,7 +68,7 @@ data class Dynamic(
         graphics.color = Color(0, 0, 0, 192)
         graphics.font = Font("大签字笔体", Font.PLAIN, 45)
         for ((line, str) in textList.withIndex()) {
-            graphics.drawString(str, 15, 60 + line * 45)
+            graphics.drawString(str, 15, 60 + line * 49)
         }
         graphics.dispose()
         // 输出图片
