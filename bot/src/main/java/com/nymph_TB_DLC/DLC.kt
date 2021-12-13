@@ -15,9 +15,9 @@ import net.mamoe.mirai.console.plugin.jvm.KotlinPlugin
 object DLC : KotlinPlugin(
     JvmPluginDescription(
         id = "MCP.TB_DLC",
-        version = "0.0.2",
+        version = "0.1.0",
         name = "TB_DLC-MirrorWorld"
-    ) { dependsOn("MCP.navigatorTB_Nymph", "0.15.5") }) {
+    ) { dependsOn("MCP.navigatorTB_Nymph", "0.16.0") }) {
 
     override fun onEnable() {
         MirrorWorldUser.reload()

@@ -27,7 +27,6 @@ class Tool(sixD: Array<Int>) {
         (sqrt(31.4 * lv) / (4.13 * _agi) + 10 - _agi).roundToInt()
 
     fun show(): String = """
-    方案有效,生成角色属性预览如下
     等级: 1
     HP: ${draftHP()}	MP: ${draftMP()}
     ATK: ${draftATK()}	MAT: ${draftMAT()}

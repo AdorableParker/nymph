@@ -184,7 +184,7 @@ sealed class GameRole {
 
     /**通用防御能力*/
     open fun defense(damage: Pair<Double, Double>, logID: String): Int {
-        val d = (damage.first + damage.second).roundToInt() + (8 - natureAgi..natureAgi).random()
+        val d = (damage.first + damage.second).roundToInt() + (natureAgi - 8..natureAgi).random()
         return if (skillList.contains("[皇室荣光]")) {
             if (d <= lv * 2) {
                 BattleRecord().write(logID, "${name}触发技能[皇室荣光],护盾吸收了所有的伤害")

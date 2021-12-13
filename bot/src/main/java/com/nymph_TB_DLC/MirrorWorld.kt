@@ -5,33 +5,36 @@ import net.mamoe.mirai.console.command.MemberCommandSenderOnMessage
 import net.mamoe.mirai.contact.User
 import net.mamoe.mirai.event.events.GroupMessageEvent
 import net.mamoe.mirai.event.nextEvent
+import net.mamoe.mirai.message.data.At
+import net.mamoe.mirai.message.data.Message
+import net.mamoe.mirai.message.data.PlainText
 import net.mamoe.mirai.message.data.content
 import java.lang.System.currentTimeMillis
 import java.time.LocalDateTime
 import kotlin.math.roundToInt
 
-class MirrorWorld {
-    private suspend fun yesOrNo(subject: MemberCommandSenderOnMessage, theme: String, no: String): Boolean {
-        subject.sendMessage("[30秒/3次]$theme<是/否>")
+class MirrorWorld(private val groupObject: MemberCommandSenderOnMessage) {
+    private suspend fun yesOrNo(theme: String, no: String): Boolean {
+        groupObject.sendMessage("[30秒/3次]$theme<是/否>")
         for (i in 0..2) {
             val judge = runCatching {
-                nextEvent<GroupMessageEvent>(30_000) { it.sender == subject.user }.message.content
+                nextEvent<GroupMessageEvent>(30_000) { it.sender == groupObject.user }.message.content
             }.onFailure {
-                subject.sendMessage("输入超时,$no")
+                groupObject.sendMessage("输入超时,$no")
                 return true
             }.getOrNull()
 
             when (judge) {
                 "是" -> return false
                 "否" -> {
-                    subject.sendMessage(no)
+                    groupObject.sendMessage(no)
                     break
                 }
                 else -> {
                     if (i < 2) {
-                        subject.sendMessage("[30秒/${2 - i}次]$theme<是/否>")
+                        groupObject.sendMessage("[30秒/${2 - i}次]$theme<是/否>")
                     } else {
-                        subject.sendMessage("次数用尽,$no")
+                        groupObject.sendMessage("次数用尽,$no")
                         break
                     }
                 }
@@ -40,18 +43,31 @@ class MirrorWorld {
         return true
     }
 
-    /** 用户数据汇报 */
-    suspend fun gamerInfo(subject: MemberCommandSenderOnMessage) {
-        subject.sendMessage(MirrorWorldUser.outInfo(subject.user.id))
+    /** 一次机会 */
+    private suspend fun yesOrNo(message: Message, no: Message): Boolean {
+        groupObject.sendMessage(message)
+        val judge = runCatching {
+            nextEvent<GroupMessageEvent>(30_000) { it.sender == groupObject.user }.message.content
+        }.onFailure {
+            groupObject.sendMessage("输入超时,$no")
+            return true
+        }.getOrNull()
+
+        if (judge == "是") return false
+        groupObject.sendMessage(no)
+        return true
     }
 
+    /** 用户数据汇报 */
+    fun gamerInfo(uid: Long) = MirrorWorldUser.outInfo(uid)
+
     /** 玩家角色建立 */
-    suspend fun characterCreation(subject: MemberCommandSenderOnMessage) {
-        val userData = MirrorWorldUser.userRole[subject.user.id]
+    suspend fun characterCreation(uid: Long) {
+        val userData = MirrorWorldUser.userRole[uid]
         if (userData != null) {
-            if (yesOrNo(subject, "创建新角色？\n清除存档,不可恢复", "角色建立取消")) return
+            if (yesOrNo("创建新角色？\n清除存档,不可恢复", "角色建立取消")) return
         }
-        subject.sendMessage(
+        groupObject.sendMessage(
             """
         角色已建立,开始分配属性点
         现在拥有 22 点属性点可分配至
@@ -70,40 +86,40 @@ class MirrorWorld {
         val lt = Array(6) { 0 }
         GetAP@ while (true) {
             val plan = kotlin.runCatching {
-                nextEvent<GroupMessageEvent>(120_000) { it.sender == subject.user }.message.content
+                nextEvent<GroupMessageEvent>(120_000) { it.sender == groupObject.user }.message.content
                     .split(":", "：", limit = 7)
             }.onFailure {
-                subject.sendMessage("输入超时,角色建立取消")
+                groupObject.sendMessage("输入超时,角色建立取消")
                 return
             }.getOrDefault(listOf())
             // 判断输入数量
             if (plan.size < 6) {
-                subject.sendMessage("[120秒]参数数量不匹配,请重新输入")
+                groupObject.sendMessage("[120秒]参数数量不匹配,请重新输入")
                 continue
             }
             // 解析数据
             for (index in 0..5)
                 when (val v = plan[index].toIntOrNull()) {
                     null -> {
-                        subject.sendMessage("[120秒]属性值必须为整数,请重新输入")
+                        groupObject.sendMessage("[120秒]属性值必须为整数,请重新输入")
                         continue@GetAP
                     }
                     in 0..7 -> lt[index] = v
                     else -> {
-                        subject.sendMessage("[120秒]每项最多为其分配7点,请重新输入")
+                        groupObject.sendMessage("[120秒]每项最多为其分配7点,请重新输入")
                         continue@GetAP
                     }
                 }
             // 检查点数用量
-            if (22 < lt.sum()) subject.sendMessage("[120秒]该方案所用点数超出可用点数总量,请重新输入") else break
+            if (22 < lt.sum()) {
+                groupObject.sendMessage("[120秒]该方案所用点数超出可用点数总量,请重新输入")
+                continue
+            }
             // 输出汇报
             val mod = Tool(lt)
-            subject.sendMessage(
-                "方案有效,生成角色属性预览如下\n${mod.show()}"
-            )
+            groupObject.sendMessage("方案有效,生成角色属性预览如下\n${mod.show()}")
             // 用户确定
             if (yesOrNo(
-                    subject,
                     "确定当前方案？（剩余未分配的属性点将会以1属性点:${MirrorWorldConfig.ExchangeRate}金币的比例自动转化为金币值）\n确定属性后,不可再次更改",
                     "请重新输入方案"
                 )
@@ -113,7 +129,7 @@ class MirrorWorld {
         //选择特质及职业
         var sp = 6
         val killList = Array(3) { 0 }
-        subject.sendMessage(
+        groupObject.sendMessage(
             """
             [120秒]点数设定完成,请进行特性/职业选择
             现拥有 $sp SP
@@ -126,9 +142,9 @@ class MirrorWorld {
         )
         while (true) {
             val k1 = runCatching {
-                nextEvent<GroupMessageEvent>(120_000) { it.sender == subject.user }.message.content.toIntOrNull()
+                nextEvent<GroupMessageEvent>(120_000) { it.sender == groupObject.user }.message.content.toIntOrNull()
             }.onFailure {
-                subject.sendMessage("输入超时,角色建立取消")
+                groupObject.sendMessage("输入超时,角色建立取消")
                 return
             }.getOrNull()
             when (k1) {
@@ -137,7 +153,7 @@ class MirrorWorld {
                 3 -> sp -= 2
                 4 -> sp -= 3
                 else -> {
-                    subject.sendMessage(
+                    groupObject.sendMessage(
                         """
                         [120秒]参数错误,请重新选择特性(输入序号:单选)
                         1:奴隶出身(+1SP)
@@ -152,7 +168,7 @@ class MirrorWorld {
             killList[0] = k1
             break
         }
-        subject.sendMessage(
+        groupObject.sendMessage(
             """
             [120秒]剩余 $sp SP
             请选择特性(单选)
@@ -164,9 +180,9 @@ class MirrorWorld {
         )
         while (true) {
             val k2 = runCatching {
-                nextEvent<GroupMessageEvent>(120_000) { it.sender == subject.user }.message.content.toIntOrNull()
+                nextEvent<GroupMessageEvent>(120_000) { it.sender == groupObject.user }.message.content.toIntOrNull()
             }.onFailure {
-                subject.sendMessage("输入超时,角色建立取消")
+                groupObject.sendMessage("输入超时,角色建立取消")
                 return
             }.getOrNull()
             when (k2) {
@@ -175,7 +191,7 @@ class MirrorWorld {
                 3 -> sp -= 2
                 4 -> sp -= 3
                 else -> {
-                    subject.sendMessage(
+                    groupObject.sendMessage(
                         """
                         [120秒]参数错误,请重新选择特性(输入序号:单选)
                         1:恶名远扬(+1SP)
@@ -191,7 +207,7 @@ class MirrorWorld {
             break
         }
         val k3 = if (sp >= 2) {
-            subject.sendMessage(
+            groupObject.sendMessage(
                 """
                 [120秒]现拥有 $sp SP
                 请选择职业(可选)
@@ -203,40 +219,41 @@ class MirrorWorld {
                 """.trimIndent()
             )
             runCatching {
-                nextEvent<GroupMessageEvent>(30_000) { it.sender == subject.user }.message.content.toIntOrNull()
-            }.onFailure { subject.sendMessage("输入超时,放弃职业选择") }.getOrNull()
+                nextEvent<GroupMessageEvent>(30_000) { it.sender == groupObject.user }.message.content.toIntOrNull()
+            }.onFailure { groupObject.sendMessage("输入超时,放弃职业选择") }.getOrNull()
         } else null
         val role = when (k3) {
-            1 -> Knight(subject.user.nick)
-            2 -> Hunter(subject.user.nick)
-            3 -> Priest(subject.user.nick)
-            4 -> Wizard(subject.user.nick)
-            else -> Unemployed(subject.user.nick)
+            1 -> Knight(groupObject.user.nick)
+            2 -> Hunter(groupObject.user.nick)
+            3 -> Priest(groupObject.user.nick)
+            4 -> Wizard(groupObject.user.nick)
+            else -> Unemployed(groupObject.user.nick)
         }
         killList[2] = if (role is Unemployed) sp else sp - 2
         role.newRole(killList)
         role.set6D(lt)
-        MirrorWorldUser.userRole[subject.user.id] = role
-        subject.sendMessage("角色创建全部完成")
+        MirrorWorldUser.userRole[uid] = role
+        groupObject.sendMessage("角色创建全部完成")
     }
 
     /** PvP */
-    suspend fun pvp(subject: MemberCommandSenderOnMessage, blue: User) {
-        val userRole = MirrorWorldUser.userRole[subject.user.id]
+    suspend fun pvp(blue: User) {
+        val userRole = MirrorWorldUser.userRole[groupObject.user.id]
         if (userRole == null) {
-            subject.sendMessage("你的角色未创建完成，请建立角色后操作")
+            groupObject.sendMessage("你的角色未创建完成，请建立角色后操作")
             return
         }
         val blueRole = MirrorWorldUser.userRole[blue.id]
         if (blueRole == null) {
-            subject.sendMessage("对方角色未创建完成，请等待其建立角色后操作")
+            groupObject.sendMessage("对方角色未创建完成，请等待其建立角色后操作")
             return
         }
 
         if (userRole.pvpUA.not()) {
-            subject.sendMessage(
+            groupObject.sendMessage(
                 """
-            PvP挑战须知:\n挑战依据战败惩罚分为[练习][切磋][死斗][自定义]四类
+            PvP挑战须知:
+            挑战依据战败惩罚分为[练习][切磋][死斗][自定义]四类
             [练习]
             1、生命值降至0即判负
             2、对战结束后双方状态将恢复至对战前状态
@@ -250,68 +267,73 @@ class MirrorWorld {
             1、生命值降至0即判负
             2、败方将会进行角色清算（结算分数,删除角色）
             3、胜方获得败方25%的金币(加成前)
+            4、开启死斗对战需双方同意
             [自定义]
             1、判负标准可自定
             2、无任何奖励
             3、开启自定义对战将会消耗双方金币各20枚
             """.trimIndent()
             )
-            if (yesOrNo(subject, "已知上述情况？", "拒绝")) return
+            if (yesOrNo("已知上述情况？", "拒绝")) return
             userRole.pvpUA = true
         }
-
-        subject.sendMessage("[120秒/1次]请选择模式\n1:练习\n2:切磋\n3:死斗\n4:自定义")
+        groupObject.sendMessage("[120秒/1次]请选择模式\n1:练习\n2:切磋\n3:死斗\n4:自定义")
         val mods = runCatching {
-            nextEvent<GroupMessageEvent>(120_000) { it.sender == subject.user }.message.content
+            nextEvent<GroupMessageEvent>(120_000) { it.sender == groupObject.user }.message.content
                 .toIntOrNull()
         }.onFailure {
-            subject.sendMessage("输入超时,对战取消")
+            groupObject.sendMessage("输入超时,对战取消")
             return
         }.getOrNull()
         val logID = when (mods) {
             1 -> {
                 if (userRole.showGold() < 10 || blueRole.showGold() < 10) {
-                    subject.sendMessage("金币余额不足,创建对战失败")
+                    groupObject.sendMessage("金币余额不足,创建对战失败")
                     return
                 }
                 drillBattleSequence(userRole, blueRole)
             }
-            2 -> battleSequence(userRole, blueRole)
+            2 -> {
+                if (userRole.lv >= blueRole.lv && yesOrNo(At(blue) + "是否接受对战", PlainText("对战被拒绝"))) return
+                battleSequence(userRole, blueRole)
+            }
             3 -> {
-                battleSequence(userRole, subject.user.id, blueRole, blue.id)
+                if (yesOrNo(At(blue) + "是否接受对战", PlainText("对战被拒绝"))) return
+                battleSequence(userRole, groupObject.user.id, blueRole, blue.id)
             }
             4 -> {
                 if (userRole.showGold() < 20 || blueRole.showGold() < 20) {
-                    subject.sendMessage("金币余额不足,创建对战失败")
+                    groupObject.sendMessage("金币余额不足,创建对战失败")
                     return
                 }
-                val bl = getBoundaryLine(subject) ?: return
+                val bl = getBoundaryLine() ?: return
                 battleSequence(userRole, blueRole, bl)
             }
             else -> {
-                subject.sendMessage("未选择模式,对战取消")
+                groupObject.sendMessage("未选择模式,对战取消")
                 return
             }
         }
-        subject.sendMessage(BattleRecord().readResults(logID))
-        if (yesOrNo(subject, "是否输出战斗记录？", "战斗记录放弃输出")) return
-        subject.sendMessage(BattleRecord().read(logID))
+        groupObject.sendMessage(BattleRecord().readResults(logID))
+        if (yesOrNo("是否输出战斗记录？", "战斗记录放弃输出")) return
+        groupObject.sendMessage(BattleRecord().read(logID))
     }
 
+
     /** 转账 */
-    suspend fun transfer(subject: MemberCommandSenderOnMessage, blue: User, amount: Int) {
-        val userRole = MirrorWorldUser.userRole[subject.user.id]
+    suspend fun transfer(redUid: Long, blueUid: Long, amount: Int) {
+        val userRole = MirrorWorldUser.userRole[redUid]
         if (userRole == null) {
-            subject.sendMessage("你的角色未创建完成，请建立角色后操作")
+            groupObject.sendMessage("你的角色未创建完成，请建立角色后操作")
             return
         }
-        val blueRole = MirrorWorldUser.userRole[blue.id]
+        val blueRole = MirrorWorldUser.userRole[blueUid]
         if (blueRole == null) {
-            subject.sendMessage("对方角色未创建完成，请等待其建立角色后操作")
+            groupObject.sendMessage("对方角色未创建完成，请等待其建立角色后操作")
             return
         }
         val v = (amount * 1.01 + 1).roundToInt()
-        subject.sendMessage(if (userRole.transfer(blueRole, v)) "转账成功,本次操作收取手续费${v - amount}枚" else "账户金额不足,转账失败")
+        groupObject.sendMessage(if (userRole.transfer(blueRole, v)) "转账成功,本次操作收取手续费${v - amount}枚" else "账户金额不足,转账失败")
         blueRole.loseGold(v - amount)
     }
 
@@ -337,18 +359,18 @@ class MirrorWorld {
     fun treatment(uid: Long) = MirrorWorldUser.userRole[uid]?.treatment()
 
     /** 自定义场获取判定线数据 */
-    private suspend fun getBoundaryLine(subject: MemberCommandSenderOnMessage): Double? {
-        subject.sendMessage("[120秒/1次]请设定战败判定线(范围:0 ~ 0.9)")
+    private suspend fun getBoundaryLine(): Double? {
+        groupObject.sendMessage("[120秒/1次]请设定战败判定线(范围:0 ~ 0.9)")
         val boundaryLine = runCatching {
-            nextEvent<GroupMessageEvent>(120_000) { it.sender == subject.user }.message.content
+            nextEvent<GroupMessageEvent>(120_000) { it.sender == groupObject.user }.message.content
                 .toDoubleOrNull()
         }.onFailure {
-            subject.sendMessage("输入超时,对战取消")
+            groupObject.sendMessage("输入超时,对战取消")
             return null
         }.getOrNull()
         boundaryLine ?: return null
         if (0.0 <= boundaryLine && boundaryLine <= 0.9) return boundaryLine
-        subject.sendMessage("输入非法,对战取消")
+        groupObject.sendMessage("输入非法,对战取消")
         return null
     }
 
