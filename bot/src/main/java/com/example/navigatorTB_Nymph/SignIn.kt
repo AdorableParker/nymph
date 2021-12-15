@@ -27,7 +27,7 @@ object SignIn : SimpleCommand(
     suspend fun MemberCommandSenderOnMessage.main() {
         if (group.botMuteRemaining > 0) return
         if (PluginMain.DLC_MirrorWorld) {
-            val s = MirrorWorld().pay(user.id, (1..20).random())
+            val s = MirrorWorld(this).pay((1..20).random())
             group.sendImage(sing(user.id, s))
         } else {
             group.sendImage(sing(user.id))

@@ -1,6 +1,7 @@
 package com.example.navigatorTB_Nymph
 
 import com.nymph_TB_DLC.MirrorWorld
+import net.mamoe.mirai.console.command.CommandManager
 import net.mamoe.mirai.console.command.CommandManager.INSTANCE.register
 import net.mamoe.mirai.console.command.CommandManager.INSTANCE.unregister
 import net.mamoe.mirai.console.command.MemberCommandSenderOnMessage
@@ -17,6 +18,11 @@ object MirrorWorldGame {
         GMtoBestow.register()
         GMStrip.register()
         Inn.register()
+        PvEBattle.register()
+        Shopping.register()
+        BuyItem.register()
+        SellItem.register()
+        ItemSynthesis.register()
     }
 
     fun unregister() {
@@ -27,6 +33,11 @@ object MirrorWorldGame {
         GMtoBestow.unregister()
         GMStrip.unregister()
         Inn.unregister()
+        PvEBattle.unregister()
+        Shopping.unregister()
+        BuyItem.unregister()
+        SellItem.unregister()
+        ItemSynthesis.unregister()
     }
 
     object PlayerInfo : SimpleCommand(
@@ -38,7 +49,7 @@ object MirrorWorldGame {
         suspend fun MemberCommandSenderOnMessage.main() {
             if (group.botMuteRemaining > 0) return
             if (PluginMain.DLC_MirrorWorld) {
-                MirrorWorld().gamerInfo(this)
+                MirrorWorld(this).gamerInfo()
             } else sendMessage("缺少依赖DLC")
         }
     }
@@ -51,7 +62,7 @@ object MirrorWorldGame {
         suspend fun MemberCommandSenderOnMessage.main() {
             if (group.botMuteRemaining > 0) return
             if (PluginMain.DLC_MirrorWorld) {
-                MirrorWorld().characterCreation(this)
+                MirrorWorld(this).characterCreation()
             } else sendMessage("缺少依赖DLC")
         }
     }
@@ -65,7 +76,7 @@ object MirrorWorldGame {
         suspend fun MemberCommandSenderOnMessage.main(user: User) {
             if (group.botMuteRemaining > 0) return
             if (PluginMain.DLC_MirrorWorld) {
-                MirrorWorld().pvp(this, user)
+                MirrorWorld(this).pvp(user)
             } else sendMessage("缺少依赖DLC")
         }
     }
@@ -78,7 +89,7 @@ object MirrorWorldGame {
         suspend fun MemberCommandSenderOnMessage.main(user: User, amount: Int) {
             if (group.botMuteRemaining > 0) return
             if (PluginMain.DLC_MirrorWorld) {
-                MirrorWorld().transfer(this, user, amount)
+                MirrorWorld(this).transfer(user.id, amount)
             } else sendMessage("缺少依赖DLC")
         }
     }
@@ -91,7 +102,7 @@ object MirrorWorldGame {
         suspend fun MemberCommandSenderOnMessage.main(foe: User, amount: Int) {
             if (group.botMuteRemaining > 0 || user.id != MySetting.AdminID) return
             if (PluginMain.DLC_MirrorWorld) {
-                MirrorWorld().toBestow(foe.id, amount)
+                MirrorWorld(this).toBestow(amount)
             } else sendMessage("缺少依赖DLC")
         }
     }
@@ -104,7 +115,7 @@ object MirrorWorldGame {
         suspend fun MemberCommandSenderOnMessage.main(foe: User, amount: Int) {
             if (group.botMuteRemaining > 0 || user.id != MySetting.AdminID) return
             if (PluginMain.DLC_MirrorWorld) {
-                MirrorWorld().strip(foe.id, amount)
+                MirrorWorld(this).strip(amount)
             } else sendMessage("缺少依赖DLC")
         }
     }
@@ -117,10 +128,77 @@ object MirrorWorldGame {
         suspend fun MemberCommandSenderOnMessage.main() {
             if (group.botMuteRemaining > 0) return
             if (PluginMain.DLC_MirrorWorld) {
-                MirrorWorld().treatment(user.id)?.let { it ->
+                MirrorWorld(this).treatment()?.let { it ->
                     sendMessage(it)
                 } ?: sendMessage("请先建立角色")
             } else sendMessage("缺少依赖DLC")
+        }
+    }
+
+    object PvEBattle : SimpleCommand(
+        PluginMain, "PvE", "进入副本",
+        description = "副本对战"
+    ) {
+        @Handler
+        suspend fun MemberCommandSenderOnMessage.main() {
+            if (group.botMuteRemaining > 0) return
+            if (PluginMain.DLC_MirrorWorld) MirrorWorld(this).pve(user)
+            else sendMessage("缺少依赖DLC")
+        }
+    }
+
+    object Shopping : SimpleCommand(
+        PluginMain, "Shop", "进入商店",
+        description = "查看商店物品"
+    ) {
+        @Handler
+        suspend fun MemberCommandSenderOnMessage.main() {
+            if (group.botMuteRemaining > 0) return
+            if (PluginMain.DLC_MirrorWorld) {
+                sendMessage(MirrorWorld(this).enterStore())
+            } else sendMessage("缺少依赖DLC")
+        }
+    }
+
+    object BuyItem : SimpleCommand(
+        PluginMain, "Buy", "购买物品",
+        description = "购买商店物品"
+    ) {
+        override val usage: String = "${CommandManager.commandPrefix}购买物品 [物品名] <购买数量-默认:1>"
+
+        @Handler
+        suspend fun MemberCommandSenderOnMessage.main(itemName: String, itemDemand: Int = 1) {
+            if (group.botMuteRemaining > 0) return
+            if (PluginMain.DLC_MirrorWorld) {
+                sendMessage(MirrorWorld(this).buy(itemName, itemDemand))
+            } else sendMessage("缺少依赖DLC")
+        }
+    }
+
+    object SellItem : SimpleCommand(
+        PluginMain, "Sell", "出售物品",
+        description = "出售背包物品"
+    ) {
+        override val usage: String = "${CommandManager.commandPrefix}出售物品 [物品名] [出售单价] <出售数量-默认:1>"
+
+        @Handler
+        suspend fun MemberCommandSenderOnMessage.main(itemName: String, unitPrice: Int, itemDemand: Int = 1) {
+            if (group.botMuteRemaining > 0) return
+            if (PluginMain.DLC_MirrorWorld) {
+                sendMessage(MirrorWorld(this).sell(itemName, unitPrice, itemDemand))
+            } else sendMessage("缺少依赖DLC")
+        }
+    }
+
+    object ItemSynthesis : SimpleCommand(
+        PluginMain, "Alchemy", "合成",
+        description = "合成物品"
+    ) {
+        @Handler
+        suspend fun MemberCommandSenderOnMessage.main() {
+            if (group.botMuteRemaining > 0) return
+            if (PluginMain.DLC_MirrorWorld) MirrorWorld(this).alchemy()
+            else sendMessage("缺少依赖DLC")
         }
     }
 }

@@ -31,7 +31,6 @@ import net.mamoe.mirai.event.subscribeGroupMessages
 import net.mamoe.mirai.message.data.*
 import net.mamoe.mirai.utils.ExternalResource.Companion.toExternalResource
 import net.mamoe.mirai.utils.ExternalResource.Companion.uploadAsImage
-import net.mamoe.mirai.utils.MiraiExperimentalApi
 import net.mamoe.mirai.utils.debug
 import net.mamoe.mirai.utils.info
 import net.mamoe.mirai.utils.warning
@@ -43,7 +42,7 @@ object PluginMain : KotlinPlugin(
     JvmPluginDescription(
         id = "MCP.navigatorTB_Nymph",
         name = "navigatorTB",
-        version = "0.15.6"
+        version = "0.16.1"
     )
 ) {
     // 分词功能
@@ -64,7 +63,6 @@ object PluginMain : KotlinPlugin(
 
     var DLC_MirrorWorld = false
 
-    @OptIn(MiraiExperimentalApi::class)
     override fun onEnable() {
         MySetting.reload() // 从数据库自动读
         MyPluginData.reload()
