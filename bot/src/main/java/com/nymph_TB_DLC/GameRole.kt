@@ -45,13 +45,13 @@ sealed class GameRole {
     abstract val professionATK: Double
     abstract val professionMAT: Double
     abstract val professionTPA: Double
+    abstract var skillPrint: Int                                            //技能点
 
     var bag: MutableMap<Int, Int> = mutableMapOf()                           //物品
     private var traitsList: MutableSet<String> = mutableSetOf()             //特质
     var skillList: MutableSet<String> = mutableSetOf()                      //特质
 
     //    private var skillList: MutableSet<String> = mutableSetOf()        //技能
-    abstract var skillPrint: Int                                            //技能点
     private var attributePrint: Int = 22                                    //属性点
 
     fun showTPA() = tpa

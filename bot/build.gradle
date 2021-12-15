@@ -1,12 +1,12 @@
 plugins {
-    id("net.mamoe.mirai-console") version "2.8.2" // mirai-console version
-    id 'kotlin'
-    id 'org.jetbrains.kotlin.plugin.serialization' version '1.5.30'
+    id("net.mamoe.mirai-console") version "2+" // mirai-console version
+    id('kotlin')
+    id("org.jetbrains.kotlin.plugin.serialization") version "1+"
 }
 
 
 mirai {
-    coreVersion = "2.8.2" // mirai-core version
+    coreVersion = "2+" // mirai-core version
 }
 
 
@@ -21,9 +21,6 @@ java {
 }
 
 dependencies {
-    compileOnly("net.mamoe:mirai-core:2.8.2") // mirai-core 的 API
-    compileOnly("net.mamoe:mirai-console:2.8.2") // 后端
-
-//    testImplementation('org.junit.jupiter:junit-jupiter:5.8.2')
-//    implementation("org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version")
+    compileOnly("net.mamoe:mirai-core:2+") // mirai-core 的 API
+    compileOnly("net.mamoe:mirai-console:2+") // 后端
 }

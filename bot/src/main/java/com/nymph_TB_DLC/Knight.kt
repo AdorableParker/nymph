@@ -18,7 +18,7 @@ class Knight(override val name: String) : GameRole() {
     override val professionATK = 1.3
     override val professionMAT = 0.9
     override val professionTPA = 0.7
-    override var skillPrint = 4    //技能点
+    override var skillPrint: Int = 4    //技能点
     override fun defense(damage: Pair<Double, Double>, logID: String): Int {
         var t = ""
         val k = if (judge(50)) {

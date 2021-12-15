@@ -582,19 +582,6 @@ class MirrorWorld(private val groupObject: MemberCommandSenderOnMessage) {
             return
         }
 
-
-        /*
-        稀释 取半
-        蒸馏 翻倍
-        加热 平方
-        冷冻 开方
-        过滤 向下取整
-        搅拌 向上取整
-        反相 取相反值
-        活化 取绝对值
-        收集 判断产物
-         */
-
         val itemList = ArrayList<Int>()
         val operationList = ArrayList<Operation>()
         // 获取基材
@@ -680,31 +667,3 @@ class MirrorWorld(private val groupObject: MemberCommandSenderOnMessage) {
     }
 }
 
-enum class Operation {
-    DoNothing,
-    Dilution,
-    Distillation,
-    Heating,
-    Freezing,
-    ReversedPhase,
-    Activation,
-    Filter,
-    Stir,
-    CollectProduct;
-
-    companion object {
-        fun Int.toOperation() = when (this) {
-            0 -> DoNothing
-            1 -> Dilution
-            2 -> Distillation
-            3 -> Heating
-            4 -> Freezing
-            5 -> ReversedPhase
-            6 -> Activation
-            7 -> Filter
-            8 -> Stir
-            9 -> CollectProduct
-            else -> null
-        }
-    }
-}

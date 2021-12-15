@@ -17,9 +17,9 @@ class Hunter(override val name: String) : GameRole() {
     override val professionATK = 0.9
     override val professionMAT = 0.8
     override val professionTPA = 1.3
-    override var skillPrint = 4    //技能点
-    override fun defense(damage: Pair<Double, Double>, logID: String): Int =
-        if (judge(20)) {
+    override var skillPrint: Int = 4    //技能点
+    override fun defense(damage: Pair<Double, Double>, logID: String): Int {
+        return if (judge(20)) {
             BattleRecord().write(logID, "${name}成功闪避了这次攻击")
             0
         } else {
@@ -38,4 +38,5 @@ class Hunter(override val name: String) : GameRole() {
                 d
             }
         }
+    }
 }
