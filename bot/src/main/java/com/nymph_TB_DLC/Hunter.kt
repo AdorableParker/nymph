@@ -24,7 +24,7 @@ class Hunter(override val name: String) : GameRole() {
             0
         } else {
             val d = (damage.first + damage.second).roundToInt() + (natureAgi - 8..natureAgi).random()
-            if (MirrorWorldAssets.skillList.contains("[皇室荣光]")) {
+            if (skillList.contains("[皇室荣光]")) {
                 if (d <= lv * 2) {
                     BattleRecord().write(logID, "${name}触发技能[皇室荣光],护盾吸收了所有的伤害")
                     0

@@ -10,10 +10,10 @@ import com.nymph_TB_DLC.CharacterLineDictionary as CLD
 @Serializable
 sealed class GameRole {
     abstract val name: String                               // 名字,使用昵称
-    private var gold: Int = 0                               //金币
+    private var gold: Int = 0                               // 金币
 
-    var lv: Int = 1                                         //等级
-    private var userExp: Int = 0                            //经验
+    var lv: Int = 1                                         // 等级
+    private var userExp: Int = 0                            // 经验
     var pvpUA: Boolean = false                              // 用户协议
     //六维
     /**力量: 1..8*/
@@ -46,16 +46,67 @@ sealed class GameRole {
     abstract val professionMAT: Double
     abstract val professionTPA: Double
 
-    //    private var bag = arrayOfNulls<Int>(16)                    //物品
-    private var traitsList: MutableSet<String> = mutableSetOf()     //特质
-    private var skillList: MutableSet<String> = mutableSetOf()     //特质
+    var bag: MutableMap<Int, Int> = mutableMapOf()                           //物品
+    private var traitsList: MutableSet<String> = mutableSetOf()             //特质
+    var skillList: MutableSet<String> = mutableSetOf()                      //特质
 
-    //    private var skillList: MutableSet<String> = mutableSetOf()      //技能
-    abstract var skillPrint: Int                                           //技能点
-    private var attributePrint: Int = 22                            //属性点
+    //    private var skillList: MutableSet<String> = mutableSetOf()        //技能
+    abstract var skillPrint: Int                                            //技能点
+    private var attributePrint: Int = 22                                    //属性点
 
     fun showTPA() = tpa
     fun showGold() = gold
+
+    fun showBag(): String {
+        val str = StringBuffer()
+        bag.forEach { (itemID, num) ->
+            str.append("${ItemTable.productList.find { itemID == it.itemID }?.itemName} - ${num}个\n")
+        }
+        return str.toString()
+    }
+
+
+    /** 消耗一个物品
+     * @param[itemID]物品ID
+     */
+    fun consumeItem(itemID: Int) {
+        val item = bag[itemID] ?: return
+        if (item == 1) bag.remove(itemID)
+        else bag[itemID] = item - 1
+    }
+
+
+    /** 消耗物品
+     * @param[itemID]物品ID
+     * @param[v]消耗数量
+     * @return 消耗成功则返回 true 否则返回 false
+     */
+    fun consumeItems(itemID: Int, v: Int): Boolean {
+        val item = bag[itemID] ?: return false
+        when {
+            item < v -> return false
+            item == v -> bag.remove(itemID)
+            else -> bag[itemID] = item - v
+        }
+        return true
+    }
+
+    /** 获得物品
+     * @param[itemID]物品ID
+     * @param[v]获得量
+     */
+    fun receiveItem(itemID: Int, v: Int) {
+        var item = bag.getOrPut(itemID) { 0 }
+        item += v
+    }
+
+    /** 获取背包内物品数量
+     * @param[itemName]物品名
+     * @return 物品存在则返回拥有量,否则返回 -1*/
+    fun findBagItemAmount(itemName: String): Int {
+        val itemID = ItemTable.find(itemName)?.itemID ?: return -1
+        return bag.getOrDefault(itemID, -1)
+    }
 
     fun info(): String {
         val buffer = StringBuilder()
@@ -106,8 +157,9 @@ sealed class GameRole {
         updateCAV()
     }
 
-    //设置六围
+    /** 设置六围 */
     fun set6D(plan: Array<Int>) {
+        giveGold((22 - plan.sum()) * 10)
         attributePrint = 0
         natureStr += plan[0]
         natureMen += plan[1]
@@ -132,37 +184,26 @@ sealed class GameRole {
     /**练习场备份属性*/
     fun backup() = Triple(hp.current, mp.current, lv)
 
+    /** 金币直接加 */
     fun giveGold(v: Int) {
         gold += v
     }
 
+    /** 金币判断减 */
     fun loseGold(v: Int) = if (v <= gold) {
         gold -= v
         true
     } else false
 
-    /** 移除 */
+    /** 金币强制减 */
     fun snatch(v: Int) = if (v <= gold) gold -= v else gold = 0
 
-
+    /** 无加成转账 */
     fun transfer(joe: GameRole, amount: Int) = if (gold <= amount) false
     else {
         gold -= amount
         joe.gold += amount
         true
-    }
-
-    fun show(): String {
-        return """
-        等级: 1
-        HP: ${hp.max}	MP: ${mp.max}
-        ATK: $atk	MAT: $mat
-        TPA: $tpa
-        ------六维加点------
-        力量:$natureStr	法力:$natureMen
-        智力:$natureInt	体质:$natureVit
-        速度:$natureAgi	运气:$natureLck
-        """.trimIndent()
     }
 
     /**刷新属性*/
@@ -210,7 +251,7 @@ sealed class GameRole {
         }
     }
 
-    /** 经验结算
+    /** 战斗 - 经验结算
      * @param[foe]战败对象
      * @param[buff]经验系数
      * */
@@ -226,7 +267,7 @@ sealed class GameRole {
         return Pair(winnerExp, loserExp)
     }
 
-    /** 金币结算
+    /** 战斗 - 金币结算
      * @param[foe]战败对象
      * @param[buff]金币系数
      * */
@@ -243,10 +284,17 @@ sealed class GameRole {
         return Pair(winnerGold, loserGold)
     }
 
+    /** 商业 - 赚取收益 */
     fun getPaid(salary: Int): Int {
         val income = (getTraits("Gold", true) * salary).toInt()
         giveGold(income)
         return income
+    }
+
+    /** 商业 - 支付金额 */
+    fun payFine(salary: Int): Int {
+        val income = (getTraits("Gold", false) * salary).toInt()
+        return if (loseGold(income)) income else -1
     }
 
     /** 加成计算
@@ -290,6 +338,7 @@ sealed class GameRole {
         return negative + positive + 1
     }
 
+    /** 休息治疗 */
     fun treatment(): String {
         val medicalExpenses = (getTraits("Gold", false) * (hp.max - hp.current) / 20).toInt()
         return if (loseGold(medicalExpenses)) {
@@ -298,5 +347,3 @@ sealed class GameRole {
         } else "你没有足够的钱进行治疗"
     }
 }
-
-

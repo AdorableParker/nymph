@@ -1,6 +1,8 @@
 package com.nymph_TB_DLC
 
 
+import com.nymph_TB_DLC.Operation.*
+import com.nymph_TB_DLC.Operation.Companion.toOperation
 import net.mamoe.mirai.console.command.MemberCommandSenderOnMessage
 import net.mamoe.mirai.contact.User
 import net.mamoe.mirai.event.events.GroupMessageEvent
@@ -11,9 +13,13 @@ import net.mamoe.mirai.message.data.PlainText
 import net.mamoe.mirai.message.data.content
 import java.lang.System.currentTimeMillis
 import java.time.LocalDateTime
-import kotlin.math.roundToInt
+import kotlin.math.*
 
 class MirrorWorld(private val groupObject: MemberCommandSenderOnMessage) {
+    /** 用户ID */
+    private val uid = groupObject.user.id
+
+    /** 用户确认(三次) */
     private suspend fun yesOrNo(theme: String, no: String): Boolean {
         groupObject.sendMessage("[30秒/3次]$theme<是/否>")
         for (i in 0..2) {
@@ -43,7 +49,7 @@ class MirrorWorld(private val groupObject: MemberCommandSenderOnMessage) {
         return true
     }
 
-    /** 一次机会 */
+    /** 用户确认(一次) */
     private suspend fun yesOrNo(message: Message, no: Message): Boolean {
         groupObject.sendMessage(message)
         val judge = runCatching {
@@ -59,10 +65,10 @@ class MirrorWorld(private val groupObject: MemberCommandSenderOnMessage) {
     }
 
     /** 用户数据汇报 */
-    fun gamerInfo(uid: Long) = MirrorWorldUser.outInfo(uid)
+    fun gamerInfo() = MirrorWorldUser.outInfo(uid)
 
     /** 玩家角色建立 */
-    suspend fun characterCreation(uid: Long) {
+    suspend fun characterCreation() {
         val userData = MirrorWorldUser.userRole[uid]
         if (userData != null) {
             if (yesOrNo("创建新角色？\n清除存档,不可恢复", "角色建立取消")) return
@@ -238,7 +244,7 @@ class MirrorWorld(private val groupObject: MemberCommandSenderOnMessage) {
 
     /** PvP */
     suspend fun pvp(blue: User) {
-        val userRole = MirrorWorldUser.userRole[groupObject.user.id]
+        val userRole = MirrorWorldUser.userRole[uid]
         if (userRole == null) {
             groupObject.sendMessage("你的角色未创建完成，请建立角色后操作")
             return
@@ -299,7 +305,7 @@ class MirrorWorld(private val groupObject: MemberCommandSenderOnMessage) {
             }
             3 -> {
                 if (yesOrNo(At(blue) + "是否接受对战", PlainText("对战被拒绝"))) return
-                battleSequence(userRole, groupObject.user.id, blueRole, blue.id)
+                battleSequence(userRole, uid, blueRole, blue.id)
             }
             4 -> {
                 if (userRole.showGold() < 20 || blueRole.showGold() < 20) {
@@ -319,10 +325,9 @@ class MirrorWorld(private val groupObject: MemberCommandSenderOnMessage) {
         groupObject.sendMessage(BattleRecord().read(logID))
     }
 
-
     /** 转账 */
-    suspend fun transfer(redUid: Long, blueUid: Long, amount: Int) {
-        val userRole = MirrorWorldUser.userRole[redUid]
+    suspend fun transfer(blueUid: Long, amount: Int) {
+        val userRole = MirrorWorldUser.userRole[uid]
         if (userRole == null) {
             groupObject.sendMessage("你的角色未创建完成，请建立角色后操作")
             return
@@ -338,7 +343,7 @@ class MirrorWorld(private val groupObject: MemberCommandSenderOnMessage) {
     }
 
     /** 收益 */
-    fun pay(uid: Long, amount: Int): String? {
+    fun pay(amount: Int): String? {
         val userRole = MirrorWorldUser.userRole[uid] ?: return null
         val userData = MirrorWorldUser.userData.getOrPut(uid) { PermanentData() }
         val today = LocalDateTime.now().dayOfYear
@@ -348,15 +353,18 @@ class MirrorWorld(private val groupObject: MemberCommandSenderOnMessage) {
         } else "你今天已经签到过了"
     }
 
-    fun toBestow(uid: Long, amount: Int) {
+    /** 增加账户金额 */
+    fun toBestow(amount: Int) {
         MirrorWorldUser.userRole[uid]?.giveGold(amount)
     }
 
-    fun strip(uid: Long, amount: Int) {
+    /** 剥夺账户金额 */
+    fun strip(amount: Int) {
         MirrorWorldUser.userRole[uid]?.snatch(amount)
     }
 
-    fun treatment(uid: Long) = MirrorWorldUser.userRole[uid]?.treatment()
+    /** 休息治疗 */
+    fun treatment() = MirrorWorldUser.userRole[uid]?.treatment()
 
     /** 自定义场获取判定线数据 */
     private suspend fun getBoundaryLine(): Double? {
@@ -532,5 +540,171 @@ class MirrorWorld(private val groupObject: MemberCommandSenderOnMessage) {
             }
         }
         return logID
+    }
+
+    /** 查看货架 */
+    fun enterStore(): String {
+        val userRole = MirrorWorldUser.userRole[uid] ?: return "你的角色未创建完成，请建立角色后操作"
+        return Shop(userRole).viewShelf()
+    }
+
+    /** 采购物品 */
+    fun buy(productName: String, demand: Int): String {
+        val userRole = MirrorWorldUser.userRole[uid] ?: return "你的角色未创建完成，请建立角色后操作"
+        val productID =
+            ItemTable.productList.find { it.itemName == productName }?.itemID ?: return "没有名为${productName}的物品"
+        return Shop(userRole).buy(productID, demand)
+    }
+
+    /** 挂售物品 */
+    fun sell(productName: String, unitPrice: Int, demand: Int): String {
+        val userRole = MirrorWorldUser.userRole[uid] ?: return "你的角色未创建完成，请建立角色后操作"
+        val productID =
+            ItemTable.productList.find { it.itemName == productName }?.itemID ?: return "没有名为${productName}的物品"
+        return Shop(userRole).sell(productID, uid, unitPrice, demand)
+    }
+
+    /** PvE */
+    suspend fun pve(blue: User) {
+        val userRole = MirrorWorldUser.userRole[uid]
+        if (userRole == null) {
+            groupObject.sendMessage("你的角色未创建完成，请建立角色后操作")
+            return
+        }
+        // TODO: 2021/12/14 副本选择 => 随机怪物
+    }
+
+    /** 炼金术 */
+    suspend fun alchemy() {
+        val userRole = MirrorWorldUser.userRole[uid]
+        if (userRole == null) {
+            groupObject.sendMessage("你的角色未创建完成，请建立角色后操作")
+            return
+        }
+
+
+        /*
+        稀释 取半
+        蒸馏 翻倍
+        加热 平方
+        冷冻 开方
+        过滤 向下取整
+        搅拌 向上取整
+        反相 取相反值
+        活化 取绝对值
+        收集 判断产物
+         */
+
+        val itemList = ArrayList<Int>()
+        val operationList = ArrayList<Operation>()
+        // 获取基材
+        groupObject.sendMessage("现拥有以下物品,请选择其中一项作为炼金基材:\n" + userRole.showBag())
+        for (i in 0..3) {
+            // 获取材料
+            obtainMaterials(userRole)?.let { itemList.add(it) } ?: return
+            // 处理基材
+            groupObject.sendMessage(
+                """
+            选择处理材料方式(输入序号):
+            1、贫化    2、蒸馏    3、加热
+            4、冷冻    5、反相    6、活化
+            7、过滤    8、搅拌    9、收集产物
+            0、什么也不做
+            """.trimIndent()
+            )
+            val operate = handlingMaterials() ?: return
+            if (operate == CollectProduct) operationList.add(operate) else break
+            // 获取配料
+            if (i <= 2) groupObject.sendMessage("请选择其中一项作为炼金辅料")
+        }
+        var productValue = 0.0
+        for ((index, materials) in itemList.withIndex()) {
+            productValue += materials
+            productValue = when (operationList[index]) {
+                DoNothing -> productValue
+                Dilution -> productValue / 2
+                Distillation -> productValue * 2
+                Heating -> productValue * productValue
+                Freezing -> sqrt(productValue)
+                ReversedPhase -> 0 - productValue
+                Activation -> productValue.absoluteValue
+                Filter -> floor(productValue)
+                Stir -> ceil(productValue)
+                CollectProduct -> break
+            }
+            userRole.consumeItem(materials)
+        }
+
+        val product = ItemTable.find(productValue.toInt())
+        if (product == null) {
+            groupObject.sendMessage("炼金失败了,你获得了一堆垃圾")
+            return
+        }
+        userRole.receiveItem(product.itemID, 1)
+        if (yesOrNo(PlainText("炼金成功了,你获得了${product.itemName}一份,是否保存配方？"), PlainText("放弃配方保存"))) return
+        saveFormula(itemList, product)
+//        "$product=$itemList|$operationList"
+    }
+
+    private fun saveFormula(itemList: ArrayList<Int>, product: Item) {
+        val index = itemList.sorted().joinToString("", "${itemList.size}").toInt()
+        Alchemy.formula.getOrPut(product.itemID) { mutableMapOf() }[index] = itemList.toTypedArray()
+        MirrorWorldUser.userData.getOrPut(uid) { PermanentData() }.formula.add(index)
+    }
+
+    private suspend fun handlingMaterials(): Operation? {
+        while (true) {
+            val judge = runCatching {
+                nextEvent<GroupMessageEvent>(120_000) { it.sender == groupObject.user }
+                    .message.content.toIntOrNull()
+            }.onFailure {
+                groupObject.sendMessage("输入超时,本次炼金取消")
+                return null
+            }.getOrNull()
+            if (judge in 0..9) return judge!!.toOperation()
+            groupObject.sendMessage("无此操作,请重新输入")
+        }
+    }
+
+    private suspend fun obtainMaterials(userRole: GameRole): Int? {
+        while (true) {
+            val judge = runCatching {
+                nextEvent<GroupMessageEvent>(120_000) { it.sender == groupObject.user }.message.content
+            }.onFailure {
+                groupObject.sendMessage("输入超时,本次炼金取消")
+                return null
+            }.getOrElse { "无此物品" }
+            if (userRole.findBagItemAmount(judge) != -1) return ItemTable.find(judge)?.itemID
+            groupObject.sendMessage("背包中无此物品,请重新输入")
+        }
+    }
+}
+
+enum class Operation {
+    DoNothing,
+    Dilution,
+    Distillation,
+    Heating,
+    Freezing,
+    ReversedPhase,
+    Activation,
+    Filter,
+    Stir,
+    CollectProduct;
+
+    companion object {
+        fun Int.toOperation() = when (this) {
+            0 -> DoNothing
+            1 -> Dilution
+            2 -> Distillation
+            3 -> Heating
+            4 -> Freezing
+            5 -> ReversedPhase
+            6 -> Activation
+            7 -> Filter
+            8 -> Stir
+            9 -> CollectProduct
+            else -> null
+        }
     }
 }

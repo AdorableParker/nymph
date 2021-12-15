@@ -32,6 +32,54 @@ object MirrorWorldUser : AutoSavePluginData("DLC_PlayerData") { // "name" 是保
     }
 }
 
+object FleaMarket : AutoSavePluginData("DLC_ShopData") { // "name" 是保存的文件名 (不带后缀)
+    /** 货架数据
+     *
+     *  物品id:(卖家id,单价,数量)
+     */
+    @ValueDescription("货架数据")
+    val shelfData: MutableMap<Int, MutableList<Triple<Long, Int, Int>>> by value(
+        mutableMapOf()
+    )
+}
+
+object Alchemy : AutoSavePluginData("DLC_AlchemyData") { // "name" 是保存的文件名 (不带后缀)
+    /** 配方库数据
+     *
+     * 物品id: 配方原料
+     */
+    @ValueDescription("配方库")
+    val formula: MutableMap<Int, MutableMap<Int, Array<Int>>> by value(
+        mutableMapOf()
+    )
+}
+
+@ValueDescription("物品数据")
+object ItemTable : AutoSavePluginData("DLC_AssetsItem") {
+    /**物品数据*/
+    val productList: Set<Item> by value(
+        setOf(
+            Item(1, "物品A", "用于测试的物品A"),
+            Item(2, "物品B", "用于测试的物品B"),
+            Item(3, "物品C", "用于测试的物品C"),
+            Item(4, "物品D", "用于测试的物品D"),
+            Item(5, "物品E", "用于测试的物品E"),
+            Item(6, "物品F", "用于测试的物品F"),
+            Item(7, "物品G", "用于测试的物品G"),
+            Item(8, "物品H", "用于测试的物品H"),
+            Item(9, "物品I", "用于测试的物品I")
+        )
+    )
+
+    fun find(itemID: Int): Item? {
+        return productList.find { itemID == it.itemID }
+    }
+
+    fun find(itemName: String): Item? {
+        return productList.find { itemName == it.itemName }
+    }
+}
+
 object MirrorWorldAssets : AutoSavePluginData("DLC_AssetsData") { // "name" 是保存的文件名 (不带后缀)
     @ValueDescription("技能列表")
     val skillList: MutableMap<String, String> by value(
@@ -67,7 +115,7 @@ object MirrorWorldAssets : AutoSavePluginData("DLC_AssetsData") { // "name" 是�
             ),
             mapOf(
                 "Gold" to mutableMapOf(
-                    "-被通缉者-" to Triple(0.5, 0.0, "金币花费+50%"),
+                    "-被通缉者-" to Triple(0.1, 0.0, "金币花费+20%"),
                     "-被传颂者-" to Triple(0.0, 0.2, "金币支出-20%,金币经验收入+20%"),
                 ),
                 "Exp" to mutableMapOf(
