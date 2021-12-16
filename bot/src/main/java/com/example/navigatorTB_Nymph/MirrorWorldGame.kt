@@ -49,7 +49,7 @@ object MirrorWorldGame {
         suspend fun MemberCommandSenderOnMessage.main() {
             if (group.botMuteRemaining > 0) return
             if (PluginMain.DLC_MirrorWorld) {
-                MirrorWorld(this).gamerInfo()
+                sendMessage(MirrorWorld(this).gamerInfo())
             } else sendMessage("缺少依赖DLC")
         }
     }
@@ -102,7 +102,7 @@ object MirrorWorldGame {
         suspend fun MemberCommandSenderOnMessage.main(foe: User, amount: Int) {
             if (group.botMuteRemaining > 0 || user.id != MySetting.AdminID) return
             if (PluginMain.DLC_MirrorWorld) {
-                MirrorWorld(this).toBestow(amount)
+                MirrorWorld(this).toBestow(foe.id, amount)
             } else sendMessage("缺少依赖DLC")
         }
     }
@@ -115,7 +115,7 @@ object MirrorWorldGame {
         suspend fun MemberCommandSenderOnMessage.main(foe: User, amount: Int) {
             if (group.botMuteRemaining > 0 || user.id != MySetting.AdminID) return
             if (PluginMain.DLC_MirrorWorld) {
-                MirrorWorld(this).strip(amount)
+                MirrorWorld(this).strip(foe.id, amount)
             } else sendMessage("缺少依赖DLC")
         }
     }
