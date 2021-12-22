@@ -1,11 +1,11 @@
 plugins {
-    id("net.mamoe.mirai-console") version "2+" // mirai-console version
-    id('kotlin')
-    id("org.jetbrains.kotlin.plugin.serialization") version "1+"
+    id "net.mamoe.mirai-console" version "2.8.3" // mirai-console version
+    id "org.jetbrains.kotlin.jvm"
+    id "org.jetbrains.kotlin.plugin.serialization" version '1.5.30'
 }
 
 mirai {
-    coreVersion = "2+" // mirai-core version
+    coreVersion = "2.8.2" // mirai-core version
 }
 
 repositories {
@@ -19,8 +19,11 @@ java {
 }
 
 dependencies {
-    compileOnly("net.mamoe:mirai-core:2+") // mirai-core 的 API
-    compileOnly("net.mamoe:mirai-console:2+") // 后端
+    compileOnly('net.mamoe:mirai-core:2.8.3') // mirai-core 的 API
+    compileOnly('net.mamoe:mirai-console:2.8.3') // 后端
+    compileOnly('org.jetbrains.kotlin:kotlin-serialization:1.6.10')
+    compileOnly("org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version")
+//    compileOnly("net.mamoe.yamlkt:yamlkt:0.10.2")
 
     compileOnly files("../lib/DLC_MirrorWorld.jar")
 
@@ -28,9 +31,6 @@ dependencies {
     implementation('org.jsoup:jsoup:1.14.3')
     implementation('com.mayabot.mynlp:mynlp-all:3.2.2') // 在有更好的分词库之前保持版本
     implementation('org.xerial:sqlite-jdbc:3.36.0.2')
-
-//    compileOnly('org.jetbrains.kotlin:kotlin-serialization:1.6.0')
 //    compileOnly('net.sourceforge.htmlunit:htmlunit:2.55.0')
-//    compileOnly("org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version")
 }
 

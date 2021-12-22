@@ -12,7 +12,6 @@ import net.mamoe.mirai.console.command.MemberCommandSenderOnMessage
 import net.mamoe.mirai.console.command.SimpleCommand
 import net.mamoe.mirai.message.data.PlainText
 import net.mamoe.mirai.utils.ExternalResource.Companion.toExternalResource
-import net.mamoe.mirai.utils.MiraiExperimentalApi
 import java.io.File
 import java.time.LocalDateTime
 import kotlin.random.Random
@@ -25,7 +24,6 @@ object Tarot : SimpleCommand(
     override val usage: String = "${CommandManager.commandPrefix}每日塔罗"
 
     @Handler
-    @MiraiExperimentalApi
     suspend fun MemberCommandSenderOnMessage.main() {
         record(primaryName)
         if (group.botMuteRemaining > 0) return

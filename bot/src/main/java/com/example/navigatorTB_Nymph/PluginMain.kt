@@ -31,6 +31,7 @@ import net.mamoe.mirai.event.subscribeGroupMessages
 import net.mamoe.mirai.message.data.*
 import net.mamoe.mirai.utils.ExternalResource.Companion.toExternalResource
 import net.mamoe.mirai.utils.ExternalResource.Companion.uploadAsImage
+import net.mamoe.mirai.utils.MiraiExperimentalApi
 import net.mamoe.mirai.utils.debug
 import net.mamoe.mirai.utils.info
 import net.mamoe.mirai.utils.warning
@@ -63,9 +64,10 @@ object PluginMain : KotlinPlugin(
 
     var DLC_MirrorWorld = false
 
+    @OptIn(MiraiExperimentalApi::class)
     override fun onEnable() {
-        MySetting.reload() // 从数据库自动读
-        MyPluginData.reload()
+        MySetting.reload()
+        MyPluginData.reload()  //(PluginMain.kt:70)
         UsageStatistics.reload()
 
         if (MyPluginData.initialization) {  // 首次启动初始化数据库
@@ -102,8 +104,10 @@ object PluginMain : KotlinPlugin(
         Roster.register()           // 碧蓝和谐名
         AssetDataAccess.register()  // 资源数据库处理
         AI.register()               // 图灵数据库增删改查
-        MirrorWorldGame.register()  // DLC_01
         MyHelp.register()           // 帮助功能
+        MirrorWorldGame.register()  // DLC_01
+
+        DLC_MirrorWorld = PluginManager.plugins.find { plugin -> plugin.id == "MCP.TB_DLC" } != null
 
         // 动态更新
         PluginMain.launch {
@@ -248,9 +252,6 @@ object PluginMain : KotlinPlugin(
         if (MySetting.resident) {
             residentTask()
         }
-
-        DLC_MirrorWorld = PluginManager.plugins.find { plugin -> plugin.id == "MCP.TB_DLC" } != null
-
     }
 
     private fun residentTask() {

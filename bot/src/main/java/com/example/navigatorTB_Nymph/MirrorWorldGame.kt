@@ -23,6 +23,8 @@ object MirrorWorldGame {
         BuyItem.register()
         SellItem.register()
         ItemSynthesis.register()
+        OpenBag.register()
+        UseItems.register()
     }
 
     fun unregister() {
@@ -38,6 +40,8 @@ object MirrorWorldGame {
         BuyItem.unregister()
         SellItem.unregister()
         ItemSynthesis.unregister()
+        OpenBag.unregister()
+        UseItems.unregister()
     }
 
     object PlayerInfo : SimpleCommand(
@@ -142,7 +146,7 @@ object MirrorWorldGame {
         @Handler
         suspend fun MemberCommandSenderOnMessage.main() {
             if (group.botMuteRemaining > 0) return
-            if (PluginMain.DLC_MirrorWorld) MirrorWorld(this).pve(user)
+            if (PluginMain.DLC_MirrorWorld) MirrorWorld(this).pve()
             else sendMessage("缺少依赖DLC")
         }
     }
@@ -201,4 +205,31 @@ object MirrorWorldGame {
             else sendMessage("缺少依赖DLC")
         }
     }
+
+    object OpenBag : SimpleCommand(
+        PluginMain, "OpenBag", "背包",
+        description = "打开背包"
+    ) {
+        @Handler
+        suspend fun MemberCommandSenderOnMessage.main() {
+            if (group.botMuteRemaining > 0) return
+            if (PluginMain.DLC_MirrorWorld) {
+                sendMessage(MirrorWorld(this).openBag())
+            } else sendMessage("缺少依赖DLC")
+        }
+    }
+
+    object UseItems : SimpleCommand(
+        PluginMain, "UseItems", "使用",
+        description = "打开背包"
+    ) {
+        @Handler
+        suspend fun MemberCommandSenderOnMessage.main(itemName: String) {
+            if (group.botMuteRemaining > 0) return
+            if (PluginMain.DLC_MirrorWorld) {
+                sendMessage(MirrorWorld(this).useItems(itemName))
+            } else sendMessage("缺少依赖DLC")
+        }
+    }
+
 }
