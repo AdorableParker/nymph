@@ -221,13 +221,13 @@ object MirrorWorldGame {
 
     object UseItems : SimpleCommand(
         PluginMain, "UseItems", "使用",
-        description = "打开背包"
+        description = "使用物品"
     ) {
         @Handler
-        suspend fun MemberCommandSenderOnMessage.main(itemName: String) {
+        suspend fun MemberCommandSenderOnMessage.main(itemName: String, amount:Int) {
             if (group.botMuteRemaining > 0) return
             if (PluginMain.DLC_MirrorWorld) {
-                sendMessage(MirrorWorld(this).useItems(itemName))
+                sendMessage(MirrorWorld(this).useItems(itemName, amount))
             } else sendMessage("缺少依赖DLC")
         }
     }

@@ -77,6 +77,8 @@ object PluginMain : KotlinPlugin(
             MyPluginData.AcgImageRun.clear()
         }
 
+
+
         Tarot.register()            // 塔罗
         SignIn.register()           // 签到
         OneWord.register()          // 一言
