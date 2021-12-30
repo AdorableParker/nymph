@@ -1,11 +1,9 @@
 package com.example.navigatorTB_Nymph
 
 import com.nymph_TB_DLC.MirrorWorld
-import net.mamoe.mirai.console.command.CommandManager
+import net.mamoe.mirai.console.command.*
 import net.mamoe.mirai.console.command.CommandManager.INSTANCE.register
 import net.mamoe.mirai.console.command.CommandManager.INSTANCE.unregister
-import net.mamoe.mirai.console.command.MemberCommandSenderOnMessage
-import net.mamoe.mirai.console.command.SimpleCommand
 import net.mamoe.mirai.contact.User
 
 object MirrorWorldGame {
@@ -25,6 +23,7 @@ object MirrorWorldGame {
         ItemSynthesis.register()
         OpenBag.register()
         UseItems.register()
+        ItemSynthesisGuide.register()
     }
 
     fun unregister() {
@@ -42,6 +41,7 @@ object MirrorWorldGame {
         ItemSynthesis.unregister()
         OpenBag.unregister()
         UseItems.unregister()
+        ItemSynthesisGuide.unregister()
     }
 
     object PlayerInfo : SimpleCommand(
@@ -204,7 +204,44 @@ object MirrorWorldGame {
             if (PluginMain.DLC_MirrorWorld) MirrorWorld(this).alchemy()
             else sendMessage("缺少依赖DLC")
         }
+
+        @Handler
+        suspend fun GroupTempCommandSenderOnMessage.main() {
+            if (PluginMain.DLC_MirrorWorld) MirrorWorld(this).alchemy()
+            else sendMessage("缺少依赖DLC")
+        }
+
+        @Handler
+        suspend fun FriendCommandSenderOnMessage.main() {
+            if (PluginMain.DLC_MirrorWorld) MirrorWorld(this).alchemy()
+            else sendMessage("缺少依赖DLC")
+        }
     }
+
+    object ItemSynthesisGuide : SimpleCommand(
+        PluginMain, "AlchemyGuide", "合成指南",
+        description = "合成物品指南"
+    ) {
+        @Handler
+        suspend fun MemberCommandSenderOnMessage.main() {
+            if (group.botMuteRemaining > 0) return
+            if (PluginMain.DLC_MirrorWorld) MirrorWorld(this).alchemyGuide()
+            else sendMessage("缺少依赖DLC")
+        }
+
+        @Handler
+        suspend fun GroupTempCommandSenderOnMessage.main() {
+            if (PluginMain.DLC_MirrorWorld) MirrorWorld(this).alchemyGuide()
+            else sendMessage("缺少依赖DLC")
+        }
+
+        @Handler
+        suspend fun FriendCommandSenderOnMessage.main() {
+            if (PluginMain.DLC_MirrorWorld) MirrorWorld(this).alchemyGuide()
+            else sendMessage("缺少依赖DLC")
+        }
+    }
+
 
     object OpenBag : SimpleCommand(
         PluginMain, "OpenBag", "背包",
@@ -224,7 +261,7 @@ object MirrorWorldGame {
         description = "使用物品"
     ) {
         @Handler
-        suspend fun MemberCommandSenderOnMessage.main(itemName: String, amount:Int) {
+        suspend fun MemberCommandSenderOnMessage.main(itemName: String, amount: Int) {
             if (group.botMuteRemaining > 0) return
             if (PluginMain.DLC_MirrorWorld) {
                 sendMessage(MirrorWorld(this).useItems(itemName, amount))
