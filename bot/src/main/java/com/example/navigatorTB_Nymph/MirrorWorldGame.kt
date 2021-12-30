@@ -225,19 +225,22 @@ object MirrorWorldGame {
         @Handler
         suspend fun MemberCommandSenderOnMessage.main() {
             if (group.botMuteRemaining > 0) return
-            if (PluginMain.DLC_MirrorWorld) MirrorWorld(this).alchemyGuide()
+            if (PluginMain.DLC_MirrorWorld)
+                sendMessage(MirrorWorld(this).alchemyGuide())
             else sendMessage("缺少依赖DLC")
         }
 
         @Handler
         suspend fun GroupTempCommandSenderOnMessage.main() {
-            if (PluginMain.DLC_MirrorWorld) MirrorWorld(this).alchemyGuide()
+            if (PluginMain.DLC_MirrorWorld)
+                sendMessage(MirrorWorld(this).alchemyGuide())
             else sendMessage("缺少依赖DLC")
         }
 
         @Handler
         suspend fun FriendCommandSenderOnMessage.main() {
-            if (PluginMain.DLC_MirrorWorld) MirrorWorld(this).alchemyGuide()
+            if (PluginMain.DLC_MirrorWorld)
+                sendMessage(MirrorWorld(this).alchemyGuide())
             else sendMessage("缺少依赖DLC")
         }
     }
