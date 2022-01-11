@@ -17,6 +17,10 @@ object OneWord : SimpleCommand(
     @Handler
     suspend fun MemberCommandSenderOnMessage.main() {
         if (group.botMuteRemaining > 0) return
+        if (group.id !in ActiveGroupList.user) {
+            sendMessage("本群授权已到期,请续费后使用")
+            return
+        }
         val pair = hitokoto()
         sendMessage("${pair.first}\n${pair.second}\t一言: hitokoto.cn")
     }

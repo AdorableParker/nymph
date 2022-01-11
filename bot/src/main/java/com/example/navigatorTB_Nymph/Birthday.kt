@@ -27,7 +27,10 @@ object Birthday : SimpleCommand(
     suspend fun MemberCommandSenderOnMessage.main() {
         record(primaryName)
         if (group.botMuteRemaining > 0) return
-
+        if (group.id !in ActiveGroupList.user) {
+            sendMessage("本群授权已到期,请续费后使用")
+            return
+        }
         val today = LocalDateTime.now().format(DateTimeFormatter.ofPattern("M月d日"))
 
         val dbObject = SQLiteJDBC(PluginMain.resolveDataPath("AssetData.db"))

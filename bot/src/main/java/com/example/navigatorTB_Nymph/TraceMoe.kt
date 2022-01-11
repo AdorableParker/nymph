@@ -30,7 +30,10 @@ object TraceMoe : SimpleCommand(
     suspend fun MemberCommandSenderOnMessage.main(image: Image) {
         record(primaryName)
         if (group.botMuteRemaining > 0) return
-
+        if (group.id !in ActiveGroupList.user) {
+            sendMessage("本群授权已到期,请续费后使用")
+            return
+        }
         sendMessage("开始查询，请稍后...")
         val jsonObjString = getJSON(image.queryUrl())
         if (jsonObjString == null) {
@@ -49,19 +52,15 @@ object TraceMoe : SimpleCommand(
 
     private fun getJSON(img: String): String? {
         val url = "https://api.trace.moe/search?anilistInfo&cutBorders&url=$img"
-        runCatching {
+        return runCatching {
             Jsoup.connect(url)
                 .ignoreContentType(true)
                 .execute()
                 .body()
                 .toString()
-        }.onSuccess {
-            return it
         }.onFailure {
             PluginMain.logger.warning { "File:TraceMoe.kt\tLine:60\n$it" }
-            return null
-        }
-        return null
+        }.getOrNull()
     }
 
     private suspend fun writeReport(jsonObject: JsonObject, group: Group): Message {

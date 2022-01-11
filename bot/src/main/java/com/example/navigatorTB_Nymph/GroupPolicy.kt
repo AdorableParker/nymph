@@ -14,8 +14,8 @@ import net.mamoe.mirai.console.command.MemberCommandSenderOnMessage
 import net.mamoe.mirai.contact.Member
 import net.mamoe.mirai.contact.isOperator
 import net.mamoe.mirai.message.data.At
-import net.mamoe.mirai.message.data.PlainText
 import net.mamoe.mirai.message.data.buildMessageChain
+import java.time.LocalDateTime
 
 
 object GroupPolicy : CompositeCommand(
@@ -41,6 +41,10 @@ object GroupPolicy : CompositeCommand(
     @SubCommand("群策略设定状态汇报", "汇报")
     suspend fun MemberCommandSenderOnMessage.report() {
         if (group.botMuteRemaining > 0) return
+        if (group.id !in ActiveGroupList.user) {
+            sendMessage("本群授权已到期,请续费后使用")
+            return
+        }
         val dbObject = SQLiteJDBC(PluginMain.resolveDataPath("User.db"))
 
         val policy = dbObject.selectOne("Policy", "group_id", group.id, 1)
@@ -77,7 +81,10 @@ object GroupPolicy : CompositeCommand(
     @SubCommand("免打扰模式")
     suspend fun MemberCommandSenderOnMessage.tellUndisturbed(value: Int) {
         if (group.botMuteRemaining > 0) return
-
+        if (group.id !in ActiveGroupList.user) {
+            sendMessage("本群授权已到期,请续费后使用")
+            return
+        }
         if (permissionCheck(user)) {
             sendMessage("权限不足")
             return
@@ -96,7 +103,10 @@ object GroupPolicy : CompositeCommand(
     @SubCommand("免打扰模式")
     suspend fun MemberCommandSenderOnMessage.tellUndisturbed() {
         if (group.botMuteRemaining > 0) return
-
+        if (group.id !in ActiveGroupList.user) {
+            sendMessage("本群授权已到期,请续费后使用")
+            return
+        }
         sendMessage(
             """
             无效模式参数，设定失败,请参考以下示范命令
@@ -112,7 +122,10 @@ object GroupPolicy : CompositeCommand(
     @SubCommand("报时模式")
     suspend fun MemberCommandSenderOnMessage.tellTime(mode: Int) {
         if (group.botMuteRemaining > 0) return
-
+        if (group.id !in ActiveGroupList.user) {
+            sendMessage("本群授权已到期,请续费后使用")
+            return
+        }
         if (permissionCheck(user)) {
             sendMessage("权限不足")
             return
@@ -136,7 +149,10 @@ object GroupPolicy : CompositeCommand(
     @SubCommand("报时模式")
     suspend fun MemberCommandSenderOnMessage.tellTime() {
         if (group.botMuteRemaining > 0) return
-
+        if (group.id !in ActiveGroupList.user) {
+            sendMessage("本群授权已到期,请续费后使用")
+            return
+        }
         val info: MutableList<String> = mutableListOf()
         tellTimeMode.forEach {
             info.add("${it.key}\t    ${it.value}")
@@ -149,7 +165,10 @@ object GroupPolicy : CompositeCommand(
     @SubCommand("订阅模式")
     suspend fun MemberCommandSenderOnMessage.subscription(mode: Int) {
         if (group.botMuteRemaining > 0) return
-
+        if (group.id !in ActiveGroupList.user) {
+            sendMessage("本群授权已到期,请续费后使用")
+            return
+        }
         if (permissionCheck(user)) {
             sendMessage("权限不足")
             return
@@ -170,7 +189,10 @@ object GroupPolicy : CompositeCommand(
     @SubCommand("订阅模式")
     suspend fun MemberCommandSenderOnMessage.subscription() {
         if (group.botMuteRemaining > 0) return
-
+        if (group.id !in ActiveGroupList.user) {
+            sendMessage("本群授权已到期,请续费后使用")
+            return
+        }
         sendMessage(
             """
             无效模式参数，设定失败,请参考以下示范命令
@@ -196,7 +218,10 @@ object GroupPolicy : CompositeCommand(
     @SubCommand("每日提醒模式")
     suspend fun MemberCommandSenderOnMessage.dailyReminder(mode: Int) {
         if (group.botMuteRemaining > 0) return
-
+        if (group.id !in ActiveGroupList.user) {
+            sendMessage("本群授权已到期,请续费后使用")
+            return
+        }
         if (permissionCheck(user)) {
             sendMessage("权限不足")
             return
@@ -221,7 +246,10 @@ object GroupPolicy : CompositeCommand(
     @SubCommand("每日提醒模式")
     suspend fun MemberCommandSenderOnMessage.dailyReminder() {
         if (group.botMuteRemaining > 0) return
-
+        if (group.id !in ActiveGroupList.user) {
+            sendMessage("本群授权已到期,请续费后使用")
+            return
+        }
         sendMessage(
             """
             无效模式参数，设定失败,请参考以下示范命令
@@ -239,7 +267,10 @@ object GroupPolicy : CompositeCommand(
     @SubCommand("教学许可")
     suspend fun MemberCommandSenderOnMessage.teaching(switch: Int) {
         if (group.botMuteRemaining > 0) return
-
+        if (group.id !in ActiveGroupList.user) {
+            sendMessage("本群授权已到期,请续费后使用")
+            return
+        }
         if (permissionCheck(user)) {
             sendMessage("权限不足")
             return
@@ -258,7 +289,10 @@ object GroupPolicy : CompositeCommand(
     @SubCommand("教学许可")
     suspend fun MemberCommandSenderOnMessage.teaching() {
         if (group.botMuteRemaining > 0) return
-
+        if (group.id !in ActiveGroupList.user) {
+            sendMessage("本群授权已到期,请续费后使用")
+            return
+        }
         sendMessage(
             """
             无效模式参数，设定失败,请参考以下示范命令
@@ -274,7 +308,10 @@ object GroupPolicy : CompositeCommand(
     @SubCommand("对话概率")
     suspend fun MemberCommandSenderOnMessage.triggerProbability(value: Int) {
         if (group.botMuteRemaining > 0) return
-
+        if (group.id !in ActiveGroupList.user) {
+            sendMessage("本群授权已到期,请续费后使用")
+            return
+        }
         if (permissionCheck(user)) {
             sendMessage("权限不足")
             return
@@ -288,7 +325,10 @@ object GroupPolicy : CompositeCommand(
     @SubCommand("对话概率")
     suspend fun MemberCommandSenderOnMessage.triggerProbability() {
         if (group.botMuteRemaining > 0) return
-
+        if (group.id !in ActiveGroupList.user) {
+            sendMessage("本群授权已到期,请续费后使用")
+            return
+        }
         sendMessage(
             """
             无效模式参数，设定失败,请参考以下示范命令
@@ -303,7 +343,10 @@ object GroupPolicy : CompositeCommand(
     @SubCommand("色图许可")
     suspend fun MemberCommandSenderOnMessage.acgImage(token: String) {
         if (group.botMuteRemaining > 0) return
-
+        if (group.id !in ActiveGroupList.user) {
+            sendMessage("本群授权已到期,请续费后使用")
+            return
+        }
         if (permissionCheck(user)) {
             sendMessage("权限不足")
             return
@@ -326,7 +369,10 @@ object GroupPolicy : CompositeCommand(
     @SubCommand("色图许可")
     suspend fun MemberCommandSenderOnMessage.acgImage() {
         if (group.botMuteRemaining > 0) return
-
+        if (group.id !in ActiveGroupList.user) {
+            sendMessage("本群授权已到期,请续费后使用")
+            return
+        }
         sendMessage(
             """
             无效模式参数，设定失败,请参考以下示范命令
@@ -344,129 +390,41 @@ object GroupPolicy : CompositeCommand(
         return user.permission.isOperator().not()
     }
 
-    @SubCommand("责任人绑定")
-    suspend fun MemberCommandSenderOnMessage.bindingOwnership(string: String) {
+    @SubCommand("续费")
+    suspend fun MemberCommandSenderOnMessage.renewal(cdKey: String, key: String) {
         if (group.botMuteRemaining > 0) return
+        val cdKeyDbObject = SQLiteJDBC(PluginMain.resolveDataPath("CD-KEY.db"))
+        val cdk = cdKeyDbObject.selectOne("CD-KEY", "code", cdKey, 1)
+        if (cdk.isEmpty() || cdk["key"] != key){
+            sendMessage("该序列号或密码无效,请检查输入(若确定输入无误请联系客服)")
+            return
+        }
+
+        cdKeyDbObject.delete("CD-KEY", "code", cdKey)
+        cdKeyDbObject.closeDB()
 
         val dbObject = SQLiteJDBC(PluginMain.resolveDataPath("User.db"))
-        val rpl = dbObject.selectOne("Responsible", "group_id", group.id, 1)
-        val nowPR = rpl["principal_ID"].toString().toLong()
-        when (string) {
-            "解绑" -> {
-                if (nowPR == user.id) {
-                    dbObject.update("Responsible", "group_id", "${group.id}", "principal_ID", 0)
-                    sendMessage("本群责任人解绑完成,请尽快绑定相关责任人,防止出现使用问题")
-                } else {
-                    sendMessage("你不是本群责任人,无法解绑")
-                }
-            }
-            "绑定" -> {
-                if (nowPR == 0L) {
-                    dbObject.update("Responsible", "group_id", "${group.id}", "principal_ID", user.id)
-                    sendMessage("本群责任人绑定完成\nGroup ID:${group.id}\tPrincipal ID: ${user.id}")
-                } else {
-                    sendMessage(PlainText("本群已有责任人:") + At(nowPR) + PlainText("\n原责任人解绑后方可绑定"))
-                }
-            }
-            else -> bindingOwnership()
-        }
+        val groupObject = dbObject.selectOne("Responsible", "group_id", group.id, 1)
+        val onlyTime = (groupObject["active"] as Int) + (cdk["value"] as Int) + if (LocalDateTime.now().hour < 12) 0 else 1
+
+        dbObject.update("Responsible", "group_id", "${group.id}",
+            arrayOf("principal_ID","active"),
+            arrayOf("${user.id}","$onlyTime" ))
         dbObject.closeDB()
+        sendMessage("续费完成,可以通过群策略设定状态汇报命令查看当前群状态")
     }
 
-    @SubCommand("责任人绑定")
-    suspend fun MemberCommandSenderOnMessage.bindingOwnership() {
+    @SubCommand("续费")
+    suspend fun MemberCommandSenderOnMessage.renewal() {
         if (group.botMuteRemaining > 0) return
-
         sendMessage(
             """
             无效参数，设定失败,请参考以下示范命令
-            责任人绑定 [绑定|解绑]
+            续费 [序列号] [密码]
             ——————————
-            绑定责任人用于认定当前群的Bot使用权限最高归属人
-            !!若因未绑定而导致后期BOt使用管控问题,后果自负...(相关自助功能使用将会受限,也将维权繁琐)
+            将认定发起续费的账号为当前群的Bot归属人
+            根据输入的序列号对使用期限进行续费
             """.trimIndent()
         )
     }
-
-    @SubCommand("继承到群")
-    suspend fun MemberCommandSenderOnMessage.succeed(ancestor: Long, inheritor: Long) {
-        if (group.botMuteRemaining > 0) return
-
-        val dbObject = SQLiteJDBC(PluginMain.resolveDataPath("User.db"))
-        val rpl = dbObject.selectOne("Responsible", "group_id", ancestor, 1)
-        dbObject.closeDB()
-
-        val nowPR = rpl["principal_ID"].toString().toLong()
-        if (nowPR == user.id) {
-            if (MyPluginData.pactList.contains(ancestor)) {
-                sendMessage("群${ancestor}已有继承协议,请撤销后重新签署")
-                return
-            }
-            MyPluginData.groupIdList[inheritor] = GroupCertificate(nowPR, true, ancestor)
-            MyPluginData.pactList.add(ancestor)
-            sendMessage(PlainText("继承协议已建立\n被继承群：$ancestor\n受继承群：$inheritor\n继承协议签署人：") + At(nowPR))
-        } else {
-            sendMessage("你不是该群责任人,无法继承")
-        }
-    }
-
-    @SubCommand("继承到群")
-    suspend fun MemberCommandSenderOnMessage.succeed(inheritor: Long) {
-        succeed(group.id, inheritor)
-    }
-
-    @SubCommand("继承到群")
-    suspend fun MemberCommandSenderOnMessage.succeed() {
-        if (group.botMuteRemaining > 0) return
-
-        sendMessage(
-            """
-            无效参数，设定失败,请参考以下示范命令
-            继承到群 [被继承群] [受继承群]
-            ——————————
-            参数[被继承群] 若是当前群可省略
-            本功能仅绑定[被继承群]的责任人有权执行
-            执行本命令后，直接邀请至目标群，同意申请后[被继承群]将自动退群
-            """.trimIndent()
-        )
-    }
-
-    @SubCommand("撤销继承协议")
-    suspend fun MemberCommandSenderOnMessage.revokePact(ancestor: Long, inheritor: Long) {
-        if (group.botMuteRemaining > 0) return
-
-        val dbObject = SQLiteJDBC(PluginMain.resolveDataPath("User.db"))
-        val rpl = dbObject.selectOne("Responsible", "group_id", ancestor, 1)
-        dbObject.closeDB()
-        val nowPR = rpl["principal_ID"].toString().toLong()
-        if (nowPR == user.id) {
-            MyPluginData.groupIdList.remove(inheritor)
-            MyPluginData.pactList.remove(ancestor)
-            sendMessage("继承协议已作废")
-        } else {
-            sendMessage("你不是该群责任人,无法撤销继承协议")
-        }
-    }
-
-    @SubCommand("撤销继承协议")
-    suspend fun MemberCommandSenderOnMessage.revokePact(inheritor: Long) {
-        revokePact(group.id, inheritor)
-    }
-
-    @SubCommand("撤销继承协议")
-    suspend fun MemberCommandSenderOnMessage.revokePact() {
-        if (group.botMuteRemaining > 0) return
-
-        sendMessage(
-            """
-            无效参数，设定失败,请参考以下示范命令
-            撤销继承协议 [被继承群] [受继承群]
-            ——————————
-            参数[被继承群] 若是当前群可省略
-            本功能仅绑定[被继承群]的责任人有权执行
-            执行本命令后，撤销[被继承群]与[受继承群]的继承协议
-            """.trimIndent()
-        )
-    }
-
 }

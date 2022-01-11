@@ -20,8 +20,11 @@ object AI : CompositeCommand(
 
     @SubCommand("教学")
     suspend fun MemberCommandSenderOnMessage.main(question: String, answer: String) {
-
         if (group.botMuteRemaining > 0) return
+        if (group.id !in ActiveGroupList.user) {
+            sendMessage("本群授权已到期,请续费后使用")
+            return
+        }
 
         val userDBObject = SQLiteJDBC(PluginMain.resolveDataPath("User.db"))
         val info = userDBObject.selectOne("Policy", "group_id", group.id, 1)
@@ -74,6 +77,10 @@ object AI : CompositeCommand(
     @SubCommand("查询")
     suspend fun MemberCommandSenderOnMessage.main(key: String) {
         if (group.botMuteRemaining > 0) return
+        if (group.id !in ActiveGroupList.user) {
+            sendMessage("本群授权已到期,请续费后使用")
+            return
+        }
 
         val dbObject =
             SQLiteJDBC(PluginMain.resolveDataPath("AI.db"))
@@ -82,6 +89,7 @@ object AI : CompositeCommand(
         dbObject.closeDB()
         val r = when {
             entryList.isEmpty() -> "问答包含关键词${key}的条目不存在"
+            entryList.size >= 30 -> "问答包含关键词${key}的条目过多(超过三十条)，请提供更加详细的关键词"
             entryList.size >= 10 -> {
                 val report = mutableListOf("问答包含关键词${key}的条目过多(超过十条)，仅提供前十条，本群关键词优先显示")
                 for (row in entryList) {
@@ -96,7 +104,6 @@ object AI : CompositeCommand(
                 }
                 report.joinToString("\n")
             }
-            entryList.size >= 20 -> "问答包含关键词${key}的条目过多(超过二十条)，请提供更加详细的关键词"
             else -> {
                 val report = mutableListOf("条目清单:")
                 for (row in entryList) {
@@ -115,6 +122,10 @@ object AI : CompositeCommand(
     @SubCommand("统计")
     suspend fun MemberCommandSenderOnMessage.main() {
         if (group.botMuteRemaining > 0) return
+        if (group.id !in ActiveGroupList.user) {
+            sendMessage("本群授权已到期,请续费后使用")
+            return
+        }
 
         val dbObject =
             SQLiteJDBC(PluginMain.resolveDataPath("AI.db"))
@@ -139,6 +150,10 @@ object AI : CompositeCommand(
     @SubCommand("EID查询")
     suspend fun MemberCommandSenderOnMessage.eIDMain(EID: Int) {
         if (group.botMuteRemaining > 0) return
+        if (group.id !in ActiveGroupList.user) {
+            sendMessage("本群授权已到期,请续费后使用")
+            return
+        }
 
         val dbObject =
             SQLiteJDBC(PluginMain.resolveDataPath("AI.db"))
@@ -165,6 +180,10 @@ object AI : CompositeCommand(
     @SubCommand("删除")
     suspend fun MemberCommandSenderOnMessage.main(EID: Int) {
         if (group.botMuteRemaining > 0) return
+        if (group.id !in ActiveGroupList.user) {
+            sendMessage("本群授权已到期,请续费后使用")
+            return
+        }
 
         val dbObject =
             SQLiteJDBC(PluginMain.resolveDataPath("AI.db"))
@@ -182,6 +201,10 @@ object AI : CompositeCommand(
     @SubCommand("sudo删除")
     suspend fun MemberCommandSenderOnMessage.sudoMain(EID: Int) {
         if (group.botMuteRemaining > 0) return
+        if (group.id !in ActiveGroupList.user) {
+            sendMessage("本群授权已到期,请续费后使用")
+            return
+        }
 
         val dbObject =
             SQLiteJDBC(PluginMain.resolveDataPath("AI.db"))

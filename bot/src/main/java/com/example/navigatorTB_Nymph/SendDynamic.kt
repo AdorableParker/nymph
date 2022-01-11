@@ -32,6 +32,10 @@ object SendDynamic : SimpleCommand(
     @Handler
     suspend fun MemberCommandSenderOnMessage.main(name: String, index: Int = 0) {
         if (group.botMuteRemaining > 0) return
+        if (group.id !in ActiveGroupList.user) {
+            sendMessage("本群授权已到期,请续费后使用")
+            return
+        }
         sendMessage(main(group, DynamicNameList.getOrDefault(name, name.toIntOrNull()), index))
     }
 

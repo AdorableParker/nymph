@@ -32,10 +32,7 @@ object AssetDataAccess : CompositeCommand(
             dbObject.insert(
                 "AzurLane_construct_time",
                 arrayOf("OriginalName", "Alias", "Time", "LimitedTime"),
-                arrayOf(
-                    "" +
-                            "\"$shipName\"", "\"$alias\"", "\"$time\"", limited
-                )
+                arrayOf("\"$shipName\"", "\"$alias\"", "\"$time\"", limited)
             )
             dbObject.closeDB()
             sendMessage("写入完成")

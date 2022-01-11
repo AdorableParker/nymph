@@ -1,8 +1,19 @@
 package com.example.navigatorTB_Nymph
 
+import com.beust.klaxon.JsonObject
+import com.beust.klaxon.Parser
 import com.example.navigatorTB_Nymph.UsageStatistics.record
 import net.mamoe.mirai.console.command.MemberCommandSenderOnMessage
 import net.mamoe.mirai.console.command.SimpleCommand
+import net.mamoe.mirai.contact.Group
+import net.mamoe.mirai.message.data.Message
+import net.mamoe.mirai.message.data.PlainText
+import net.mamoe.mirai.message.data.buildMessageChain
+import net.mamoe.mirai.utils.ExternalResource.Companion.uploadAsImage
+import net.mamoe.mirai.utils.warning
+import org.jsoup.Jsoup
+import java.net.URL
+import java.time.Instant
 
 
 object AcgImage : SimpleCommand(
@@ -13,12 +24,16 @@ object AcgImage : SimpleCommand(
     suspend fun MemberCommandSenderOnMessage.main() {
         record(primaryName)
         if (group.botMuteRemaining > 0) return
-        sendMessage("功能整改中")
-/*
+        if (group.id !in ActiveGroupList.user) {
+            sendMessage("本群授权已到期,请续费后使用")
+            return
+        }
+
         if (MyPluginData.AcgImageRun.contains(group.id)) {
             sendMessage("功能运行中，请等待")
             return
         }
+
         MyPluginData.AcgImageRun.add(group.id)
         val dbObject = SQLiteJDBC(PluginMain.resolveDataPath("User.db"))
         val status = dbObject.selectOne("Policy", "group_id", group.id, 1)
@@ -46,47 +61,45 @@ object AcgImage : SimpleCommand(
             return
         }
         runCatching {
-            getRandomImg()?.let { inputStream ->
-                inputStream.toExternalResource().use {
-                    group.sendImage(it)
-                }
-                dbObject.update(
-                    "ACGImg",
-                    "group_id",
-                    "${group.id}",
-                    arrayOf("score", "date"),
-                    arrayOf("${score - 1}", "${Instant.now().epochSecond}")
-                )
-                if (score - 1 < 10) {
-                    sendMessage("ℹ本群剩余配给已经不足10点了")
-                }
-            } ?: throw IllegalAccessException("图片数据流为空")
+            sendMessage(getRandomImg(group))
+            dbObject.update(
+                "ACGImg",
+                "group_id",
+                "${group.id}",
+                arrayOf("score", "date"),
+                arrayOf("${score - 1}", "${Instant.now().epochSecond}")
+            )
+            if (score - 1 < 10) {
+                sendMessage("ℹ本群剩余配给已经不足10点了")
+            }
         }.onFailure {
             PluginMain.logger.warning { "File:AcgImage.kt    Line:78\n${it.message}" }
             sendMessage("数据传输失败...嗯.一定是塞壬的问题..")
         }
         dbObject.closeDB()
         MyPluginData.AcgImageRun.remove(group.id)
- */
     }
 
-/*
-    private fun getRandomImg(): InputStream? {
-        val webClient = WebClient(BrowserVersion.EDGE) //新建一个浏览器客户端对象 指定内核
-        webClient.options.isCssEnabled = false //是否启用CSS, 因为不需要展现页面, 所以不需要启用
-        runCatching {
-            val page: HtmlPage = webClient.getPage(MySetting.ImageHostingService) //尝试加载给出的网页
-            val link = Jsoup.parse(page.asXml()).text()
-            webClient.close()
-            //            return ImmutableImageleImage.loader().fromStream(inputStream).bytes(PngWriter.MaxCompression).inputStream() // com.sksamuel.scrimage.ImageParseException 原因不详
-            return URL(link).openConnection().getInputStream()
-        }.onFailure {
-            PluginMain.logger.warning("File:AcgImage.kt\tLine:95\n$it")
+
+    private suspend fun getRandomImg(group: Group): Message {
+        val doc = Jsoup.connect("https://api.lolicon.app/setu/v2?r18=0&size=regular")
+            .ignoreContentType(true)
+            .execute().body().toString()
+
+        val jsonObj = Parser.default().parse(StringBuilder(doc)) as JsonObject
+        val errorInfo = jsonObj.string("error")
+        if(!errorInfo.isNullOrEmpty()) return PlainText(errorInfo)
+        val data = jsonObj.array<JsonObject>("data")?.get(0)
+        val url = data?.obj("urls")?.string("regular") ?: return PlainText("图片资源获取失败")
+        return buildMessageChain {
+            +"PID:${data.int("pid")}"         // 作品ID
+            +"PID:${data.int("uid")}"         // 作者ID
+            +"标题:${data.string("title")}"     // 作品名
+            +URL(url).openConnection().getInputStream().use {
+                it.uploadAsImage(group)
+            }
         }
-        webClient.close()
-        return null
     }
- */
 
     fun getReplenishment(group: Long, supply: Int): String {
         val dbObject = SQLiteJDBC(PluginMain.resolveDataPath("User.db"))

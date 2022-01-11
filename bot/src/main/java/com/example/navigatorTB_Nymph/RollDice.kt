@@ -26,7 +26,10 @@ object RollDice : SimpleCommand(
     suspend fun MemberCommandSenderOnMessage.main(pip: Int, roll: Int = 1, dice: Int = 6, verify: String = "细") {
         record(primaryName)
         if (group.botMuteRemaining > 0) return
-
+        if (group.id !in ActiveGroupList.user) {
+            sendMessage("本群授权已到期,请续费后使用")
+            return
+        }
         if (roll <= 0 || dice <= 0) {
             sendMessage("参数错误：无法执行R${roll}D${dice}")
             return

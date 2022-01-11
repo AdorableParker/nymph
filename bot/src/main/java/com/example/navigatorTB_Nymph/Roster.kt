@@ -28,7 +28,10 @@ object Roster : SimpleCommand(
     suspend fun MemberCommandSenderOnMessage.main(shipName: String) {
         record(primaryName)
         if (group.botMuteRemaining > 0) return
-
+        if (group.id !in ActiveGroupList.user) {
+            sendMessage("本群授权已到期,请续费后使用")
+            return
+        }
         val i = shipName.toCharArray()
         i.forEachIndexed { index, char ->
             if (char.isLowerCase()) i[index] = char.uppercaseChar()

@@ -23,7 +23,7 @@ import net.mamoe.mirai.console.plugin.jvm.KotlinPlugin
 import net.mamoe.mirai.contact.Contact
 import net.mamoe.mirai.contact.Member
 import net.mamoe.mirai.event.EventPriority
-import net.mamoe.mirai.event.events.BotInvitedJoinGroupRequestEvent
+import net.mamoe.mirai.event.events.BotJoinGroupEvent
 import net.mamoe.mirai.event.events.BotLeaveEvent
 import net.mamoe.mirai.event.events.NudgeEvent
 import net.mamoe.mirai.event.globalEventChannel
@@ -64,6 +64,7 @@ object PluginMain : KotlinPlugin(
 
     var DLC_MirrorWorld = false
 
+
     @OptIn(MiraiExperimentalApi::class)
     override fun onEnable() {
         MySetting.reload()
@@ -76,8 +77,6 @@ object PluginMain : KotlinPlugin(
         } else {                            // 重置状态数据防止出现状态锁定
             MyPluginData.AcgImageRun.clear()
         }
-
-
 
         Tarot.register()            // 塔罗
         SignIn.register()           // 签到
@@ -99,7 +98,6 @@ object PluginMain : KotlinPlugin(
         Construction.register()     // 建造时间
         ShipMap.register()          // 打捞地图
         SendDynamic.register()      // 动态查询
-        Request.register()          // 加群操作
         WikiAzurLane.register()     // 碧蓝Wiki
         CalculationExp.register()   // 经验计算器
         Birthday.register()         // 舰船下水日
@@ -116,44 +114,14 @@ object PluginMain : KotlinPlugin(
             CRON.start()
         }
         // 入群审核
-        this.globalEventChannel().subscribeAlways<BotInvitedJoinGroupRequestEvent> {
-            logger.debug { "File:PluginMain.kt\tLine:135\nGroupName:${it.groupName}\nGroupID：${it.groupId}" }
-            MyPluginData.groupIdList.forEach { (groupID, user) ->
-                logger.debug { "GroupID:$groupID\tUserID：${user.principal_ID}\tFrom：${user.from}" }
-            }
-            if (MyPluginData.groupIdList.contains(it.groupId)) {
-                val gc = MyPluginData.groupIdList[it.groupId]!! // 获取群证书
-                it.accept()
-                val dbObject = SQLiteJDBC(resolveDataPath("User.db"))
-                if (gc.flag) {
-                    dbObject.update("Policy", "group_id", "${gc.from}", "group_id", "${it.groupId}")
-                    dbObject.update("SubscribeInfo", "group_id", "${gc.from}", "group_id", "${it.groupId}")
-                    dbObject.update("Responsible", "group_id", "${gc.from}", "group_id", "${it.groupId}")
-                    dbObject.update("ACGImg", "group_id", "${gc.from}", "group_id", "${it.groupId}")
-                    val ancestor = Bot.getInstance(MySetting.BotID).getGroup(gc.from)
-                    if (ancestor != null) {
-                        ancestor.sendMessage("受继承群已接受继承，即将退出本群")
-                        MyPluginData.pactList.remove(gc.from)
-                        ancestor.quit()
-                    }
-                } else {
-                    dbObject.insert("Policy", arrayOf("group_id"), arrayOf("${it.groupId}"))
-                    dbObject.insert("SubscribeInfo", arrayOf("group_id"), arrayOf("${it.groupId}"))
-                    dbObject.insert("ACGImg", arrayOf("group_id"), arrayOf("${it.groupId}"))
-                    dbObject.insert(
-                        "Responsible",
-                        arrayOf("group_id", "principal_ID"),
-                        arrayOf("${it.groupId}", "${gc.principal_ID}")
-                    )
-                }
-                MyPluginData.groupIdList.remove(it.groupId)
-                dbObject.closeDB()
-                logger.info { "PASS" }
-                bot.getFriend(MySetting.AdminID)?.sendMessage("GroupName:${it.groupName}\nGroupID：${it.groupId}\nPASS")
-            } else {
-                it.ignore()
-                logger.info { "FAIL" }
-            }
+        this.globalEventChannel().subscribeAlways<BotJoinGroupEvent> {
+            val dbObject = SQLiteJDBC(resolveDataPath("User.db"))
+            dbObject.insert("Policy", arrayOf("group_id"), arrayOf("${it.groupId}"))
+            dbObject.insert("SubscribeInfo", arrayOf("group_id"), arrayOf("${it.groupId}"))
+            dbObject.insert("ACGImg", arrayOf("group_id"), arrayOf("${it.groupId}"))
+            dbObject.insert("Responsible", arrayOf("group_id"), arrayOf("${it.groupId}"))
+            dbObject.closeDB()
+            bot.getFriend(MySetting.AdminID)?.sendMessage("GroupName:${it.group.name}\nGroupID：${it.groupId}\nPASS")
         }
         // 退群清理
         this.globalEventChannel().subscribeAlways<BotLeaveEvent.Kick> {
@@ -195,12 +163,12 @@ object PluginMain : KotlinPlugin(
         // 聊天触发
         this.globalEventChannel().subscribeGroupMessages(priority = EventPriority.LOWEST) {
             atBot {
-                if (group.botMuteRemaining > 0) return@atBot
+                if (group.botMuteRemaining > 0 || group.id !in ActiveGroupList.user) return@atBot
                 val filterMessageList: List<Message> = message.filter { it !is At }
                 val filterMessageChain: MessageChain = filterMessageList.toMessageChain()
                 if ((1..5).random() <= 2) {
-                    if (filterMessageChain.content.trim()
-                            .contains(prohibitedWord.toRegex()) && group.botPermission > this.sender.permission
+                    if (filterMessageChain.content.trim() //
+                            .contains(prohibitedWord.joinToString("|").toRegex()) && group.botPermission > this.sender.permission
                     ) {
                         this.sender.mute((300..900).random())
                         group.sendMessage(
@@ -220,7 +188,7 @@ object PluginMain : KotlinPlugin(
                 AI.dialogue(subject, filterMessageChain.content.trim(), true)
             }
             atBot().not().invoke {
-                if (group.botMuteRemaining > 0) return@invoke
+                if (group.botMuteRemaining > 0 || group.id !in ActiveGroupList.user) return@invoke
                 val dbObject = SQLiteJDBC(resolveDataPath("User.db"))
                 val groupInfo = dbObject.selectOne("Policy", "group_id", group.id, 1)
                 dbObject.closeDB()
@@ -270,6 +238,20 @@ object PluginMain : KotlinPlugin(
         CRON.addJob(t.dayOfYear * 10000 + 20 * 100, Interval(1, 0, 3)) { dailyReminder() }
     }
 
+    /* 每天12点 更新激活状态*/
+    private fun activationStatusUpdate() {
+        val dbObject = SQLiteJDBC(resolveDataPath("User.db"))
+        dbObject.select("Responsible", "", "").forEach {
+            val uid = it["group_id"] as Long
+            val active = it["active"] as Int
+            if(active >= 0) {
+                ActiveGroupList.user += uid
+                dbObject.update("Responsible", "$uid", uid,"active",active - 1)
+            } else ActiveGroupList.user -= uid
+        }
+        dbObject.closeDB()
+    }
+
     /* 每日提醒 */
     private suspend inline fun dailyReminder() {
         logger.info { "执行任务：每日提醒" }
@@ -297,8 +279,10 @@ object PluginMain : KotlinPlugin(
             )
         )
         for (groupPolicy in groupList) {
-            val groupID = groupPolicy["group_id"] as Int
-            val group = Bot.getInstance(MySetting.BotID).getGroup(groupID.toLong())
+            val groupID = groupPolicy["group_id"] as Long
+            if (groupID !in ActiveGroupList.user) continue // 激活到期则跳过
+
+            val group = Bot.getInstance(MySetting.BotID).getGroup(groupID)
             if (group == null || group.botMuteRemaining > 0) {
                 continue
             }
@@ -318,6 +302,9 @@ object PluginMain : KotlinPlugin(
     private suspend inline fun tellTime() {
         logger.info { "执行任务：整点报时" }
         val time = LocalDateTime.now().hour
+
+        if (time == 0) activationStatusUpdate() // 更新激活状态
+
         val dbObject = SQLiteJDBC(resolveDataPath("AssetData.db"))
         val scriptList = dbObject.select("script", "Hour", time, 1)
         dbObject.closeDB()
@@ -331,8 +318,10 @@ object PluginMain : KotlinPlugin(
         val script = mutableMapOf<Int, List<MutableMap<String?, Any?>>>()
 
         for (groupPolicy in groupList) {
-            val groupID = groupPolicy["group_id"] as Int
-            val group = Bot.getInstance(MySetting.BotID).getGroup(groupID.toLong())
+            val groupID = groupPolicy["group_id"] as Long
+            if (groupID !in ActiveGroupList.user) continue // 激活到期则跳过
+
+            val group = Bot.getInstance(MySetting.BotID).getGroup(groupID)
             if (group == null || group.botMuteRemaining > 0) continue
 
             val groupMode = groupPolicy["TellTimeMode"] as Int
@@ -381,8 +370,11 @@ object PluginMain : KotlinPlugin(
             val bot = Bot.getInstance(MySetting.BotID)
             val gList = mutableListOf<Contact>()
             groupList.forEach {
-                val g = bot.getGroup((it["group_id"] as Int).toLong())
-                if ((g != null) && (g.botMuteRemaining <= 0)) gList.add(g)
+                val groupID = it["group_id"] as Long
+                if(groupID in ActiveGroupList.user) { // 激活到期则跳过
+                    val g = bot.getGroup(groupID)
+                    if ((g != null) && (g.botMuteRemaining <= 0)) gList.add(g)
+                }
             }
             val forwardMessage = dynamic.message2jpg().uploadAsImage(gList.random())
 
@@ -425,7 +417,8 @@ object PluginMain : KotlinPlugin(
             """
                 CREATE TABLE "Responsible" (
                 	"group_id"	INTEGER NOT NULL UNIQUE,
-                	"principal_ID"	NUMERIC NOT NULL
+                	"principal_ID"	NUMERIC NOT NULL,
+                    "active"	NUMERIC NOT NULL
                 );
             """.trimIndent()
         )
@@ -480,7 +473,6 @@ object PluginMain : KotlinPlugin(
         Duel.unregister()               // 禁言决斗
         MyHelp.unregister()             // 帮助功能
         AutoBanned.unregister()         // 自助禁言
-        Request.unregister()            // 加群操作
         AcgImage.unregister()           // 随机图片
         ShipMap.unregister()            // 打捞地图
         SendDynamic.unregister()        // 动态查询

@@ -23,7 +23,10 @@ object MinesweeperGame : CompositeCommand(
     @SubCommand("开始", "新游戏")
     suspend fun MemberCommandSenderOnMessage.start(level: Int, punishment: Boolean = false) {
         if (group.botMuteRemaining > 0) return
-
+        if (group.id !in ActiveGroupList.user) {
+            sendMessage("本群授权已到期,请续费后使用")
+            return
+        }
         if (punishment) if (!group.botPermission.isOperator()) {
             sendMessage("TB在本群没有管理员权限，无法创建带有禁言惩罚的游戏")
             return
@@ -43,7 +46,10 @@ object MinesweeperGame : CompositeCommand(
     @SubCommand("开始", "新游戏")
     suspend fun MemberCommandSenderOnMessage.start(width: Int, high: Int, mine: Int, punishment: Boolean = false) {
         if (group.botMuteRemaining > 0) return
-
+        if (group.id !in ActiveGroupList.user) {
+            sendMessage("本群授权已到期,请续费后使用")
+            return
+        }
         if (punishment) if (!group.botPermission.isOperator()) {
             sendMessage("TB在本群没有管理员权限，无法创建带有禁言惩罚的游戏")
             return
@@ -61,7 +67,10 @@ object MinesweeperGame : CompositeCommand(
     @SubCommand("踩")
     suspend fun MemberCommandSenderOnMessage.dig(x: Int, y: Int) {
         if (group.botMuteRemaining > 0) return
-
+        if (group.id !in ActiveGroupList.user) {
+            sendMessage("本群授权已到期,请续费后使用")
+            return
+        }
         val minesweeperGame = PluginMain.MINESWEEPER_GAME[group.id]
         if (minesweeperGame != null) {
             if (minesweeperGame.validation(x, y)) {
@@ -88,7 +97,10 @@ object MinesweeperGame : CompositeCommand(
     @SubCommand("旗")
     suspend fun MemberCommandSenderOnMessage.flag(x: Int, y: Int) {
         if (group.botMuteRemaining > 0) return
-
+        if (group.id !in ActiveGroupList.user) {
+            sendMessage("本群授权已到期,请续费后使用")
+            return
+        }
         val minesweeperGame = PluginMain.MINESWEEPER_GAME[group.id]
         if (minesweeperGame != null) {
             if (minesweeperGame.validation(x, y)) {

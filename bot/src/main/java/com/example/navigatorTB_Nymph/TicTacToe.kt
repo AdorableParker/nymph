@@ -340,7 +340,10 @@ object TicTacToeGame : CompositeCommand(
     @SubCommand("开始", "新游戏")
     suspend fun MemberCommandSenderOnMessage.start(level: Boolean = true) {
         if (group.botMuteRemaining > 0) return
-
+        if (group.id !in ActiveGroupList.user) {
+            sendMessage("本群授权已到期,请续费后使用")
+            return
+        }
         val ticTacToe = TicTacToe(level)
         if ((1..100).random() <= 50)
             sendMessage("你先手，运气不错")
@@ -355,6 +358,10 @@ object TicTacToeGame : CompositeCommand(
     @SubCommand("下")
     suspend fun MemberCommandSenderOnMessage.down(index: Int) {
         if (group.botMuteRemaining > 0) return
+        if (group.id !in ActiveGroupList.user) {
+            sendMessage("本群授权已到期,请续费后使用")
+            return
+        }
         val ticTacToe = PluginMain.TicTacToe_GAME[group.id]
         if (ticTacToe != null) {
             when (ticTacToe.down(index)) {

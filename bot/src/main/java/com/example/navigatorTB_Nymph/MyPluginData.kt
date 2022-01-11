@@ -42,16 +42,6 @@ object MyPluginData : AutoSavePluginData("TB_Data") { // "name" 是保存的文�
         )
     )
 
-    @ValueDescription("群邀请白名单")
-    val groupIdList: MutableMap<Long, GroupCertificate> by value(
-        mutableMapOf()
-    )
-
-    @ValueDescription("群继承信息")
-    val pactList: MutableList<Long> by value(
-        mutableListOf()
-    )
-
     @ValueDescription("对决功能状态")
     val duelTime: MutableMap<Long, Long> by value(
         mutableMapOf()

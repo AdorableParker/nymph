@@ -19,6 +19,10 @@ object Test : SimpleCommand(
     @Handler
     suspend fun MemberCommandSenderOnMessage.main() {
         if (group.botMuteRemaining > 0) return
+        if (group.id !in ActiveGroupList.user) {
+            sendMessage("本群授权已到期,请续费后使用")
+            return
+        }
 
         if (isUser() && user.id == MySetting.AdminID) {
             sendMessage("Hi,Administration")
@@ -33,7 +37,10 @@ object Test : SimpleCommand(
     @Handler
     suspend fun MemberCommandSenderOnMessage.main(groupID: Long) {
         if (group.botMuteRemaining > 0) return
-
+        if (group.id !in ActiveGroupList.user) {
+            sendMessage("本群授权已到期,请续费后使用")
+            return
+        }
         val group = bot.getGroup(groupID)
         if (group != null) {
             runCatching {

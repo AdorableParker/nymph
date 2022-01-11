@@ -52,6 +52,11 @@ object MirrorWorldGame {
         @Handler
         suspend fun MemberCommandSenderOnMessage.main() {
             if (group.botMuteRemaining > 0) return
+            if (group.id !in ActiveGroupList.user) {
+                sendMessage("本群授权已到期,请续费后使用")
+                return
+            }
+
             if (PluginMain.DLC_MirrorWorld) {
                 sendMessage(MirrorWorld(this).gamerInfo())
             } else sendMessage("缺少依赖DLC")
@@ -65,6 +70,11 @@ object MirrorWorldGame {
         @Handler
         suspend fun MemberCommandSenderOnMessage.main() {
             if (group.botMuteRemaining > 0) return
+            if (group.id !in ActiveGroupList.user) {
+                sendMessage("本群授权已到期,请续费后使用")
+                return
+            }
+
             if (PluginMain.DLC_MirrorWorld) {
                 MirrorWorld(this).characterCreation()
             } else sendMessage("缺少依赖DLC")
@@ -79,6 +89,11 @@ object MirrorWorldGame {
         @Handler
         suspend fun MemberCommandSenderOnMessage.main(user: User) {
             if (group.botMuteRemaining > 0) return
+            if (group.id !in ActiveGroupList.user) {
+                sendMessage("本群授权已到期,请续费后使用")
+                return
+            }
+
             if (PluginMain.DLC_MirrorWorld) {
                 MirrorWorld(this).pvp(user)
             } else sendMessage("缺少依赖DLC")
@@ -92,6 +107,11 @@ object MirrorWorldGame {
         @Handler
         suspend fun MemberCommandSenderOnMessage.main(user: User, amount: Int) {
             if (group.botMuteRemaining > 0) return
+            if (group.id !in ActiveGroupList.user) {
+                sendMessage("本群授权已到期,请续费后使用")
+                return
+            }
+
             if (PluginMain.DLC_MirrorWorld) {
                 MirrorWorld(this).transfer(user.id, amount)
             } else sendMessage("缺少依赖DLC")
@@ -131,6 +151,11 @@ object MirrorWorldGame {
         @Handler
         suspend fun MemberCommandSenderOnMessage.main() {
             if (group.botMuteRemaining > 0) return
+            if (group.id !in ActiveGroupList.user) {
+                sendMessage("本群授权已到期,请续费后使用")
+                return
+            }
+
             if (PluginMain.DLC_MirrorWorld) {
                 MirrorWorld(this).treatment()?.let { it ->
                     sendMessage(it)
@@ -146,6 +171,11 @@ object MirrorWorldGame {
         @Handler
         suspend fun MemberCommandSenderOnMessage.main() {
             if (group.botMuteRemaining > 0) return
+            if (group.id !in ActiveGroupList.user) {
+                sendMessage("本群授权已到期,请续费后使用")
+                return
+            }
+
             if (PluginMain.DLC_MirrorWorld) MirrorWorld(this).pve()
             else sendMessage("缺少依赖DLC")
         }
@@ -158,6 +188,11 @@ object MirrorWorldGame {
         @Handler
         suspend fun MemberCommandSenderOnMessage.main() {
             if (group.botMuteRemaining > 0) return
+            if (group.id !in ActiveGroupList.user) {
+                sendMessage("本群授权已到期,请续费后使用")
+                return
+            }
+
             if (PluginMain.DLC_MirrorWorld) {
                 sendMessage(MirrorWorld(this).enterStore())
             } else sendMessage("缺少依赖DLC")
@@ -173,6 +208,11 @@ object MirrorWorldGame {
         @Handler
         suspend fun MemberCommandSenderOnMessage.main(itemName: String, itemDemand: Int = 1) {
             if (group.botMuteRemaining > 0) return
+            if (group.id !in ActiveGroupList.user) {
+                sendMessage("本群授权已到期,请续费后使用")
+                return
+            }
+
             if (PluginMain.DLC_MirrorWorld) {
                 sendMessage(MirrorWorld(this).buy(itemName, itemDemand))
             } else sendMessage("缺少依赖DLC")
@@ -188,6 +228,11 @@ object MirrorWorldGame {
         @Handler
         suspend fun MemberCommandSenderOnMessage.main(itemName: String, unitPrice: Int, itemDemand: Int = 1) {
             if (group.botMuteRemaining > 0) return
+            if (group.id !in ActiveGroupList.user) {
+                sendMessage("本群授权已到期,请续费后使用")
+                return
+            }
+
             if (PluginMain.DLC_MirrorWorld) {
                 sendMessage(MirrorWorld(this).sell(itemName, unitPrice, itemDemand))
             } else sendMessage("缺少依赖DLC")
@@ -201,6 +246,11 @@ object MirrorWorldGame {
         @Handler
         suspend fun MemberCommandSenderOnMessage.main() {
             if (group.botMuteRemaining > 0) return
+            if (group.id !in ActiveGroupList.user) {
+                sendMessage("本群授权已到期,请续费后使用")
+                return
+            }
+
             if (PluginMain.DLC_MirrorWorld) MirrorWorld(this).alchemy()
             else sendMessage("缺少依赖DLC")
         }
@@ -225,6 +275,11 @@ object MirrorWorldGame {
         @Handler
         suspend fun MemberCommandSenderOnMessage.main() {
             if (group.botMuteRemaining > 0) return
+            if (group.id !in ActiveGroupList.user) {
+                sendMessage("本群授权已到期,请续费后使用")
+                return
+            }
+
             if (PluginMain.DLC_MirrorWorld)
                 sendMessage(MirrorWorld(this).alchemyGuide())
             else sendMessage("缺少依赖DLC")
@@ -253,6 +308,11 @@ object MirrorWorldGame {
         @Handler
         suspend fun MemberCommandSenderOnMessage.main() {
             if (group.botMuteRemaining > 0) return
+            if (group.id !in ActiveGroupList.user) {
+                sendMessage("本群授权已到期,请续费后使用")
+                return
+            }
+
             if (PluginMain.DLC_MirrorWorld) {
                 sendMessage(MirrorWorld(this).openBag())
             } else sendMessage("缺少依赖DLC")
@@ -266,6 +326,11 @@ object MirrorWorldGame {
         @Handler
         suspend fun MemberCommandSenderOnMessage.main(itemName: String, amount: Int) {
             if (group.botMuteRemaining > 0) return
+            if (group.id !in ActiveGroupList.user) {
+                sendMessage("本群授权已到期,请续费后使用")
+                return
+            }
+
             if (PluginMain.DLC_MirrorWorld) {
                 sendMessage(MirrorWorld(this).useItems(itemName, amount))
             } else sendMessage("缺少依赖DLC")

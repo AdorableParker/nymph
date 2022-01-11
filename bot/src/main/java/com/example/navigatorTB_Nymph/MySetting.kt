@@ -31,7 +31,7 @@ object MySetting : AutoSavePluginConfig("TB_Setting") {
 //    val ImageHostingService by value("")
 
     @ValueDescription("违禁词")
-    val prohibitedWord by value("")
+    val prohibitedWord: List<String> by value(listOf("傻逼"))
 
     @ValueDescription("免打扰时间段:0-23")
     val undisturbed: List<Int> by value(listOf(-1))

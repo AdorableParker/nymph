@@ -39,17 +39,20 @@ object Music : SimpleCommand(
 ) {
 
 
-    override val usage: String = "${CommandManager.commandPrefix}$primaryName <平台值>\n1\t网易云\n2\tQQ"
+    override val usage: String = "${CommandManager.commandPrefix}$primaryName <平台值>\n1\tQQ\n2\t网易云"
 
     @Handler
     suspend fun MemberCommandSenderOnMessage.main(musicName: String, type: Int = 1) {
         record(primaryName)
         if (group.botMuteRemaining > 0) return
-
+        if (group.id !in ActiveGroupList.user) {
+            sendMessage("本群授权已到期,请续费后使用")
+            return
+        }
         runCatching {
             val rMessage = when (type) {
-                1 -> get136Music(musicName, user.avatarUrl)
-                2 -> getQQMusic(musicName, user.avatarUrl)
+                1 -> getQQMusic(musicName, user.avatarUrl)
+                2 -> get136Music(musicName, user.avatarUrl)
                 else -> PlainText("不认识的搜索源")
             }
             sendMessage(rMessage)
@@ -58,7 +61,6 @@ object Music : SimpleCommand(
             sendMessage("点歌失败，未知的失败原因")
         }
     }
-
 
     private fun get136Music(musicName: String, pictureUrl: String): Message {
         val doc = Jsoup.connect("https://music.163.com/api/search/get/web").data(
@@ -109,29 +111,19 @@ object Music : SimpleCommand(
 
         val songList = jsonObj.obj("data")?.obj("song")?.array<JsonObject>("list")
         if (songList.isNullOrEmpty()) return PlainText("搜索结果列表为空")
-        var song = songList[0]
-        var mid = song.string("songmid")  // 获取歌曲MID
 
-        var musicURL = queryRealUrl(mid)    // 获取歌曲URL
-
-        var i = 0
-        while (isExistent(musicURL).not()) {  // 若该歌曲url无效
-            song = songList[i]                // 获取列表内下一首
-            mid = song.string("songmid")
-            musicURL = queryRealUrl(mid)
-            i++
-            if (i >= songList.size) return PlainText("获取歌曲信息失败，此歌曲概为付费或会员歌曲")
+        for(song in songList){
+            val musicURL = queryRealUrl(song.string("songmid").toString())    // 获取歌曲URL
+            if (isExistent(musicURL)){
+                return MusicInfo(
+                    MusicKind.QQMusic,
+                    song.string("songname").toString(),
+                    musicURL!!,
+                    "https://i.y.qq.com/v8/playsong.html?_wv=1&songid=${song.int("songid")}&source=qqshare&ADTAG=qqshare"
+                ).constructorMusicCard(pictureUrl)
+            }
         }
-
-        val songname = song.string("songname")!!
-        val songid = song.int("songid")!!
-
-        return MusicInfo(
-            MusicKind.QQMusic,
-            songname,
-            musicURL!!,
-            "https://i.y.qq.com/v8/playsong.html?_wv=1&songid=$songid&source=qqshare&ADTAG=qqshare"
-        ).constructorMusicCard(pictureUrl)
+        return PlainText("获取歌曲信息失败，此歌曲概为付费或会员歌曲")
     }
 
     private fun isExistent(url: String?): Boolean {
@@ -150,7 +142,7 @@ object Music : SimpleCommand(
         }
     }
 
-    private fun queryRealUrl(songMID: String?): String? {
+    private fun queryRealUrl(songMID: String): String? {
         try {
             val doc = Jsoup.connect("https://u.y.qq.com/cgi-bin/musicu.fcg").data(
                 mapOf(
