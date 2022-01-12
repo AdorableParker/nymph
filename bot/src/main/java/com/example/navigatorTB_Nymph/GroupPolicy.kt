@@ -72,6 +72,8 @@ object GroupPolicy : CompositeCommand(
             +"报时模式：\t${tellTimeMode[policy["TellTimeMode"] as Int]}\n"
             +"对话概率:\t\t${policy["TriggerProbability"]}%\n"
             +"群色图配给：\t${acgImg["score"]}/200\n"
+            +"-=-=-=-=-=-=-=-"
+            +"距授权到期还有${responsible["principal_ID"]}天"
             +"群责任人：\t"
             +At((responsible["principal_ID"] as Int).toLong())
         })

@@ -5,6 +5,7 @@ import net.mamoe.mirai.console.data.ValueDescription
 import net.mamoe.mirai.console.data.value
 
 object MySetting : AutoSavePluginConfig("TB_Setting") {
+
     @ValueDescription("名字")
     val name by value("领航员-TB")
 
@@ -27,6 +28,8 @@ object MySetting : AutoSavePluginConfig("TB_Setting") {
         )
     )
 
+    @ValueDescription("Pixiv代理域名")
+    val proxy: String = "i.pixiv.cat"
 //    @ValueDescription("图床API")
 //    val ImageHostingService by value("")
 

@@ -21,6 +21,12 @@ object Roster : SimpleCommand(
 
     @Handler
     suspend fun MemberCommandSenderOnMessage.main() {
+        record(primaryName)
+        if (group.botMuteRemaining > 0) return
+        if (group.id !in ActiveGroupList.user) {
+            sendMessage("本群授权已到期,请续费后使用")
+            return
+        }
         sendMessage("参数不匹配, 你是否想执行:\n $usage")
     }
 

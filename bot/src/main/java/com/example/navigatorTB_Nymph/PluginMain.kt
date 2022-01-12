@@ -68,8 +68,9 @@ object PluginMain : KotlinPlugin(
     @OptIn(MiraiExperimentalApi::class)
     override fun onEnable() {
         MySetting.reload()
-        MyPluginData.reload()  //(PluginMain.kt:70)
+        MyPluginData.reload()
         UsageStatistics.reload()
+        ActiveGroupList.reload()
 
         if (MyPluginData.initialization) {  // 首次启动初始化数据库
             dataBastInit()
@@ -222,6 +223,8 @@ object PluginMain : KotlinPlugin(
         if (MySetting.resident) {
             residentTask()
         }
+
+        activationStatusUpdate(false)
     }
 
     private fun residentTask() {
@@ -239,14 +242,14 @@ object PluginMain : KotlinPlugin(
     }
 
     /* 每天12点 更新激活状态*/
-    private fun activationStatusUpdate() {
+    private fun activationStatusUpdate(flag: Boolean = true) {
         val dbObject = SQLiteJDBC(resolveDataPath("User.db"))
-        dbObject.select("Responsible", "", "").forEach {
-            val uid = it["group_id"] as Long
+        dbObject.select("Responsible", "active", -1, 5).forEach {
+            val uid = (it["group_id"] as Int).toLong()
             val active = it["active"] as Int
-            if(active >= 0) {
+            if (active >= 0) {
                 ActiveGroupList.user += uid
-                dbObject.update("Responsible", "$uid", uid,"active",active - 1)
+                if (flag) dbObject.update("Responsible", "$uid", uid, "active", active - 1)
             } else ActiveGroupList.user -= uid
         }
         dbObject.closeDB()
@@ -279,7 +282,7 @@ object PluginMain : KotlinPlugin(
             )
         )
         for (groupPolicy in groupList) {
-            val groupID = groupPolicy["group_id"] as Long
+            val groupID = (groupPolicy["group_id"] as Int).toLong()
             if (groupID !in ActiveGroupList.user) continue // 激活到期则跳过
 
             val group = Bot.getInstance(MySetting.BotID).getGroup(groupID)
@@ -318,7 +321,7 @@ object PluginMain : KotlinPlugin(
         val script = mutableMapOf<Int, List<MutableMap<String?, Any?>>>()
 
         for (groupPolicy in groupList) {
-            val groupID = groupPolicy["group_id"] as Long
+            val groupID = (groupPolicy["group_id"] as Int).toLong()
             if (groupID !in ActiveGroupList.user) continue // 激活到期则跳过
 
             val group = Bot.getInstance(MySetting.BotID).getGroup(groupID)
@@ -370,7 +373,7 @@ object PluginMain : KotlinPlugin(
             val bot = Bot.getInstance(MySetting.BotID)
             val gList = mutableListOf<Contact>()
             groupList.forEach {
-                val groupID = it["group_id"] as Long
+                val groupID = (it["group_id"] as Int).toLong()
                 if(groupID in ActiveGroupList.user) { // 激活到期则跳过
                     val g = bot.getGroup(groupID)
                     if ((g != null) && (g.botMuteRemaining <= 0)) gList.add(g)
@@ -393,9 +396,9 @@ object PluginMain : KotlinPlugin(
         userDB.createTable(
             """
                 CREATE TABLE "ACGImg" (
-                	"group_id"	INTEGER NOT NULL UNIQUE,
+                	"group_id"	NUMERIC NOT NULL UNIQUE,
                 	"score"	INTEGER NOT NULL DEFAULT 0,
-                	"date"	INTEGER NOT NULL DEFAULT 0,
+                	"date"	NUMERIC NOT NULL DEFAULT 0,
                 	PRIMARY KEY("group_id")
                 );
             """.trimIndent()
@@ -416,7 +419,7 @@ object PluginMain : KotlinPlugin(
         userDB.createTable(
             """
                 CREATE TABLE "Responsible" (
-                	"group_id"	INTEGER NOT NULL UNIQUE,
+                	"group_id"	NUMERIC NOT NULL UNIQUE,
                 	"principal_ID"	NUMERIC NOT NULL,
                     "active"	NUMERIC NOT NULL
                 );
@@ -442,7 +445,7 @@ object PluginMain : KotlinPlugin(
             	"answer"	TEXT NOT NULL,
             	"question"	TEXT NOT NULL,
             	"keys"	TEXT NOT NULL,
-            	"fromGroup"	INTEGER NOT NULL,
+            	"fromGroup"	NUMERIC NOT NULL,
             	PRIMARY KEY("ID" AUTOINCREMENT)
             );
         """.trimIndent()

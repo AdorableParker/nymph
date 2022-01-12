@@ -82,7 +82,7 @@ object AcgImage : SimpleCommand(
 
 
     private suspend fun getRandomImg(group: Group): Message {
-        val doc = Jsoup.connect("https://api.lolicon.app/setu/v2?r18=0&size=regular")
+        val doc = Jsoup.connect("https://api.lolicon.app/setu/v2?r18=0&size=regular&proxy=${MySetting.proxy}")
             .ignoreContentType(true)
             .execute().body().toString()
 

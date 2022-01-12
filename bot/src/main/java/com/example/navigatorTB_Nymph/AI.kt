@@ -127,14 +127,12 @@ object AI : CompositeCommand(
             return
         }
 
-        val dbObject =
-            SQLiteJDBC(PluginMain.resolveDataPath("AI.db"))
-        val entryList =
-            dbObject.executeStatement("SELECT * FROM Corpus;").toList()
+        val dbObject = SQLiteJDBC(PluginMain.resolveDataPath("AI.db"))
+        val entryList = dbObject.executeStatement("SELECT * FROM Corpus;").toList()
         dbObject.closeDB()
         val cAll = entryList.size
-        val cSpecial = entryList.count { it["fromGroup"].toString().toLong() == group.id }
-        val cAvailable = entryList.count { it["fromGroup"].toString().toLong() == 0L } + cSpecial
+        val cSpecial = entryList.count { (it["fromGroup"] as Int).toLong() == group.id }
+        val cAvailable = entryList.count { (it["fromGroup"] as Int).toLong() == 0L } + cSpecial
         val r = when (cAll) {
             0 -> "统计查询失败"
             else -> {
