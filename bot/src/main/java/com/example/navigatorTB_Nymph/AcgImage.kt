@@ -92,8 +92,8 @@ object AcgImage : SimpleCommand(
         val data = jsonObj.array<JsonObject>("data")?.get(0)
         val url = data?.obj("urls")?.string("regular") ?: return PlainText("图片资源获取失败")
         return buildMessageChain {
-            +"PID:${data.int("pid")}"         // 作品ID
-            +"PID:${data.int("uid")}"         // 作者ID
+            +"PID:${data.int("pid")}\n"         // 作品ID
+            +"UID:${data.int("uid")}\n"         // 作者ID
             +"标题:${data.string("title")}"     // 作品名
             +URL(url).openConnection().getInputStream().use {
                 it.uploadAsImage(group)

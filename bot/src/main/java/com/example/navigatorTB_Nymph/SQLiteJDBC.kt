@@ -117,12 +117,12 @@ class SQLiteJDBC(DbPath: Path) {
     ): MutableMap<String?, Any?> {
         val row: MutableMap<String?, Any?> = mutableMapOf()
         val sql: String = when (mods) {
-            1 -> "SELECT * FROM $table WHERE $column = $value;"
-            2 -> "SELECT * FROM $table WHERE $column GLOB '*$value';"
-            3 -> "SELECT * FROM $table WHERE $column GLOB '$value*';"
-            4 -> "SELECT * FROM $table WHERE $column GLOB '*$value*';"
-            5 -> "SELECT * FROM $table WHERE $column != $value;"
-            else -> "SELECT * FROM $table WHERE $column = '$value';"
+            1 -> "SELECT * FROM '$table' WHERE $column = $value;"
+            2 -> "SELECT * FROM '$table' WHERE $column GLOB '*$value';"
+            3 -> "SELECT * FROM '$table' WHERE $column GLOB '$value*';"
+            4 -> "SELECT * FROM '$table' WHERE $column GLOB '*$value*';"
+            5 -> "SELECT * FROM '$table' WHERE $column != $value;"
+            else -> "SELECT * FROM '$table' WHERE $column = '$value';"
         }
         runCatching {
             stmt = c?.createStatement()

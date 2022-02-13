@@ -29,7 +29,7 @@ object MySetting : AutoSavePluginConfig("TB_Setting") {
     )
 
     @ValueDescription("Pixiv代理域名")
-    val proxy: String = "i.pixiv.cat"
+    val proxy: String by value("i.pixiv.cat")
 //    @ValueDescription("图床API")
 //    val ImageHostingService by value("")
 

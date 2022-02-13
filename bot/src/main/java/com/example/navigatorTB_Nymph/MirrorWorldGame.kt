@@ -24,6 +24,7 @@ object MirrorWorldGame {
         OpenBag.register()
         UseItems.register()
         ItemSynthesisGuide.register()
+        SimulateConstruction.register()
     }
 
     fun unregister() {
@@ -42,6 +43,7 @@ object MirrorWorldGame {
         OpenBag.unregister()
         UseItems.unregister()
         ItemSynthesisGuide.unregister()
+        SimulateConstruction.unregister()
     }
 
     object PlayerInfo : SimpleCommand(
@@ -337,4 +339,82 @@ object MirrorWorldGame {
         }
     }
 
+    object SimulateConstruction : SimpleCommand(
+        PluginMain, "SC", "模拟建造",
+        description = "碧蓝航线模拟建造"
+    ) {
+        override val usage = """
+            ${CommandManager.commandPrefix}模拟建造 [建造池]
+            建造池列表:
+            限|  限定池(所有限定船同池)
+            轻|  轻型池
+            重|  重型池
+            特|  特型池
+            """.trimIndent()
+
+        @Handler
+        suspend fun MemberCommandSenderOnMessage.main(mode: String) {
+            if (group.botMuteRemaining > 0) return
+            if (group.id !in ActiveGroupList.user) {
+                sendMessage("本群授权已到期,请续费后使用")
+                return
+            }
+
+            val message = if (PluginMain.DLC_MirrorWorld) {
+                when (mode) {
+                    "限" -> {
+                        val r1 = MirrorWorld(this).heavyPool()
+                        r1.ifBlank { limit() }
+                    }
+                    "轻" -> {
+                        val r1 = MirrorWorld(this).lightPool()
+                        r1.ifBlank { build(20) }
+                    }
+                    "重" -> {
+                        val r1 = MirrorWorld(this).heavyPool()
+                        r1.ifBlank { build(30) }
+                    }
+                    "特" -> {
+                        val r1 = MirrorWorld(this).heavyPool()
+                        r1.ifBlank { build(50) }
+                    }
+                    else -> "未知模式"
+                }
+            } else "缺少依赖DLC"
+            sendMessage(message)
+        }
+
+
+        private fun limit(): String {
+            return when ((0..1000).random()) {
+                in 0..25 -> {
+                    val objDB = SQLiteJDBC(PluginMain.resolveDataPath("AssetData.db"))
+                    val s = objDB.executeStatement(
+                        "SELECT * FROM AzurLane_construct_time WHERE LimitedTime = 1.0;"
+                    ).random()
+                    objDB.closeDB()
+                    "本次结果：\n船名：${s["OriginalName"]}[${s["Alias"]}]\t建造时间：${s["Time"]}"
+                }
+                in 10..79 -> "本次结果：超稀有"
+                in 80..199 -> "本次结果：精锐"
+                in 200..459 -> "本次结果：稀有"
+                else -> "本次结果：普通"
+            }
+        }
+
+        private fun build(mode: Int): String {
+            val level = when ((1..100).random()) {
+                in 1..7 -> 0
+                in 8..19 -> 1
+                in 20..45 -> 2
+                else -> 3
+            }
+            val objDB = SQLiteJDBC(PluginMain.resolveDataPath("AssetData.db"))
+            val l = objDB.executeStatement(
+                "SELECT * FROM AzurLane_construct_time WHERE LimitedTime = 0.0 AND (nums - $level) % $mode == 0;"
+            ).random()
+            objDB.closeDB()
+            return "本次结果：\n船名：${l["OriginalName"]}[${l["Alias"]}]\t建造时间：${l["Time"]}"
+        }
+    }
 }

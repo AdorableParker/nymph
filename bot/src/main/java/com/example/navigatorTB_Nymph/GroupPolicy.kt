@@ -14,6 +14,7 @@ import net.mamoe.mirai.console.command.MemberCommandSenderOnMessage
 import net.mamoe.mirai.contact.Member
 import net.mamoe.mirai.contact.isOperator
 import net.mamoe.mirai.message.data.At
+import net.mamoe.mirai.message.data.PlainText
 import net.mamoe.mirai.message.data.buildMessageChain
 import java.time.LocalDateTime
 
@@ -58,7 +59,8 @@ object GroupPolicy : CompositeCommand(
         sendMessage(buildMessageChain {
             +"群策略设定状态报告\n"
             +"===============\n"
-            +"免打扰状态：   \t${state[policy["undisturbed"] as Int]}\n"
+            +"免打扰状态：   \t${state[policy["Undisturbed"] as Int]}\n"
+            +"新成员通报状态：   \t${state[policy["GroupNotification"] as Int]}\n"
             +"教学许可状态：\t${state[policy["Teaching"] as Int]}\n"
             +"色图许可状态：\t${state[policy["ACGImgAllowed"] as Int]}\n"
             +"订阅状态：\n"
@@ -72,10 +74,12 @@ object GroupPolicy : CompositeCommand(
             +"报时模式：\t${tellTimeMode[policy["TellTimeMode"] as Int]}\n"
             +"对话概率:\t\t${policy["TriggerProbability"]}%\n"
             +"群色图配给：\t${acgImg["score"]}/200\n"
-            +"-=-=-=-=-=-=-=-"
-            +"距授权到期还有${responsible["principal_ID"]}天"
+            +"-=-=-=-=-=-=-=-\n"
+            +"距授权到期还有${responsible["active"]}天\n"
             +"群责任人：\t"
-            +At((responsible["principal_ID"] as Int).toLong())
+            +(responsible["principal_ID"].toString()).let {
+                if(it!="0") At(it.toLong()) else PlainText("本群暂无责任人")
+            }
         })
     }
 
@@ -93,10 +97,10 @@ object GroupPolicy : CompositeCommand(
         }
         val dbObject = SQLiteJDBC(PluginMain.resolveDataPath("User.db"))
         if (value > 0) {
-            dbObject.update("Policy", "group_id", group.id, "undisturbed", 1)
+            dbObject.update("Policy", "group_id", group.id, "Undisturbed", 1)
             sendMessage("夜间免打扰已启用")
         } else {
-            dbObject.update("Policy", "group_id", group.id, "undisturbed", 0)
+            dbObject.update("Policy", "group_id", group.id, "Undisturbed", 0)
             sendMessage("夜间免打扰已停用")
         }
         dbObject.closeDB()
@@ -120,6 +124,48 @@ object GroupPolicy : CompositeCommand(
             """.trimIndent()
         )
     }
+
+    @SubCommand("新成员通报")
+    suspend fun MemberCommandSenderOnMessage.tellNotification(value: Int) {
+        if (group.botMuteRemaining > 0) return
+        if (group.id !in ActiveGroupList.user) {
+            sendMessage("本群授权已到期,请续费后使用")
+            return
+        }
+        if (permissionCheck(user)) {
+            sendMessage("权限不足")
+            return
+        }
+        val dbObject = SQLiteJDBC(PluginMain.resolveDataPath("User.db"))
+        if (value > 0) {
+            dbObject.update("Policy", "group_id", group.id, "GroupNotification", 1)
+            sendMessage("成员通报已启用")
+        } else {
+            dbObject.update("Policy", "group_id", group.id, "GroupNotification", 0)
+            sendMessage("成员通报已停用")
+        }
+        dbObject.closeDB()
+    }
+
+    @SubCommand("新成员通报")
+    suspend fun MemberCommandSenderOnMessage.tellNotification() {
+        if (group.botMuteRemaining > 0) return
+        if (group.id !in ActiveGroupList.user) {
+            sendMessage("本群授权已到期,请续费后使用")
+            return
+        }
+        sendMessage(
+            """
+            无效模式参数，设定失败,请参考以下示范命令
+            群策略 新成员通报 [模式值]
+            ——————————
+            模式值 | 说明
+            > 0	    开启通报
+            ≯ 0     关闭通报
+            """.trimIndent()
+        )
+    }
+
 
     @SubCommand("报时模式")
     suspend fun MemberCommandSenderOnMessage.tellTime(mode: Int) {
@@ -396,7 +442,7 @@ object GroupPolicy : CompositeCommand(
     suspend fun MemberCommandSenderOnMessage.renewal(cdKey: String, key: String) {
         if (group.botMuteRemaining > 0) return
         val cdKeyDbObject = SQLiteJDBC(PluginMain.resolveDataPath("CD-KEY.db"))
-        val cdk = cdKeyDbObject.selectOne("CD-KEY", "code", cdKey, 1)
+        val cdk = cdKeyDbObject.selectOne("CD-KEY", "code", cdKey)
         if (cdk.isEmpty() || cdk["key"] != key){
             sendMessage("该序列号或密码无效,请检查输入(若确定输入无误请联系客服)")
             return
@@ -407,13 +453,14 @@ object GroupPolicy : CompositeCommand(
 
         val dbObject = SQLiteJDBC(PluginMain.resolveDataPath("User.db"))
         val groupObject = dbObject.selectOne("Responsible", "group_id", group.id, 1)
-        val onlyTime = (groupObject["active"] as Int) + (cdk["value"] as Int) + if (LocalDateTime.now().hour < 12) 0 else 1
+        val onlyTime = (groupObject["active"] as Int) + (cdk["value"] as Int) + if (LocalDateTime.now().hour <= 14) 0 else 1
 
         dbObject.update("Responsible", "group_id", "${group.id}",
             arrayOf("principal_ID","active"),
             arrayOf("${user.id}","$onlyTime" ))
         dbObject.closeDB()
-        sendMessage("续费完成,可以通过群策略设定状态汇报命令查看当前群状态")
+        ActiveGroupList.activationStatusUpdate(false)
+        sendMessage("续费完成,可通过群策略设定状态汇报命令查看当前群状态")
     }
 
     @SubCommand("续费")
