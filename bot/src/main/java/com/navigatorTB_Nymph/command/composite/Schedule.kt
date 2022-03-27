@@ -2,15 +2,14 @@ package com.navigatorTB_Nymph.command.composite
 
 
 import com.navigatorTB_Nymph.data.Interval
-import com.navigatorTB_Nymph.main.PluginMain
 import com.navigatorTB_Nymph.pluginData.ActiveGroupList
+import com.navigatorTB_Nymph.pluginMain.PluginMain
 import net.mamoe.mirai.console.command.CompositeCommand
 import net.mamoe.mirai.console.command.MemberCommandSenderOnMessage
 import net.mamoe.mirai.message.data.At
 import net.mamoe.mirai.message.data.PlainText
 import net.mamoe.mirai.utils.MiraiExperimentalApi
 import java.time.LocalDateTime
-
 import com.navigatorTB_Nymph.command.simple.Birthday.main as birthday
 import com.navigatorTB_Nymph.command.simple.Tarot.main as tarot
 

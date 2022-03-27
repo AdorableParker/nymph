@@ -1,6 +1,6 @@
 package com.navigatorTB_Nymph.tool.sql
 
-import com.navigatorTB_Nymph.main.PluginMain
+import com.navigatorTB_Nymph.pluginMain.PluginMain
 import net.mamoe.mirai.utils.debug
 import net.mamoe.mirai.utils.warning
 import java.nio.file.Path

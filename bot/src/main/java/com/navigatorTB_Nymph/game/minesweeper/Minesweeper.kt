@@ -1,6 +1,6 @@
 package com.navigatorTB_Nymph.game.minesweeper
 
-import com.navigatorTB_Nymph.main.PluginMain
+import com.navigatorTB_Nymph.pluginMain.PluginMain
 import com.navigatorTB_Nymph.tool.svg.BuildSVGTool
 import org.apache.batik.anim.dom.SVGDOMImplementation
 

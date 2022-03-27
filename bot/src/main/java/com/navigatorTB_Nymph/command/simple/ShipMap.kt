@@ -1,8 +1,8 @@
 package com.navigatorTB_Nymph.command.simple
 
-import com.navigatorTB_Nymph.main.PluginMain
 import com.navigatorTB_Nymph.pluginData.ActiveGroupList
 import com.navigatorTB_Nymph.pluginData.UsageStatistics
+import com.navigatorTB_Nymph.pluginMain.PluginMain
 import com.navigatorTB_Nymph.tool.sql.SQLiteJDBC
 import net.mamoe.mirai.console.command.CommandManager
 import net.mamoe.mirai.console.command.MemberCommandSenderOnMessage

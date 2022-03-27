@@ -1,8 +1,8 @@
 package com.navigatorTB_Nymph.command.dlc
 
-import com.navigatorTB_Nymph.main.PluginMain
 import com.navigatorTB_Nymph.pluginConfig.MySetting
 import com.navigatorTB_Nymph.pluginData.ActiveGroupList
+import com.navigatorTB_Nymph.pluginMain.PluginMain
 import com.navigatorTB_Nymph.tool.sql.SQLiteJDBC
 import com.nymph_TB_DLC.MirrorWorld
 import net.mamoe.mirai.console.command.*

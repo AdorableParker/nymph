@@ -1,8 +1,8 @@
 package com.navigatorTB_Nymph.command.composite
 
 import com.navigatorTB_Nymph.game.ticTacToe.TicTacToe
-import com.navigatorTB_Nymph.main.PluginMain
 import com.navigatorTB_Nymph.pluginData.ActiveGroupList
+import com.navigatorTB_Nymph.pluginMain.PluginMain
 import net.mamoe.mirai.console.command.CompositeCommand
 import net.mamoe.mirai.console.command.MemberCommandSenderOnMessage
 import net.mamoe.mirai.contact.Contact.Companion.sendImage
@@ -25,7 +25,7 @@ object TicTacToeGame : CompositeCommand(
             sendMessage("我先手，祝你好运")
             ticTacToe.aiRun()
         }
-        PluginMain.TicTacToe_GAME[group.id] = ticTacToe
+        PluginMain.TIC_TAC_TOE_GAME[group.id] = ticTacToe
         group.sendImage(ticTacToe.getImage())
     }
 
@@ -36,12 +36,12 @@ object TicTacToeGame : CompositeCommand(
             sendMessage("本群授权已到期,请续费后使用")
             return
         }
-        val ticTacToe = PluginMain.TicTacToe_GAME[group.id]
+        val ticTacToe = PluginMain.TIC_TAC_TOE_GAME[group.id]
         if (ticTacToe != null) {
             when (ticTacToe.down(index)) {
                 -1 -> {
                     group.sendImage(ticTacToe.getImage())
-                    PluginMain.TicTacToe_GAME.remove(group.id)
+                    PluginMain.TIC_TAC_TOE_GAME.remove(group.id)
                     sendMessage("本局游戏结束")
                     return
                 }
@@ -49,7 +49,7 @@ object TicTacToeGame : CompositeCommand(
             }
             if (ticTacToe.aiRun() == -1) {
                 group.sendImage(ticTacToe.getImage())
-                PluginMain.TicTacToe_GAME.remove(group.id)
+                PluginMain.TIC_TAC_TOE_GAME.remove(group.id)
                 sendMessage("本局游戏结束")
                 return
             }

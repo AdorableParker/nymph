@@ -1,4 +1,4 @@
-package com.navigatorTB_Nymph.main
+package com.navigatorTB_Nymph.pluginMain
 
 import com.mayabot.nlp.module.summary.KeywordSummary
 import com.mayabot.nlp.segment.Lexers
@@ -9,13 +9,11 @@ import com.navigatorTB_Nymph.data.Interval
 import com.navigatorTB_Nymph.game.crowdVerdict.VoteUser
 import com.navigatorTB_Nymph.game.duel.Gun
 import com.navigatorTB_Nymph.game.minesweeper.Minesweeper
+import com.navigatorTB_Nymph.game.pushBox.PushBox
 import com.navigatorTB_Nymph.game.ticTacToe.TicTacToe
 import com.navigatorTB_Nymph.pluginConfig.MySetting
 import com.navigatorTB_Nymph.pluginConfig.MySetting.prohibitedWord
-import com.navigatorTB_Nymph.pluginData.ActiveGroupList
-import com.navigatorTB_Nymph.pluginData.Article
-import com.navigatorTB_Nymph.pluginData.MyPluginData
-import com.navigatorTB_Nymph.pluginData.UsageStatistics
+import com.navigatorTB_Nymph.pluginData.*
 import com.navigatorTB_Nymph.tool.cronJob.CronJob
 import com.navigatorTB_Nymph.tool.sql.SQLiteJDBC
 import kotlinx.coroutines.cancel
@@ -63,8 +61,9 @@ object PluginMain : KotlinPlugin(
 
     val VOTES: MutableMap<Long, VoteUser> = mutableMapOf()
     val MINESWEEPER_GAME = mutableMapOf<Long, Minesweeper>()
-    val TicTacToe_GAME = mutableMapOf<Long, TicTacToe>()
-    val BothSidesDuel = mutableMapOf<Member, Gun>()
+    val PUSH_BOX = mutableMapOf<Long, PushBox>()
+    val TIC_TAC_TOE_GAME = mutableMapOf<Long, TicTacToe>()
+    val BOTH_SIDES_DUEL = mutableMapOf<Member, Gun>()
     val CRON = CronJob()
 
     var DLC_MirrorWorld = false
@@ -76,6 +75,7 @@ object PluginMain : KotlinPlugin(
         UsageStatistics.reload()
         ActiveGroupList.reload()
         Article.reload()
+        PushBoxLevelMap.reload()
 
         if (MyPluginData.initialization) {  // 首次启动初始化数据库
             dataBastInit()
@@ -97,6 +97,7 @@ object PluginMain : KotlinPlugin(
         Music.register()            // 点歌姬
         GroupPolicy.register()      // 群策略
         Wordle.register()           // 猜单词
+        PushBoxGame.register()      // 推箱子
         RollDice.register()         // 简易骰娘
         AutoBanned.register()       // 自助禁言
         Duel.register()             // 禁言决斗
@@ -514,6 +515,7 @@ object PluginMain : KotlinPlugin(
         Calculator.unregister()         // 计算器
         ASoulArticle.unregister()       // 小作文
         Wordle.unregister()             // 猜单词
+        PushBoxGame.unregister()        // 推箱子
         RollDice.unregister()           // 简易骰娘
         Construction.unregister()       // 建造时间
         TraceMoe.unregister()           // 以图搜番

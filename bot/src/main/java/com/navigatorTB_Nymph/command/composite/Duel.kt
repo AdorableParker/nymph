@@ -1,10 +1,10 @@
 package com.navigatorTB_Nymph.command.composite
 
 import com.navigatorTB_Nymph.game.duel.Gun
-import com.navigatorTB_Nymph.main.PluginMain
 import com.navigatorTB_Nymph.pluginData.ActiveGroupList
 import com.navigatorTB_Nymph.pluginData.MyPluginData
 import com.navigatorTB_Nymph.pluginData.UsageStatistics
+import com.navigatorTB_Nymph.pluginMain.PluginMain
 import com.navigatorTB_Nymph.tool.sql.SQLiteJDBC
 import net.mamoe.mirai.console.command.CompositeCommand
 import net.mamoe.mirai.console.command.MemberCommandSenderOnMessage
@@ -37,7 +37,7 @@ object Duel : CompositeCommand(
             return
         }
 
-        if (PluginMain.BothSidesDuel.containsKey(user) || PluginMain.BothSidesDuel.containsKey(target)) {
+        if (PluginMain.BOTH_SIDES_DUEL.containsKey(user) || PluginMain.BOTH_SIDES_DUEL.containsKey(target)) {
             sendMessage("你或对方正在决斗中，不能发起新的决斗")
             return
         }
@@ -52,12 +52,12 @@ object Duel : CompositeCommand(
         MyPluginData.duelTime[group.id] = Instant.now().epochSecond
         sendMessage("${user.nameCardOrNick}发起了对${target.nameCardOrNick}的决斗")
 
-        PluginMain.BothSidesDuel[user] = Gun(target)
-        PluginMain.BothSidesDuel[target] = Gun(user)
+        PluginMain.BOTH_SIDES_DUEL[user] = Gun(target)
+        PluginMain.BOTH_SIDES_DUEL[target] = Gun(user)
 
-        if (PluginMain.BothSidesDuel[user]?.shot(group) == true) {
-            PluginMain.BothSidesDuel.remove(user)
-            PluginMain.BothSidesDuel.remove(target)
+        if (PluginMain.BOTH_SIDES_DUEL[user]?.shot(group) == true) {
+            PluginMain.BOTH_SIDES_DUEL.remove(user)
+            PluginMain.BOTH_SIDES_DUEL.remove(target)
         } else {
             sendMessage(At(target) + PlainText("轮到你了,反击！"))
         }
@@ -75,12 +75,12 @@ object Duel : CompositeCommand(
             return
         }
 
-        if (PluginMain.BothSidesDuel.containsKey(user)) { // 判断有无进行中的决斗
-            if (PluginMain.BothSidesDuel[user]?.shot(group) == true) {  // 进行射击 判断射击是否命中
-                PluginMain.BothSidesDuel[user]?.let { PluginMain.BothSidesDuel.remove(it.adversary) }
-                PluginMain.BothSidesDuel.remove(user)
+        if (PluginMain.BOTH_SIDES_DUEL.containsKey(user)) { // 判断有无进行中的决斗
+            if (PluginMain.BOTH_SIDES_DUEL[user]?.shot(group) == true) {  // 进行射击 判断射击是否命中
+                PluginMain.BOTH_SIDES_DUEL[user]?.let { PluginMain.BOTH_SIDES_DUEL.remove(it.adversary) }
+                PluginMain.BOTH_SIDES_DUEL.remove(user)
             } else {  // 未命中
-                PluginMain.BothSidesDuel[user]?.let {
+                PluginMain.BOTH_SIDES_DUEL[user]?.let {
                     sendMessage(At(it.adversary) + PlainText("轮到你了,反击！"))
                 }
             }

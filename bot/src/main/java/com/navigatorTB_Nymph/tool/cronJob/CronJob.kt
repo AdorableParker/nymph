@@ -1,7 +1,7 @@
 package com.navigatorTB_Nymph.tool.cronJob
 
 import com.navigatorTB_Nymph.data.Interval
-import com.navigatorTB_Nymph.main.PluginMain
+import com.navigatorTB_Nymph.pluginMain.PluginMain
 import kotlinx.coroutines.delay
 import net.mamoe.mirai.utils.info
 import java.time.LocalDateTime

@@ -3,8 +3,8 @@ package com.navigatorTB_Nymph.command.composite
 import com.navigatorTB_Nymph.game.minesweeper.GameState
 import com.navigatorTB_Nymph.game.minesweeper.LevelSet
 import com.navigatorTB_Nymph.game.minesweeper.Minesweeper
-import com.navigatorTB_Nymph.main.PluginMain
 import com.navigatorTB_Nymph.pluginData.ActiveGroupList
+import com.navigatorTB_Nymph.pluginMain.PluginMain
 import net.mamoe.mirai.console.command.CompositeCommand
 import net.mamoe.mirai.console.command.MemberCommandSenderOnMessage
 import net.mamoe.mirai.contact.Contact.Companion.sendImage

@@ -13,12 +13,10 @@ repositories {
     mavenCentral()
 }
 
-java {
-    sourceCompatibility = JavaVersion.VERSION_1_7
-    targetCompatibility = JavaVersion.VERSION_1_7
-}
 
 dependencies {
+
+//    compileOnly('com.googlecode.sli4j:sli4j-slf4j-simple:2.0')
     compileOnly('net.mamoe:mirai-core:2.10.0') // mirai-core 的 API
     compileOnly('net.mamoe:mirai-console:2.10.0') // 后端
     compileOnly('org.jetbrains.kotlin:kotlin-serialization:1.6.10')

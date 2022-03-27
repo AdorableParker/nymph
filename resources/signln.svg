@@ -1,0 +1,21 @@
+<svg xmlns:xlink="http://www.w3.org/1999/xlink" id="root" width="720" height="500" xmlns="http://www.w3.org/2000/svg">
+    <g id="main" fill="#69B960" font-family="华康翩翩体W5-A">
+        <rect id="theme" width="100%" height="100%"/>
+        <image id="tarot" x="465" y="15" width="255" height="470"
+               xlink:href="D:\Program Files (x86)\MiraiProject\mcl-1.2.2\data\MCP.navigatorTB_Nymph\塔罗牌\倒吊人-逆.jpg"/>
+        <rect id="mask" fill="#FFFFFF" x="0" y="15" width="100%" height="470" opacity=".5"/>
+
+        <text id="brand" x="5" y="60" font-size="45" font-family="大签字笔体">The Hanged Man(倒吊人)</text>
+        <g id="word" font-size="25"></g>
+        <g font-size="23" text-anchor="end">
+            <text x="465" y="410">『事已至此，幸而夜风对他温柔。』</text>
+            <text x="465" y="440">——《觅楽 - 语录》</text>
+        </g>
+        <text x="715" y="150" stroke="#EEE" stroke-width="3" font-size="60" font-family="汉仪铸字卡酷体W" text-anchor="end">
+            今年还剩
+            <tspan x="715" y="220">365</tspan>
+            <tspan x="715" y="290">天</tspan>
+        </text>
+    </g>
+    <text x="5" y="480" fill="#9A9A9A" font-size="15" font-family="Zpix">一言:https://hitokoto.cn</text>
+</svg>

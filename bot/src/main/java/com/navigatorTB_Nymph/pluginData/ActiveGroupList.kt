@@ -1,6 +1,6 @@
 package com.navigatorTB_Nymph.pluginData
 
-import com.navigatorTB_Nymph.main.PluginMain
+import com.navigatorTB_Nymph.pluginMain.PluginMain
 import com.navigatorTB_Nymph.tool.sql.SQLiteJDBC
 import net.mamoe.mirai.console.data.AutoSavePluginData
 import net.mamoe.mirai.console.data.value

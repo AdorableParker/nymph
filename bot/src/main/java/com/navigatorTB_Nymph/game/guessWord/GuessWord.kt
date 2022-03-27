@@ -1,6 +1,6 @@
 package com.navigatorTB_Nymph.game.guessWord
 
-import com.navigatorTB_Nymph.main.PluginMain
+import com.navigatorTB_Nymph.pluginMain.PluginMain
 import com.navigatorTB_Nymph.tool.svg.BuildSVGTool
 
 class GuessWord(private val ctAn: String) : BuildSVGTool(PluginMain.resolveDataPath("wordle.svg").toString()) {

@@ -1,6 +1,6 @@
 package com.navigatorTB_Nymph.game.duel
 
-import com.navigatorTB_Nymph.main.PluginMain
+import com.navigatorTB_Nymph.pluginMain.PluginMain
 import net.mamoe.mirai.contact.Group
 import net.mamoe.mirai.contact.Member
 import net.mamoe.mirai.message.data.At
@@ -54,9 +54,9 @@ class Gun(val adversary: Member) {
             }
             magazine.removeFirst()
         } else {
-            if (PluginMain.BothSidesDuel[adversary]?.magazine?.isNotEmpty() == true) { // 如果对方还有子弹
+            if (PluginMain.BOTH_SIDES_DUEL[adversary]?.magazine?.isNotEmpty() == true) { // 如果对方还有子弹
                 group.sendMessage("你没子弹了！现在是对方的时间")
-                while (PluginMain.BothSidesDuel[adversary]?.shot(group) == false) {
+                while (PluginMain.BOTH_SIDES_DUEL[adversary]?.shot(group) == false) {
                     // 直到命中或是弹药用尽
                 }
             } else {
