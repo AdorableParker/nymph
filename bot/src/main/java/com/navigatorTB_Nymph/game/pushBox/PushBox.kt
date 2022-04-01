@@ -159,7 +159,12 @@ class PushBox(private val level: Int) : BuildSVGTool(PluginMain.resolveDataPath(
         upDataMan()
         upDataReachableLocation()
         moveBox(boxID, boxFinalPosition)
-        return goalMap.subtract(boxMap).isEmpty()
+        return if (goalMap.subtract(boxMap).isEmpty()) {
+            doc.getElementById("gameOver").setAttribute("opacity", "1")
+            true
+        } else {
+            false
+        }
     }
 
     fun restart() {

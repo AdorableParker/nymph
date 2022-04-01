@@ -131,10 +131,11 @@ object Music : SimpleCommand(
             val doc = Jsoup.connect("https://u.y.qq.com/cgi-bin/musicu.fcg").data(
                 mapOf(
                     "format" to "json",
-                    "data" to """{"req_0":{"module":"vkey.GetVkeyServer","method":"CgiGetVkey","param":{"guid":"0","songmid":["$songMID"],"songtype":[0],"loginflag":1,"platform":"20"}},"comm":{"uin":"18585073516","format":"json","ct":24,"cv":0}}"""
+                    "data" to """{"req":{"module":"CDN.SrfCdnDispatchServer","method":"GetCdnDispatch","param":{"guid":"3982823384","calltype":0,"userip":""}},"req_0":{"module":"vkey.GetVkeyServer","method":"CgiGetVkey","param":{"guid":"3982823384","songmid":["$songMID"],"songtype":[0],"uin":"0","loginflag":1,"platform":"20"}},"comm":{"uin":0,"format":"json","ct":24,"cv":0}}"""
                 )
             )
                 .userAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/92.0.4515.131 Safari/537.36 Edg/92.0.902.73")
+                .referrer("http://y.qq.com")
                 .header("Host", "u.y.qq.com")
                 .ignoreContentType(true).execute().body().toString()
 
