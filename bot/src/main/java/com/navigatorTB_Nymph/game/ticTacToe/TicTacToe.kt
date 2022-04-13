@@ -2,8 +2,6 @@ package com.navigatorTB_Nymph.game.ticTacToe
 
 import com.navigatorTB_Nymph.command.composite.TicTacToeGame
 import com.navigatorTB_Nymph.pluginData.UsageStatistics
-import net.mamoe.mirai.console.util.ConsoleExperimentalApi
-import net.mamoe.mirai.utils.MiraiExperimentalApi
 import java.awt.BasicStroke
 import java.awt.Color
 import java.awt.Font
@@ -12,7 +10,6 @@ import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import javax.imageio.ImageIO
 
-@OptIn(MiraiExperimentalApi::class, ConsoleExperimentalApi::class)
 class TicTacToe(solve: Boolean) {
     private val locate = arrayOf(
         Grid(1, 1), Grid(1, 2), Grid(1, 3),

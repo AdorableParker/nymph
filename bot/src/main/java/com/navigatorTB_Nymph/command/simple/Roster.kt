@@ -1,5 +1,6 @@
 package com.navigatorTB_Nymph.command.simple
 
+import com.navigatorTB_Nymph.data.AssetDataRoster
 import com.navigatorTB_Nymph.pluginData.ActiveGroupList
 import com.navigatorTB_Nymph.pluginData.UsageStatistics
 import com.navigatorTB_Nymph.pluginMain.PluginMain
@@ -40,16 +41,24 @@ object Roster : SimpleCommand(
         }
         val treated = String(i)
         val dbObject = SQLiteJDBC(dataDir)
-        val roster = dbObject.select("Roster", listOf("code", "name"), listOf(treated, treated), "OR", 4)
+        val roster = dbObject.select(
+            "Roster",
+            Triple(arrayOf("code", "name"), Array(2) { "GLOB" }, Array(2) { "*$treated*" }),
+            "OR",
+            "船名查询\nFile:Roster.kt\tLine:43"
+        ).run { List(size) { AssetDataRoster(this[it]) } }
         dbObject.closeDB()
         if (roster.isEmpty()) {
-            sendMessage("没有或尚未收录名字包含有 $shipName 的舰船");return
+            sendMessage("没有或尚未收录名字包含有 $shipName 的舰船")
+            return
         }
-        roster.sortWith(compareBy { it["name"].toString() })
         val report = mutableListOf("名字包含有 $shipName 的舰船有:")
-        for (row in roster) {
-            report.add("原名：${row["name"]}\t和谐名：${row["code"]}")
-        }
+        roster.sortedWith(
+            compareBy(
+                { it.name.length },
+                { it.name }
+            )
+        ).forEach { report.add("原名：${it.name}\t和谐名：${it.code}") }
         sendMessage(report.joinToString("\n"))
     }
 }

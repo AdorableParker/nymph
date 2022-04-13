@@ -1,5 +1,7 @@
 package com.navigatorTB_Nymph.command.composite
 
+import com.navigatorTB_Nymph.data.AICorpus
+import com.navigatorTB_Nymph.data.UserPolicy
 import com.navigatorTB_Nymph.pluginConfig.MySetting
 import com.navigatorTB_Nymph.pluginData.ActiveGroupList
 import com.navigatorTB_Nymph.pluginMain.PluginMain
@@ -11,8 +13,7 @@ import net.mamoe.mirai.utils.ExternalResource.Companion.toExternalResource
 import java.io.File
 
 object AI : CompositeCommand(
-    PluginMain, "AI",
-    description = "AI功能"
+    PluginMain, "AI", description = "AI功能"
 ) {
 
     @SubCommand("教学")
@@ -24,42 +25,45 @@ object AI : CompositeCommand(
         }
 
         val userDBObject = SQLiteJDBC(PluginMain.resolveDataPath("User.db"))
-        val info = userDBObject.selectOne("Policy", "group_id", group.id, 1)
-        if (info["Teaching"] == 0.0) {
-            userDBObject.closeDB()
+        val policy = UserPolicy(
+            userDBObject.selectOne(
+                "Policy", Triple("groupID", "=", "${group.id}"), "AI教学\nFile:AI.kt\tLine:30"
+            )
+        )
+        userDBObject.closeDB()
+        if (policy.teaching == 0) {
             sendMessage("本群禁止教学,请联系管理员开启")
             return
         }
-        userDBObject.closeDB()
         val keyWord = PluginMain.KEYWORD_SUMMARY.keyword(question, 1).let { if (it.size <= 0) question else it[0] }
 //        PluginMain.logger.debug { "*$question*\n$keyWord" }
         val dbObject = SQLiteJDBC(PluginMain.resolveDataPath("AI.db"))
-        val entry = dbObject.select(
-            "Corpus",
-            listOf("answer", "question", "keys", "fromGroup", "answer", "question", "keys"),
-            listOf(answer, question, keyWord, "${group.id}' OR fromGroup = '0", answer, question, keyWord),
-            "AND",
-            0
-        )
-        if (entry.isNotEmpty()) {
-            sendMessage("问题:$question\n回答:$answer\n该条目已存在，条目ID:${entry[0]["ID"]}")
+        val corpus = dbObject.executeQuerySQL(
+            "SELECT * FROM Corpus WHERE answer = $answer AND question = $question AND keys = $keyWord AND (fromGroup = ${group.id} OR fromGroup = 0);",
+            "AI教学\nFile:AI.kt\tLine:41"
+        ).run {
+            List(size) { AICorpus(this[it]) }
+        }
+        if (corpus.isNotEmpty()) {
+            sendMessage("问题:$question\n回答:$answer\n该条目已存在，条目ID:${corpus[0].id}")
             dbObject.closeDB()
             return
         }
         dbObject.insert(
             "Corpus",
             arrayOf("answer", "question", "keys", "fromGroup"),
-            arrayOf(
-                "'$answer'", "'$question'", "'$keyWord'",
-                "${group.id}"
+            arrayOf("'$answer'", "'$question'", "'$keyWord'", "${group.id}"),
+            "AI教学\nFile:AI.kt\tLine:52"
+        )
+        val entry = AICorpus(
+            dbObject.selectOne(
+                "Corpus", Triple(
+                    arrayOf("answer", "question", "keys", "fromGroup"),
+                    Array(4) { "=" },
+                    arrayOf(answer, question, keyWord, "${group.id}")
+                ), "AND", "AI教学\nFile:AI.kt\tLine:59"
             )
         )
-        val entryID = dbObject.select(
-            "Corpus",
-            listOf("answer", "question", "keys", "fromGroup"),
-            listOf(answer, question, keyWord, "${group.id}"),
-            "AND"
-        )[0]["ID"]
 
         dbObject.closeDB()
         if ((1..10).random() <= 1) {
@@ -68,7 +72,7 @@ object AI : CompositeCommand(
             }
             sendMessage(audio)
         }
-        sendMessage("问题:$question\n回答:$answer\n条目已添加，条目ID:$entryID")
+        sendMessage("问题:$question\n回答:$answer\n条目已添加，条目ID:${entry.id}")
     }
 
     @SubCommand("查询")
@@ -79,35 +83,35 @@ object AI : CompositeCommand(
             return
         }
 
-        val dbObject =
-            SQLiteJDBC(PluginMain.resolveDataPath("AI.db"))
-        val entryList =
-            dbObject.executeStatement("""SELECT * FROM Corpus WHERE answer GLOB "*$key*" OR question GLOB "*$key*" OR keys GLOB "*$key*";""")
+        val dbObject = SQLiteJDBC(PluginMain.resolveDataPath("AI.db"))
+        val entryList = dbObject.executeQuerySQL(
+            "SELECT * FROM Corpus WHERE answer GLOB '*$key*' OR question GLOB '*$key*' OR keys GLOB '*$key*';",
+            "AI查询\nFile:AI.kt\tLine:87"
+        ).run {
+            List(size) { AICorpus(this[it]) }
+        }
         dbObject.closeDB()
         val r = when {
             entryList.isEmpty() -> "问答包含关键词${key}的条目不存在"
             entryList.size >= 30 -> "问答包含关键词${key}的条目过多(超过三十条)，请提供更加详细的关键词"
             entryList.size >= 10 -> {
                 val report = mutableListOf("问答包含关键词${key}的条目过多(超过十条)，仅提供前十条，本群关键词优先显示")
-                for (row in entryList) {
-                    if (row["fromGroup"].toString().toLong() == group.id && report.size <= 10) {
-                        report.add("问题:${row["question"]}\n回答:${row["answer"]}\n条目ID:${row["ID"]}\n控制权限:完全控制\n")
-                    }
-                }
-                for (row in entryList) {
-                    if (row["fromGroup"].toString().toLong() == 0L && report.size <= 10) {
-                        report.add("问题:${row["question"]}\n回答:${row["answer"]}\n条目ID:${row["ID"]}\n控制权限:只读权限\n")
-                    }
+                entryList.forEach {
+                    if (report.size <= 10)
+                        if (it.fromGroup == group.id)
+                            report.add("问题:${it.question}\n回答:${it.answer}\n条目ID:${it.id}\n控制权限:完全控制\n")
+                        else if (it.fromGroup == 0L)
+                            report.add("问题:${it.question}\n回答:${it.answer}\n条目ID:${it.id}\n控制权限:只读权限\n")
                 }
                 report.joinToString("\n")
             }
             else -> {
                 val report = mutableListOf("条目清单:")
-                for (row in entryList) {
-                    when (row["fromGroup"].toString().toLong()) {
-                        group.id -> report.add("问题:${row["question"]}\n回答:${row["answer"]}\n条目ID:${row["ID"]}\n控制权限:完全控制\n")
-                        0L -> report.add("问题:${row["question"]}\n回答:${row["answer"]}\n条目ID:${row["ID"]}\n控制权限:只读权限\n")
-                        else -> report.add("问题:隐藏\t回答:隐藏\n条目ID:${row["ID"]}\n控制权限:不可操作\n")
+                entryList.forEach {
+                    when (it.fromGroup) {
+                        group.id -> report.add("问题:${it.question}\n回答:${it.answer}\n条目ID:${it.id}\n控制权限:完全控制\n")
+                        0L -> report.add("问题:${it.question}\n回答:${it.answer}\n条目ID:${it.id}\n控制权限:只读权限\n")
+                        else -> report.add("问题:隐藏\t回答:隐藏\n条目ID:${it.id}\n控制权限:不可操作\n")
                     }
                 }
                 report.joinToString("\n")
@@ -125,21 +129,19 @@ object AI : CompositeCommand(
         }
 
         val dbObject = SQLiteJDBC(PluginMain.resolveDataPath("AI.db"))
-        val entryList = dbObject.executeStatement("SELECT * FROM Corpus;").toList()
-        dbObject.closeDB()
-        val cAll = entryList.size
-        val cSpecial = entryList.count { (it["fromGroup"] as Int).toLong() == group.id }
-        val cAvailable = entryList.count { (it["fromGroup"] as Int).toLong() == 0L } + cSpecial
-        val r = when (cAll) {
-            0 -> "统计查询失败"
-            else -> {
-                "目前数据库教学数据共计${cAll}条\n" +
-                        "本群可读教学数据${cAvailable}条\n" +
-                        "其中本群专属教学数据${cSpecial}条\n" +
-                        "占本群可读的${"%.2f".format(cSpecial.toDouble() / cAvailable * 100)}%,占数据库总量的${"%.2f".format(cSpecial.toDouble() / cAll * 100)}%"
-            }
+        val entryList = dbObject.executeQuerySQL("SELECT * FROM Corpus;", "AI统计\nFile:AI.kt\tLine:132").run {
+            List(size) { AICorpus(this[it]) }
         }
-        sendMessage(r)
+        dbObject.closeDB()
+        val cSpecial = entryList.count { it.fromGroup == group.id }
+        val cAvailable = entryList.count { it.fromGroup == 0L } + cSpecial
+        sendMessage(
+            if (entryList.isEmpty()) "统计查询失败" else "目前数据库教学数据共计${entryList.size}条\n本群可读教学数据${cAvailable}条\n其中本群专属教学数据${cSpecial}条\n占本群可读的${
+                "%.2f".format(
+                    cSpecial.toDouble() / cAvailable * 100
+                )
+            }%,占数据库总量的${"%.2f".format(cSpecial.toDouble() / entryList.size * 100)}%"
+        )
     }
 
     @SubCommand("EID查询")
@@ -150,26 +152,25 @@ object AI : CompositeCommand(
             return
         }
 
-        val dbObject =
-            SQLiteJDBC(PluginMain.resolveDataPath("AI.db"))
-        val entryList =
-            dbObject.select("Corpus", "ID", EID, 1)
+        val dbObject = SQLiteJDBC(PluginMain.resolveDataPath("AI.db"))
+        val entryList = dbObject.select("Corpus", Triple("id", "=", "$EID"), "AI_EID查询\nFile:AI.kt\tLine:156").run {
+            List(size) { AICorpus(this[it]) }
+        }
         dbObject.closeDB()
-        val r = when {
+        sendMessage(when {
             entryList.isEmpty() -> "条目${EID}不存在"
             else -> {
                 val report = mutableListOf("条目清单:")
-                for (row in entryList) {
-                    when (row["fromGroup"].toString().toLong()) {
-                        group.id -> report.add("问题:${row["question"]}\n回答:${row["answer"]}\n条目ID:${row["ID"]}\n控制权限:完全控制")
-                        0L -> report.add("问题:${row["question"]}\n回答:${row["answer"]}\n条目ID:${row["ID"]}\n控制权限:只读权限")
-                        else -> report.add("问题:隐藏\t回答:隐藏\n条目ID:${row["ID"]}\n控制权限:不可操作")
+                entryList.forEach {
+                    when (it.fromGroup) {
+                        group.id -> report.add("问题:${it.question}\n回答:${it.answer}\n条目ID:${it.id}\n控制权限:完全控制")
+                        0L -> report.add("问题:${it.question}\n回答:${it.answer}\n条目ID:${it.id}\n控制权限:只读权限")
+                        else -> report.add("问题:隐藏\t回答:隐藏\n条目ID:${it.id}\n控制权限:不可操作")
                     }
                 }
                 report.joinToString("\n")
             }
-        }
-        sendMessage(r)
+        })
     }
 
     @SubCommand("删除")
@@ -180,84 +181,56 @@ object AI : CompositeCommand(
             return
         }
 
-        val dbObject =
-            SQLiteJDBC(PluginMain.resolveDataPath("AI.db"))
-        val entry = dbObject.select("Corpus", "ID", EID, 1)
-        if (entry.size > 0) for (row in entry) {
-            if (row["fromGroup"].toString().toLong() == group.id) {
-                dbObject.delete("Corpus", "ID", "$EID")
-                sendMessage("问题:${row["question"]}\n回答:${row["answer"]}\n条目ID:${row["ID"]}\n条目已删除")
-                break
-            } else sendMessage("该条目本群无权删除")
-        } else sendMessage("没有该条目")
-        dbObject.closeDB()
-    }
-
-    @SubCommand("sudo删除")
-    suspend fun MemberCommandSenderOnMessage.sudoMain(EID: Int) {
-        if (group.botMuteRemaining > 0) return
-        if (group.id !in ActiveGroupList.user) {
-            sendMessage("本群授权已到期,请续费后使用")
-            return
+        val dbObject = SQLiteJDBC(PluginMain.resolveDataPath("AI.db"))
+        val entry = dbObject.select("Corpus", Triple("id", "=", "$EID"), "AI删除\nFile:AI.kt\tLine:185").run {
+            List(size) { AICorpus(this[it]) }
         }
-
-        val dbObject =
-            SQLiteJDBC(PluginMain.resolveDataPath("AI.db"))
-        val entry = dbObject.select("Corpus", "ID", EID, 1)
-        if (entry.size > 0) for (row in entry) {
-            if (user.id == MySetting.AdminID) {
-                dbObject.delete("Corpus", "ID", "$EID")
-                sendMessage("问题:${row["question"]}\n回答:${row["answer"]}\n条目ID:${row["ID"]}\n条目已删除")
-                break
+        if (entry.isNotEmpty()) entry.forEach {
+            if (it.fromGroup == group.id || user.id == MySetting.AdminID) {
+                dbObject.delete("Corpus", Pair("id", "$EID"), "AI删除\nFile:AI.kt\tLine:190")
+                sendMessage("问题:${it.question}\n回答:${it.answer}\n条目ID:${it.id}\n条目已删除")
+                return dbObject.closeDB()
             } else sendMessage("权限不足")
         } else sendMessage("没有该条目")
         dbObject.closeDB()
     }
 
-    ///**
     suspend fun dialogue(subject: Group, content: String, atMe: Boolean = false) {
         val keyWord = PluginMain.KEYWORD_SUMMARY.keyword(content, 1).let { if (it.size <= 0) content else it[0] }
-        val wordList = PluginMain.LEXER.scan(content)
-//        PluginMain.logger.debug { "*$content*\n$keyWord" }
+        val wordList = PluginMain.LEXER.scan(content).toList()
 
-        val dbObject =
-            SQLiteJDBC(PluginMain.resolveDataPath("AI.db"))
-        val rList = if (keyWord.isNullOrBlank()) {
-            dbObject.select("Corpus", "answer", content, 0)
-        } else {
-            dbObject.select("Corpus", "keys", keyWord, 0)
-        }
+        val dbObject = SQLiteJDBC(PluginMain.resolveDataPath("AI.db"))
+        val rList = with(
+            if (keyWord.isNullOrBlank())
+                dbObject.select("Corpus", Triple("answer", "=", "'$content'"), "AI对话\nFile:AI.kt\tLine:205")
+            else
+                dbObject.select("Corpus", Triple("keys", "=", "'$keyWord'"), "AI对话\nFile:AI.kt\tLine:208")
+        ) { List(size) { AICorpus(this[it]) } }
         dbObject.closeDB()
         val r = mutableListOf<String>()
         var jaccardMax = 0.6
-        for (i in rList) {
-            val formID = i["fromGroup"].toString().toLong()
-            if (formID != subject.id && formID != 0L) continue
-            val a = mutableListOf<String>()
-            val b = mutableListOf<String>()
-            val s = PluginMain.LEXER.scan(i["question"].toString())
+        rList.forEach {
+            if (it.fromGroup == subject.id || it.fromGroup == 0L) {
+                val a = mutableListOf<String>()
+                val b = mutableListOf<String>()
+                PluginMain.LEXER.scan(it.question).toList().forEach { wordTermA -> a.add(wordTermA.toString()) }
+                wordList.forEach { wordTermB -> b.add(wordTermB.toString()) }
 
-            s.toList().forEach { a.add(it.toString()) }
-            wordList.toList().forEach { b.add(it.toString()) }
-
-            val jaccardIndex = (a intersect b.toSet()).size.toDouble() / (a union b).size.toDouble()
-            when {
-                jaccardIndex > jaccardMax -> {
-                    jaccardMax = jaccardIndex
-                    r.clear()
-                    r.add(i["answer"] as String)
+                val jaccardIndex = (a intersect b.toSet()).size.toDouble() / (a union b).size.toDouble()
+                when {
+                    jaccardIndex > jaccardMax -> {
+                        jaccardMax = jaccardIndex
+                        r.clear()
+                        r.add(it.answer)
+                    }
+                    jaccardIndex == jaccardMax -> r.add(it.answer)
                 }
-                jaccardIndex == jaccardMax -> r.add(i["answer"] as String)
-                jaccardIndex < jaccardMax -> continue
             }
         }
         if (r.size > 0) {
             subject.sendMessage(r.random())
             return
         }
-        if (atMe) {
-            subject.sendMessage("( -`_´- ) (似乎并没有听懂... ")
-        }
+        if (atMe) subject.sendMessage("( -`_´- ) (似乎并没有听懂... ")
     }
-//    */
 }

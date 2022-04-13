@@ -2,6 +2,8 @@ package com.navigatorTB_Nymph.command.simple
 
 import com.beust.klaxon.JsonObject
 import com.beust.klaxon.Parser
+import com.navigatorTB_Nymph.data.UserACGImg
+import com.navigatorTB_Nymph.data.UserPolicy
 import com.navigatorTB_Nymph.pluginConfig.MySetting
 import com.navigatorTB_Nymph.pluginData.ActiveGroupList
 import com.navigatorTB_Nymph.pluginData.MyPluginData
@@ -40,19 +42,29 @@ object AcgImage : SimpleCommand(
 
         MyPluginData.AcgImageRun.add(group.id)
         val dbObject = SQLiteJDBC(PluginMain.resolveDataPath("User.db"))
-        val status = dbObject.selectOne("Policy", "group_id", group.id, 1)
-        if (status["ACGImgAllowed"] != 1) {
+        val status = UserPolicy(
+            dbObject.selectOne(
+                "Policy",
+                Triple("groupID", "=", "${group.id}"),
+                "随机图片\nFile:AcgImage.kt\tLine:46"
+            )
+        )
+        if (status.acgImgAllowed != 1) {
             dbObject.closeDB()
             sendMessage("本群尚未启用该功能，请联系群主或管理员开启")
             MyPluginData.AcgImageRun.remove(group.id)
             return
         }
 
-        val quota = dbObject.selectOne("ACGImg", "group_id", group.id, 1)
-        val score = quota["score"] as Int
-        val date = (quota["date"] as Int).toLong()
-        val timeLeft = 60 - Instant.now().epochSecond + date
-        if (score <= 0) {
+        val quota = UserACGImg(
+            dbObject.selectOne(
+                "ACGImg",
+                Triple("groupID", "=", "${group.id}"),
+                "随机图片\nFile:AcgImage.kt\tLine:58"
+            )
+        )
+        val timeLeft = 60 - Instant.now().epochSecond + quota.date
+        if (quota.score <= 0) {
             dbObject.closeDB()
             sendMessage("⚠系统错误⚠\n本群的配额已用尽")
             MyPluginData.AcgImageRun.remove(group.id)
@@ -68,16 +80,13 @@ object AcgImage : SimpleCommand(
             sendMessage(getRandomImg(group))
             dbObject.update(
                 "ACGImg",
-                "group_id",
-                "${group.id}",
-                arrayOf("score", "date"),
-                arrayOf("${score - 1}", "${Instant.now().epochSecond}")
+                Pair("groupID", "${group.id}"),
+                Pair(arrayOf("score", "date"), arrayOf("${quota.score - 1}", "${Instant.now().epochSecond}")),
+                "随机图片\nFile:AcgImage.kt\tLine:81"
             )
-            if (score - 1 < 10) {
-                sendMessage("ℹ本群剩余配给已经不足10点了")
-            }
+            if (quota.score <= 10) sendMessage("ℹ本群剩余配给已经不足10点了")
         }.onFailure {
-            PluginMain.logger.warning { "File:AcgImage.kt    Line:78\n${it.message}" }
+            PluginMain.logger.warning { "File:AcgImage.kt\tLine:89\n${it.message}" }
             sendMessage("数据传输失败...嗯.一定是塞壬的问题..")
         }
         dbObject.closeDB()
@@ -107,16 +116,30 @@ object AcgImage : SimpleCommand(
 
     fun getReplenishment(group: Long, supply: Int): String {
         val dbObject = SQLiteJDBC(PluginMain.resolveDataPath("User.db"))
-        val quota = dbObject.selectOne("ACGImg", "group_id", group, 1)["score"] as Int
-        if (quota + supply >= 200) {
-            dbObject.update("ACGImg", "group_id", group, "score", 200)
+        val quota = UserACGImg(
+            dbObject.selectOne(
+                "ACGImg",
+                Triple("groupID", "=", "$group"),
+                "随机图片\nFile:AcgImage.kt\tLine:119"
+            )
+        )
+        if (quota.score + supply >= 200) {
+            dbObject.update(
+                "ACGImg",
+                Pair("groupID", "$group"),
+                Pair(arrayOf("score"), arrayOf("200")),
+                "随机图片\nFile:AcgImage.kt\tLine:127"
+            )
             dbObject.closeDB()
             return "补给已达上限"
         }
-        dbObject.update("ACGImg", "group_id", group, "score", quota + supply)
+        dbObject.update(
+            "ACGImg",
+            Pair("groupID", "$group"),
+            Pair(arrayOf("score"), arrayOf("${quota.score + supply}")),
+            "随机图片\nFile:AcgImage.kt\tLine:136"
+        )
         dbObject.closeDB()
         return "是司令部的补给！色图配给+$supply"
     }
-
-
 }

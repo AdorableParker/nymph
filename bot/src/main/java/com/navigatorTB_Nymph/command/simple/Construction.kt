@@ -1,5 +1,6 @@
 package com.navigatorTB_Nymph.command.simple
 
+import com.navigatorTB_Nymph.data.AssetDataAzurLaneConstructTime
 import com.navigatorTB_Nymph.pluginData.ActiveGroupList
 import com.navigatorTB_Nymph.pluginData.UsageStatistics
 import com.navigatorTB_Nymph.pluginMain.PluginMain
@@ -44,22 +45,32 @@ object Construction : SimpleCommand(
 
     private fun timeToName(index: String): String {
         val db = SQLiteJDBC(dataDir)
-        val result = db.select("AzurLane_construct_time", "Time", index, 3)
+        val result = db.select(
+            "AzurLane_construct_time",
+            Triple("time", "GLOB", "'$index*'"),
+            "建造时间\nFile:Construction.kt\tLine:48"
+        ).run { List(size) { AssetDataAzurLaneConstructTime(this[it]) } }
         db.closeDB()
         if (result.isEmpty()) return "没有或尚未收录建造时间为 $index 的可建造舰船"
         val report = mutableListOf("建造时间为 $index 的舰船有:")
-        result.sortBy { it["OriginalName"].toString().length }
-        result.sortWith(
+        result.sortedBy { it.originalName.length }.sortedWith(
             compareBy(
-                { if (it["LimitedTime"] == 0.0) 1 else 0 },
-                { it["OriginalName"].toString().length },
-                { it["Alias"].toString().length },
-                { it["OriginalName"].toString() },
-                { it["Alias"].toString() }
+                { it.limitedTime },
+                { it.originalName.length },
+                { it.alias.length },
+                { it.originalName },
+                { it.alias }
             )
-        )
-        for (row in result) {
-            report.add("船名：${row["OriginalName"]}[${row["Alias"]}]\t${if (row["LimitedTime"] == 1.0) "限时" else "\t常驻"}")
+        ).forEach {
+            report.add(
+                "船名：${it.originalName}[${it.alias}]\t${
+                    when (it.limitedTime) {
+                        1 -> "限时"
+                        2 -> "不可建造"
+                        else -> "常驻"
+                    }
+                }"
+            )
         }
         db.closeDB()
         return report.joinToString("\n")
@@ -67,25 +78,36 @@ object Construction : SimpleCommand(
 
     private fun nameToTime(index: String): String {
         val db = SQLiteJDBC(dataDir)
-        val result =
-            db.select("AzurLane_construct_time", listOf("OriginalName", "Alias"), listOf(index, index), "OR", 4)
+        val result = db.select(
+            "AzurLane_construct_time",
+            Triple(arrayOf("originalName", "alias"), Array(2) { "=" }, Array(2) { "'$index'" }),
+            "OR",
+            "建造时间\nFile:Construction.kt\tLine:81"
+        ).run { List(size) { AssetDataAzurLaneConstructTime(this[it]) } }
         db.closeDB()
         if (result.isEmpty()) return "没有或尚未收录名字包含有 $index 的可建造舰船"
         val report = mutableListOf("名字包含有 $index 的可建造舰船有:")
-        result.sortWith(
+        result.sortedWith(
             compareBy(
-                { if (it["LimitedTime"] == 0.0) 1 else 0 },
-                { it["Time"].toString().split(":")[0] },
-                { it["Time"].toString().split(":")[1] },
-                { it["Time"].toString().split(":")[2] },
-                { it["OriginalName"].toString().length },
-                { it["Alias"].toString().length },
-                { it["OriginalName"].toString() },
-                { it["Alias"].toString() }
+                { it.limitedTime },
+                { it.time.split(":")[0] },
+                { it.time.split(":")[1] },
+                { it.time.split(":")[2] },
+                { it.originalName.length },
+                { it.alias.length },
+                { it.originalName },
+                { it.alias }
             )
-        )
-        for (row in result) {
-            report.add("船名：${row["OriginalName"]}[${row["Alias"]}]\t建造时间：${row["Time"]} ${if (row["LimitedTime"] == 1.0) "限时" else "常驻"}")
+        ).forEach {
+            report.add(
+                "船名：${it.originalName}[${it.alias}]\t建造时间：${it.time}\t${
+                    when (it.limitedTime) {
+                        1 -> "限时"
+                        2 -> "不可建造"
+                        else -> "常驻"
+                    }
+                }"
+            )
         }
         return report.joinToString("\n")
     }

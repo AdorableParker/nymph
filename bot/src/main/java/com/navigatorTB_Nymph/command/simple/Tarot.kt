@@ -1,5 +1,6 @@
 package com.navigatorTB_Nymph.command.simple
 
+import com.navigatorTB_Nymph.data.AssetDataTarot
 import com.navigatorTB_Nymph.pluginData.ActiveGroupList
 import com.navigatorTB_Nymph.pluginData.UsageStatistics
 import com.navigatorTB_Nymph.pluginMain.PluginMain
@@ -55,21 +56,21 @@ object Tarot : SimpleCommand(
         ).random(Random(seeds))
 
         val dbObject = SQLiteJDBC(PluginMain.resolveDataPath("AssetData.db"))
-        val r = dbObject.selectOne("Tarot", "Brand", brand)
+        val tarot =
+            AssetDataTarot(dbObject.selectOne("Tarot", Triple("brand", "=", "'brand'"), "每日塔罗\nFile:Tarot.kt\tLine:59"))
         dbObject.closeDB()
-        r["seeds"] = seeds
         return when ((0..100).random(Random(seeds))) {
             in 0..50 -> mapOf(
                 "side" to "判定！顺位-",
                 "Brand" to brand,
-                "word" to r["Upright"].toString(),
-                "ImgPath" to r["uprightImg"].toString()
+                "word" to tarot.upright,
+                "ImgPath" to tarot.uprightImg
             )
             else -> mapOf(
                 "side" to "判定！逆位-",
                 "Brand" to brand,
-                "word" to r["Reversed"].toString(),
-                "ImgPath" to r["invertImg"].toString()
+                "word" to tarot.reversed,
+                "ImgPath" to tarot.invertImg
             )
         }
     }

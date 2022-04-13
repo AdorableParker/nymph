@@ -21,10 +21,10 @@ object MyPluginData : AutoSavePluginData("TB_Data") { // "name" 是保存的文�
     @ValueDescription("UID对照表")
     val nameOfDynamic: MutableMap<Int, String> by value(
         mutableMapOf(
-            233114659 to "AzurLane",
-            161775300 to "ArKnights",
-            233108841 to "FateGrandOrder",
-            401742377 to "GenShin"
+            233114659 to "azurLane",
+            161775300 to "arKnights",
+            233108841 to "fateGrandOrder",
+            401742377 to "genShin"
         )
     )
 

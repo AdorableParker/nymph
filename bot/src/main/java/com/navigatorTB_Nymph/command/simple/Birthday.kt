@@ -1,5 +1,6 @@
 package com.navigatorTB_Nymph.command.simple
 
+import com.navigatorTB_Nymph.data.AssetDataShipBirthday
 import com.navigatorTB_Nymph.pluginData.ActiveGroupList
 import com.navigatorTB_Nymph.pluginData.UsageStatistics
 import com.navigatorTB_Nymph.pluginMain.PluginMain
@@ -30,9 +31,11 @@ object Birthday : SimpleCommand(
             return
         }
         val today = LocalDateTime.now().format(DateTimeFormatter.ofPattern("M月d日"))
-
         val dbObject = SQLiteJDBC(PluginMain.resolveDataPath("AssetData.db"))
-        val r = dbObject.select("ShipBirthday", "LaunchDay", today)
+        val r = dbObject.select("ShipBirthday", Triple("launchDay", "=", "'$today'"), "舰娘生日\nFile:Birthday.kt\tLine:35")
+            .run {
+                List(size) { AssetDataShipBirthday(this[it]) }
+            }
         dbObject.closeDB()
         if (r.isEmpty()) {
             sendMessage("今天生日的舰娘没有记载哦")
@@ -40,12 +43,10 @@ object Birthday : SimpleCommand(
         }
         val chain = MessageChainBuilder()
         r.forEach {
-            (it["path"] as String).let { path ->
-                File(PluginMain.resolveDataPath(path).toString()).toExternalResource().use { er ->
-                    chain.add(group.uploadImage(er))
-                }
+            File(PluginMain.resolveDataPath(it.path).toString()).toExternalResource().use { er ->
+                chain.add(group.uploadImage(er))
             }
-            chain.add("${it["LaunchYear"]}年的今天,${it["Name"]}下水")
+            chain.add("${it.launchYear}年的今天,${it.name}下水")
         }
         sendMessage(chain.build())
     }

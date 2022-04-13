@@ -1,5 +1,6 @@
 package com.navigatorTB_Nymph.command.simple
 
+import com.navigatorTB_Nymph.data.AssetDataWordle
 import com.navigatorTB_Nymph.game.guessWord.GuessWord
 import com.navigatorTB_Nymph.pluginData.ActiveGroupList
 import com.navigatorTB_Nymph.pluginData.UsageStatistics
@@ -29,7 +30,7 @@ object Wordle : SimpleCommand(
         }
 
         val dbObject = SQLiteJDBC(PluginMain.resolveDataPath("AssetData.db"))
-        val ctAn = dbObject.selectRandom("wordle")["word"] as String
+        val ctAn = AssetDataWordle(dbObject.selectRandom("wordle", "猜单词\nFile:Wordle.kt\tLine:32")).word
         dbObject.closeDB()
 
         val doc = GuessWord(ctAn)
@@ -50,7 +51,7 @@ object Wordle : SimpleCommand(
                 return
             }
             val dbObj = SQLiteJDBC(PluginMain.resolveDataPath("AssetData.db"))
-            val r = dbObj.selectOne("wordle", "word", inStr).isEmpty()
+            val r = dbObj.selectOne("wordle", Triple("word", "=", "'$inStr'"), "猜单词\nFile:Wordle.kt\tLine:54").isEmpty()
             dbObject.closeDB()
             if (r) {
                 sendMessage("有这样的单词吗?")

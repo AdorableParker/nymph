@@ -5,7 +5,7 @@ import com.mayabot.nlp.segment.Lexers
 import com.navigatorTB_Nymph.command.composite.*
 import com.navigatorTB_Nymph.command.dlc.MirrorWorldGame
 import com.navigatorTB_Nymph.command.simple.*
-import com.navigatorTB_Nymph.data.Interval
+import com.navigatorTB_Nymph.data.*
 import com.navigatorTB_Nymph.game.crowdVerdict.VoteUser
 import com.navigatorTB_Nymph.game.duel.Gun
 import com.navigatorTB_Nymph.game.minesweeper.Minesweeper
@@ -42,11 +42,12 @@ import net.mamoe.mirai.utils.warning
 import java.io.File
 import java.time.LocalDateTime
 
+
 object PluginMain : KotlinPlugin(
     JvmPluginDescription(
         id = "MCP.navigatorTB_Nymph",
         name = "navigatorTB",
-        version = "0.19.0"
+        version = "0.20.0"
     )
 ) {
     // 分词功能
@@ -111,7 +112,6 @@ object PluginMain : KotlinPlugin(
         CalculationExp.register()   // 经验计算器
         Birthday.register()         // 舰船下水日
         Roster.register()           // 碧蓝和谐名
-        AssetDataAccess.register()  // 资源数据库处理
         AI.register()               // 图灵数据库增删改查
         MyHelp.register()           // 帮助功能
         MirrorWorldGame.register()  // DLC_01
@@ -129,9 +129,13 @@ object PluginMain : KotlinPlugin(
         // 入群播报
         this.globalEventChannel().subscribeAlways<MemberJoinEvent> {
             val dbObject = SQLiteJDBC(resolveDataPath("User.db"))
-            val v = dbObject.selectOne("Policy", "group_id", groupId, 1)["GroupNotification"] as Int
+            val policy = dbObject.selectOne(
+                "Policy",
+                Triple("groupID", "=", "$groupId"),
+                "入群播报\nFile:PluginMain.kt\tLine:133"
+            ).run { UserPolicy(this) }
             dbObject.closeDB()
-            if (groupId in ActiveGroupList.user && v == 1)
+            if (groupId in ActiveGroupList.user && policy.groupNotification == 1)
                 group.sendMessage(
                     when (this) {
                         is MemberJoinEvent.Invite -> "${invitor.nameCardOrNick}邀请${member.nameCardOrNick}大佬加入群聊"
@@ -143,9 +147,13 @@ object PluginMain : KotlinPlugin(
         // 退群播报
         this.globalEventChannel().subscribeAlways<MemberLeaveEvent> {
             val dbObject = SQLiteJDBC(resolveDataPath("User.db"))
-            val v = dbObject.selectOne("Policy", "group_id", groupId, 1)["GroupNotification"] as Int
+            val policy = dbObject.selectOne(
+                "Policy",
+                Triple("groupID", "=", "$groupId"),
+                "退群播报\nFile:PluginMain.kt\tLine:151"
+            ).run { UserPolicy(this) }
             dbObject.closeDB()
-            if (groupId in ActiveGroupList.user && v == 1)
+            if (groupId in ActiveGroupList.user && policy.groupNotification == 1)
                 group.sendMessage(
                     when (this) {
                         is MemberLeaveEvent.Kick -> "哇啊,${member.nameCardOrNick}(${member.id})被${(operator ?: bot).nameCardOrNick}鲨掉惹"
@@ -160,27 +168,40 @@ object PluginMain : KotlinPlugin(
         }
         // 加群后添加信息
         this.globalEventChannel().subscribeAlways<BotJoinGroupEvent> {
-            val dbObject = SQLiteJDBC(resolveDataPath("User.db"))
-            dbObject.insert("Policy", arrayOf("group_id"), arrayOf("${it.groupId}"))
-            dbObject.insert("SubscribeInfo", arrayOf("group_id"), arrayOf("${it.groupId}"))
-            dbObject.insert("ACGImg", arrayOf("group_id"), arrayOf("${it.groupId}"))
-            dbObject.insert("Responsible", arrayOf("group_id"), arrayOf("${it.groupId}"))
-            dbObject.closeDB()
+            SQLiteJDBC(resolveDataPath("User.db")).apply {
+                insert("Policy", arrayOf("groupID"), arrayOf("${it.groupId}"), "加群数据录入:\nFile:PluginMain.kt\tLine:173")
+                insert(
+                    "SubscribeInfo",
+                    arrayOf("groupID"),
+                    arrayOf("${it.groupId}"),
+                    "加群数据录入:\nFile:PluginMain.Kt\tLine:174"
+                )
+                insert("ACGImg", arrayOf("groupID"), arrayOf("${it.groupId}"), "加群数据录入:\nFile:PluginMain.Kt\tLine:180")
+                insert(
+                    "Responsible",
+                    arrayOf("groupID"),
+                    arrayOf("${it.groupId}"),
+                    "加群数据录入:\nFile:PluginMain.Kt\tLine:181"
+                )
+            }.closeDB()
             ActiveGroupList.activationStatusUpdate(false)
             bot.getFriend(MySetting.AdminID)?.sendMessage("GroupName:${it.group.name}\nGroupID：${it.groupId}\nPASS")
         }
         // 退群清理
         this.globalEventChannel().subscribeAlways<BotLeaveEvent> {
             when (this) {
-                is BotLeaveEvent.Kick -> {
-                    val dbObject = SQLiteJDBC(resolveDataPath("User.db"))
-                    val pR = dbObject.selectOne("Responsible", "group_id", group.id, 1)
-                    dbObject.delete("Policy", "group_id", group.id.toString())
-                    dbObject.delete("SubscribeInfo", "group_id", group.id.toString())
-                    dbObject.delete("Responsible", "group_id", group.id.toString())
-                    dbObject.delete("ACGImg", "group_id", group.id.toString())
-                    dbObject.closeDB()
-                    logger.info { "###\n事件—被移出群:\n- 群ID：${group.id}\n- 相关群负责人：${pR["principal_ID"]}\n###" }
+                is BotLeaveEvent.Kick -> SQLiteJDBC(resolveDataPath("User.db")).run {
+                    val responsible = selectOne(
+                        "Responsible",
+                        Triple("groupID", "=", "${group.id}"),
+                        "退群清理:\nFile:PluginMain.Kt\tLine:195"
+                    ).let { UserResponsible(it) }
+                    delete("Policy", Pair("groupID", "${group.id}"), "退群数据清理:\nFile:PluginMain.Kt\tLine:200")
+                    delete("SubscribeInfo", Pair("groupID", "${group.id}"), "退群数据清理:\nFile:PluginMain.Kt\tLine:201")
+                    delete("Responsible", Pair("groupID", "${group.id}"), "退群数据清理:\nFile:PluginMain.Kt\tLine:202")
+                    delete("ACGImg", Pair("groupID", "${group.id}"), "退群数据清理:\nFile:PluginMain.Kt\tLine:203")
+                    closeDB()
+                    logger.info { "###\n事件—被移出群:\n- 群ID：${group.id}\n- 相关群负责人：${responsible.principalID}\n###" }
                     bot.getFriend(MySetting.AdminID)?.sendMessage("被移出群:${group.name}\nGroupID：${group.id}")
                 }
                 is BotLeaveEvent.Active -> {
@@ -194,7 +215,8 @@ object PluginMain : KotlinPlugin(
             }
         }
         // 戳一戳
-        this.globalEventChannel().subscribeAlways<NudgeEvent> {
+        this.globalEventChannel().subscribeAlways<NudgeEvent>
+        {
             if (this.target == bot && this.from != bot) {
                 runCatching {
                     if ((1..5).random() <= 4) {
@@ -215,12 +237,13 @@ object PluginMain : KotlinPlugin(
                         subject.sendMessage("戳回去")
                     }
                 }.onFailure {
-                    logger.info { "File:PluginMain.kt\tLine:322\n发送消息失败，在该群被禁言" }
+                    logger.info { "File:PluginMain.kt\tLine:241\n发送消息失败，在该群被禁言" }
                 }
             }
         }
         // 聊天触发
-        this.globalEventChannel().subscribeGroupMessages(priority = EventPriority.LOWEST) {
+        this.globalEventChannel().subscribeGroupMessages(priority = EventPriority.LOWEST)
+        {
             atBot {
                 if (group.botMuteRemaining > 0 || group.id !in ActiveGroupList.user) return@atBot
                 val filterMessageList: List<Message> = message.filter { it !is At }
@@ -249,15 +272,16 @@ object PluginMain : KotlinPlugin(
             atBot().not().invoke {
                 if (group.botMuteRemaining > 0 || group.id !in ActiveGroupList.user) return@invoke
                 val dbObject = SQLiteJDBC(resolveDataPath("User.db"))
-                val groupInfo = dbObject.selectOne("Policy", "group_id", group.id, 1)
+                val policy = dbObject.selectOne(
+                    "Policy",
+                    Triple("groupID", "=", "${group.id}"),
+                    "聊天触发:\nFile:PluginMain.Kt\tLine:276"
+                ).run { UserPolicy(this) }
                 dbObject.closeDB()
-
-                try {
-                    val numerator = groupInfo["TriggerProbability"] as Int
+                runCatching {
                     val v1 = (1..100).random()
-                    val v2 = if (groupInfo["ACGImgAllowed"] as Int == 1) (1..100).random() else 0
-                    //                PluginMain.logger.info { "不at执行这里,$v" }
-                    if (v1 <= numerator) AI.dialogue(subject, message.content.trim())
+                    val v2 = if (policy.acgImgAllowed == 1) (1..100).random() else 0
+                    if (v1 <= policy.triggerProbability) AI.dialogue(subject, message.content.trim())
                     if (v1 <= 99) return@invoke
 
                     val supply = when (v2) {
@@ -266,15 +290,8 @@ object PluginMain : KotlinPlugin(
                         in 20..46 -> 1
                         else -> 0
                     }
-                    if (supply > 0) {
-                        subject.sendMessage(AcgImage.getReplenishment(subject.id, supply))
-                    }
-                } catch (e: NullPointerException) {
-                    for (i in 0..10) {
-                        logger.debug { "问题复现：" }
-                        logger.debug { group.id.toString() }
-                    }
-                }
+                    if (supply > 0) subject.sendMessage(AcgImage.getReplenishment(subject.id, supply))
+                }.onFailure { logger.debug { "问题复现：${group.id}" } }
             }
         }
         // 常驻任务
@@ -301,10 +318,14 @@ object PluginMain : KotlinPlugin(
     private suspend inline fun dailyReminder() {
         logger.info { "执行任务：每日提醒" }
         val dbObject = SQLiteJDBC(resolveDataPath("User.db"))
-        val groupList = dbObject.select("Policy", "DailyReminderMode", 0, 5)
+        val policyList = dbObject.select(
+            "Policy",
+            Triple("DailyReminderMode", "=", "0"),
+            "每日提醒\nFile:PluginMain.kt\tLine:322"
+        ).run { List(this.size) { UserPolicy(this[it]) } }
         dbObject.closeDB()
         val script = mapOf(
-            1 to arrayListOf(
+            1 to arrayOf(
                 "Ciallo～(∠・ω< )⌒★今天是周一哦,今天开放的是「战术研修」「商船护送」，困难也记得打呢。",
                 "Ciallo～(∠・ω< )⌒★今天是周二哦,今天开放的是「战术研修」「海域突进」，困难也记得打呢。",
                 "Ciallo～(∠・ω< )⌒★今天是周三哦,今天开放的是「战术研修」「斩首行动」，困难也记得打呢。",
@@ -313,7 +334,7 @@ object PluginMain : KotlinPlugin(
                 "Ciallo～(∠・ω< )⌒★今天是周六哦,今天开放的是「战术研修」「斩首行动」，困难也记得打呢。",
                 "Ciallo～(∠・ω< )⌒★今天是周日哦,每日全部模式开放，每周两次的破交作战记得打哦，困难模式也别忘了。"
             ),
-            2 to arrayListOf(
+            2 to arrayOf(
                 "Ciallo～(∠・ω< )⌒★晚上好,Master,今天是周一, 今天周回本开放「弓阶修炼场」,「收集火种(枪杀)」。",
                 "Ciallo～(∠・ω< )⌒★晚上好,Master,今天是周二, 今天周回本开放「枪阶修炼场」,「收集火种(剑骑)」。",
                 "Ciallo～(∠・ω< )⌒★晚上好,Master,今天是周三, 今天周回本开放「狂阶修炼场」,「收集火种(弓术)」。",
@@ -323,22 +344,21 @@ object PluginMain : KotlinPlugin(
                 "Ciallo～(∠・ω< )⌒★晚上好,Master,今天是周日, 今天周回本开放「剑阶修炼场」,「收集火种(All)」。"
             )
         )
-        for (groupPolicy in groupList) {
-            val groupID = (groupPolicy["group_id"] as Int).toLong()
-            if (groupID !in ActiveGroupList.user) continue // 激活到期则跳过
+        for (groupPolicy in policyList) {
+            if (groupPolicy.groupID !in ActiveGroupList.user) continue // 激活到期则跳过
 
-            val group = Bot.getInstance(MySetting.BotID).getGroup(groupID)
+            val group = Bot.getInstance(MySetting.BotID).getGroup(groupPolicy.groupID)
             if (group == null || group.botMuteRemaining > 0) {
                 continue
             }
-            when (groupPolicy["DailyReminderMode"]) {
+            when (groupPolicy.dailyReminderMode) {
                 1 -> script[1]?.get(LocalDateTime.now().dayOfWeek.value - 1)?.let { group.sendMessage(it) }
                 2 -> script[2]?.get(LocalDateTime.now().dayOfWeek.value - 1)?.let { group.sendMessage(it) }
                 3 -> {
                     script[1]?.get(LocalDateTime.now().dayOfWeek.value - 1)?.let { group.sendMessage(it) }
                     script[2]?.get(LocalDateTime.now().dayOfWeek.value - 1)?.let { group.sendMessage(it) }
                 }
-                else -> logger.warning { "File:PluginMain.kt\tLine:242\n未知的模式" }
+                else -> logger.warning { "File:PluginMain.kt\tLine:362\n未知的模式" }
             }
         }
     }
@@ -351,44 +371,50 @@ object PluginMain : KotlinPlugin(
         if (time == 0) ActiveGroupList.activationStatusUpdate() // 更新激活状态
 
         val dbObject = SQLiteJDBC(resolveDataPath("AssetData.db"))
-        val scriptList = dbObject.select("script", "Hour", time, 1)
+        val scriptList = dbObject.select(
+            "Script",
+            Triple("hour", "=", "$time"),
+            "报时\nFile:PluginMain.kt\tLine:375"
+        ).run { List(this.size) { AssetDataScript(this[it]) } }
         dbObject.closeDB()
 
         val userDbObject = SQLiteJDBC(resolveDataPath("User.db"))
-        val groupList = if (time in MySetting.undisturbed) { // 免打扰模式判断
-            userDbObject.select("Policy", listOf("Undisturbed", "TellTimeMode"), listOf("1", "0"), "AND", 5)
-        } else userDbObject.select("Policy", "TellTimeMode", 0, 5)
-
+        val groupList = with(
+            if (time in MySetting.undisturbed) userDbObject.select(
+                "Policy",
+                Triple(arrayOf("undisturbed", "tellTimeMode"), Array(2) { "=" }, arrayOf("1", "0")),
+                "AND",
+                "报时\nFile:PluginMain.kt\tLine:384"
+            ) else userDbObject.select(
+                "Policy",
+                Triple("tellTimeMode", "=", "0"),
+                "报时\nFile:PluginMain.kt\tLine:389"
+            )
+        ) { List(this.size) { UserPolicy(this[it]) } }
         userDbObject.closeDB()
-        val script = mutableMapOf<Int, List<MutableMap<String?, Any?>>>()
+        val script = mutableMapOf<Int, List<AssetDataScript>>()
 
         for (groupPolicy in groupList) {
-            val groupID = (groupPolicy["group_id"] as Int).toLong()
-            if (groupID !in ActiveGroupList.user) continue // 激活到期则跳过
-
-            val group = Bot.getInstance(MySetting.BotID).getGroup(groupID)
+            if (groupPolicy.groupID !in ActiveGroupList.user) continue // 激活到期则跳过
+            val group = Bot.getInstance(MySetting.BotID).getGroup(groupPolicy.groupID)
             if (group == null || group.botMuteRemaining > 0) continue
-
-            val groupMode = groupPolicy["TellTimeMode"] as Int
-            if (groupMode == -1) {
+            if (groupPolicy.tellTimeMode == -1) {
                 group.sendMessage("现在${time}点咯")
                 continue
             }
 
-            if (script.containsKey(groupMode).not()) {
-                script[groupPolicy["TellTimeMode"] as Int] =
-                    scriptList.filter { it["mode"] == groupPolicy["TellTimeMode"] }
+            if (script.containsKey(groupPolicy.tellTimeMode).not()) {
+                script[groupPolicy.tellTimeMode] = scriptList.filter { it.mode == groupPolicy.tellTimeMode }
             }
-            val outScript = script[groupMode]?.random()?.get("content") as String
 
-            if (groupMode % 2 == 0) {      //偶数
+            val outScript = script[groupPolicy.tellTimeMode]?.random()?.content
+
+            if (groupPolicy.tellTimeMode % 2 == 0) {
                 val path = resolveDataPath("./报时语音/$outScript")
-                val audio = File("$path").toExternalResource().use {
-                    group.uploadAudio(it)
-                }
+                val audio = File("$path").toExternalResource().use { group.uploadAudio(it) }
                 audio.let { group.sendMessage(it) }
-            } else {                      //奇数
-                group.sendMessage(outScript)
+            } else {
+                outScript?.let { group.sendMessage(it) }
             }
         }
     }
@@ -396,17 +422,19 @@ object PluginMain : KotlinPlugin(
     /* 动态推送 */
     private suspend inline fun dynamicPush() {
         logger.info { "执行任务：动态推送" }
+        val time = LocalDateTime.now().hour
         for (list in MyPluginData.timeStampOfDynamic) {
             val dynamic = SendDynamic.getDynamic(list.key, 0, flag = true)
             if (dynamic.timestamp == 0L) continue
             val dbObject = SQLiteJDBC(resolveDataPath("User.db"))
             val groupList = MyPluginData.nameOfDynamic[list.key]?.let {
-                if (LocalDateTime.now().hour in MySetting.undisturbed) { // 免打扰模式判断
-                    dbObject.executeStatement(
-                        "SELECT * FROM Policy JOIN SubscribeInfo USING (group_id) " +
-                                "WHERE Policy.Undisturbed = false AND SubscribeInfo.${it} = true;"
+                with(
+                    if (time in MySetting.undisturbed) dbObject.executeQuerySQL(
+                        "SELECT * FROM Policy JOIN SubscribeInfo USING (groupID) WHERE Policy.undisturbed = false AND SubscribeInfo.${it} = true;",
+                        "动态推送\nFile:PluginMain.kt\tLine:433"
                     )
-                } else dbObject.select("SubscribeInfo", it, 1.0, 1)
+                    else dbObject.select("SubscribeInfo", Triple(it, "=", "1"), "动态推送\nFile:PluginMain.kt\tLine:437")
+                ) { List(this.size) { index -> UserSubscribeInfo(this[index]) } }
             }
             dbObject.closeDB()
 
@@ -415,85 +443,83 @@ object PluginMain : KotlinPlugin(
             val bot = Bot.getInstance(MySetting.BotID)
             val gList = mutableListOf<Contact>()
             groupList.forEach {
-                val groupID = (it["group_id"] as Int).toLong()
-                if (groupID in ActiveGroupList.user) { // 激活到期则跳过
-                    val g = bot.getGroup(groupID)
+                if (it.groupID in ActiveGroupList.user) { // 激活到期则跳过
+                    val g = bot.getGroup(it.groupID)
                     if ((g != null) && (g.botMuteRemaining <= 0)) gList.add(g)
                 }
             }
             val forwardMessage = dynamic.message2jpg().uploadAsImage(gList.random())
-
-            for (g in gList) {
-                runCatching {
-                    g.sendMessage(forwardMessage)
-                }.onFailure {
-                    logger.warning { "File:PluginMain.kt\tLine:418\nGroup:${g.id}\n${it.message}" }
-                }
-            }
+            gList.forEach { runCatching { it.sendMessage(forwardMessage) }.onFailure { err -> logger.warning { "File:PluginMain.kt\tLine:453\nGroup:${it.id}\n${err.message}" } } }
         }
     }
 
     private fun dataBastInit() {
-        val userDB = SQLiteJDBC(resolveDataPath("User.db"))
-        userDB.createTable(
-            """
+        SQLiteJDBC(resolveDataPath("User.db")).apply {
+            createTable(
+                """
                 CREATE TABLE "ACGImg" (
-                	"group_id"	NUMERIC NOT NULL UNIQUE,
-                	"score"	INTEGER NOT NULL DEFAULT 0,
-                	"date"	NUMERIC NOT NULL DEFAULT 0,
-                	PRIMARY KEY("group_id")
+                "groupID"	NUMERIC NOT NULL UNIQUE,
+                "score"	INTEGER NOT NULL DEFAULT 0,
+                "date"	NUMERIC NOT NULL DEFAULT 0,
+                PRIMARY KEY("groupID")
                 );
-            """.trimIndent()
-        )
-        userDB.createTable(
-            """
+                """.trimIndent(),
+                "初始化数据库\nFile:PluginMain.kt\tLine:459"
+            )
+            createTable(
+                """
                 CREATE TABLE "Policy" (
-                	"group_id"	NUMERIC NOT NULL UNIQUE,
-                	"TellTimeMode"	INTEGER NOT NULL DEFAULT 0,
-                	"DailyReminderMode"	INTEGER NOT NULL DEFAULT 0,
-                	"Teaching"	INTEGER NOT NULL DEFAULT 0,
-                	"TriggerProbability"	INTEGER NOT NULL DEFAULT 33,
-                	"ACGImgAllowed"	INTEGER NOT NULL DEFAULT 0,
-                    "Undisturbed"   INTEGER NOT NULL DEFAULT 0,
-                    "GroupNotification"   INTEGER NOT NULL DEFAULT 0
+                "groupID"	NUMERIC NOT NULL UNIQUE,
+                "tellTimeMode"	INTEGER NOT NULL DEFAULT 0,
+                "dailyReminderMode"	INTEGER NOT NULL DEFAULT 0,
+                "teaching"	INTEGER NOT NULL DEFAULT 0,
+                "triggerProbability"	INTEGER NOT NULL DEFAULT 33,
+                "acgImgAllowed"	INTEGER NOT NULL DEFAULT 0,
+                "undisturbed"	INTEGER NOT NULL DEFAULT 0,
+                "groupNotification"	INTEGER NOT NULL DEFAULT 0
                 );
-            """.trimIndent()
-        )
-        userDB.createTable(
-            """
+                """.trimIndent(),
+                "初始化数据库\nFile:PluginMain.kt\tLine:470"
+            )
+            createTable(
+                """
                 CREATE TABLE "Responsible" (
-                	"group_id"	NUMERIC NOT NULL UNIQUE,
-                	"principal_ID"	NUMERIC NOT NULL,
-                    "active"	NUMERIC NOT NULL
+                "groupID"	NUMERIC NOT NULL UNIQUE,
+                "principalID"	NUMERIC NOT NULL DEFAULT 0,
+                "active"	INTEGER NOT NULL DEFAULT 0,
+                PRIMARY KEY("groupID")
                 );
-            """.trimIndent()
-        )
-        userDB.createTable(
-            """
+                """.trimIndent(),
+                "初始化数据库\nFile:PluginMain.kt\tLine:485"
+            )
+            createTable(
+                """
                 CREATE TABLE "SubscribeInfo" (
-                	"group_id"	NUMERIC NOT NULL UNIQUE,
-                	"AzurLane"	INTEGER DEFAULT 0.0,
-                	"ArKnights"	INTEGER DEFAULT 0.0,
-                	"FateGrandOrder"	INTEGER DEFAULT 0.0,
-                	"GenShin"	INTEGER DEFAULT 0.0
+                "groupID"	NUMERIC NOT NULL UNIQUE,
+                "azurLane"	INTEGER DEFAULT 0.0,
+                "arKnights"	INTEGER DEFAULT 0.0,
+                "fateGrandOrder"	INTEGER DEFAULT 0.0,
+                "genShin"	INTEGER DEFAULT 0.0
                 );
-            """.trimIndent()
-        )
-        userDB.closeDB()
-        val aiDB = SQLiteJDBC(resolveDataPath("AI.db"))
-        aiDB.createTable(
-            """
+                """.trimIndent(),
+                "初始化数据库\nFile:PluginMain.kt\tLine:496"
+            )
+        }.closeDB()
+        SQLiteJDBC(resolveDataPath("AI.db")).apply {
+            createTable(
+                """
             CREATE TABLE "Corpus" (
-            	"ID"	INTEGER NOT NULL,
-            	"answer"	TEXT NOT NULL,
-            	"question"	TEXT NOT NULL,
-            	"keys"	TEXT NOT NULL,
-            	"fromGroup"	NUMERIC NOT NULL,
-            	PRIMARY KEY("ID" AUTOINCREMENT)
+            "id"	INTEGER NOT NULL UNIQUE,
+            "answer"	TEXT NOT NULL,
+            "question"	TEXT NOT NULL,
+            "keys"	TEXT NOT NULL,
+            "fromGroup"	INTEGER NOT NULL,
+            PRIMARY KEY("id" AUTOINCREMENT)
             );
-        """.trimIndent()
-        )
-        aiDB.closeDB()
+            """.trimIndent(),
+                "初始化数据库\nFile:PluginMain.kt\tLine:509"
+            )
+        }.closeDB()
         logger.info("初始化基础数据库完成")
         logger.warning("请自行检查 AssetData.db 是否存在于 Data 目录")
     }

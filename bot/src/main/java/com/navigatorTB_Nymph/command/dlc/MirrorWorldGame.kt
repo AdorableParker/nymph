@@ -1,5 +1,6 @@
 package com.navigatorTB_Nymph.command.dlc
 
+import com.navigatorTB_Nymph.data.AssetDataAzurLaneConstructTime
 import com.navigatorTB_Nymph.pluginConfig.MySetting
 import com.navigatorTB_Nymph.pluginData.ActiveGroupList
 import com.navigatorTB_Nymph.pluginMain.PluginMain
@@ -393,11 +394,12 @@ object MirrorWorldGame {
             return when ((0..1000).random()) {
                 in 0..25 -> {
                     val objDB = SQLiteJDBC(PluginMain.resolveDataPath("AssetData.db"))
-                    val s = objDB.executeStatement(
-                        "SELECT * FROM AzurLane_construct_time WHERE LimitedTime = 1.0;"
-                    ).random()
+                    val s = objDB.executeQuerySQL(
+                        "SELECT * FROM AzurLane_construct_time WHERE LimitedTime = 1.0;",
+                        "模拟建造\nFile:MirrorWorldGame.kt\tLine:396"
+                    ).random().run { AssetDataAzurLaneConstructTime(this) }
                     objDB.closeDB()
-                    "本次结果：\n船名：${s["OriginalName"]}[${s["Alias"]}]\t建造时间：${s["Time"]}"
+                    "本次结果：\n船名：${s.originalName}[${s.alias}]\t建造时间：${s.time}"
                 }
                 in 10..79 -> "本次结果：超稀有"
                 in 80..199 -> "本次结果：精锐"
@@ -414,11 +416,12 @@ object MirrorWorldGame {
                 else -> 3
             }
             val objDB = SQLiteJDBC(PluginMain.resolveDataPath("AssetData.db"))
-            val l = objDB.executeStatement(
-                "SELECT * FROM AzurLane_construct_time WHERE LimitedTime = 0.0 AND (nums - $level) % $mode == 0;"
-            ).random()
+            val l = objDB.executeQuerySQL(
+                "SELECT * FROM AzurLane_construct_time WHERE LimitedTime = 0.0 AND (nums - $level) % $mode == 0;",
+                "模拟建造\nFile:MirrorWorldGame.kt\tLine:418"
+            ).random().run { AssetDataAzurLaneConstructTime(this) }
             objDB.closeDB()
-            return "本次结果：\n船名：${l["OriginalName"]}[${l["Alias"]}]\t建造时间：${l["Time"]}"
+            return "本次结果：\n船名：${l.originalName}[${l.alias}]\t建造时间：${l.time}"
         }
     }
 }

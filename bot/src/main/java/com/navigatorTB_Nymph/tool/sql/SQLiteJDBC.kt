@@ -1,37 +1,43 @@
 package com.navigatorTB_Nymph.tool.sql
 
 import com.navigatorTB_Nymph.pluginMain.PluginMain
-import net.mamoe.mirai.utils.debug
+import net.mamoe.mirai.utils.error
 import net.mamoe.mirai.utils.warning
 import java.nio.file.Path
 import java.sql.Connection
 import java.sql.DriverManager
-import java.sql.ResultSet
-import java.sql.Statement
 
 class SQLiteJDBC(DbPath: Path) {
-    private var c: Connection? = null
+    private val connection: Connection? = runCatching {
+        DriverManager.getConnection("jdbc:sqlite:$DbPath")
+    }.onFailure {
+        PluginMain.logger.error { "申请数据库失败,异常信息:${it.message}" }
+    }.getOrNull()
 
-    init {
-        runCatching {
-            Class.forName("org.sqlite.JDBC")
-            c = DriverManager.getConnection("jdbc:sqlite:$DbPath")
-            c?.autoCommit = false
+    /**
+     * 用于执行非查询语句
+     */
+    private fun executeUpdateSQL(sql: String, log: String): Int {
+        if (connection == null) return -1
+        val statement = connection.createStatement()
+        return runCatching {
+            val r = statement.executeUpdate(sql)
+            statement.close()
+            r
         }.onFailure {
-            stmt?.close()
-            PluginMain.logger.warning { "File:SQLiteJBDC.kt\tLine:32\n${it.message}" }
-        }
+            statement.close()
+            PluginMain.logger.warning { "$log\n${it.message}" }
+            return -1
+        }.getOrDefault(-1)
     }
-
-    private var stmt: Statement? = null
 
     /**
      * 创建表
      * 以[sql]作为SQL语句创建表
      */
-    fun createTable(sql: String) {
-        if (executeSQL(sql) < 0) {
-            PluginMain.logger.warning { "File:SQLiteJBDC.kt\tLine:45\n执行SQL创建表操作异常" }
+    fun createTable(sql: String, log: String) {
+        if (executeUpdateSQL(sql, "File:SQLiteJBDC.kt\tLine:45") < 0) {
+            PluginMain.logger.warning { "$log\n执行SQL创建表操作异常" }
         }
     }
 
@@ -39,287 +45,168 @@ class SQLiteJDBC(DbPath: Path) {
      * 插入
      * 以[column]作为目标字段名，[value]作为目标值插入目标表[table]内
      */
-    fun insert(table: String, column: Array<String>, value: Array<String>) {
+    fun insert(table: String, column: Array<String>, value: Array<String>, log: String) {
         val sql = "INSERT INTO $table " +
                 "${column.joinToString(",", "(", ")")} VALUES " +
                 "${value.joinToString(",", "(", ")")};"
-        PluginMain.logger.debug { "File:SQLiteJBDC.kt\tLine:57\n$sql" }
-        if (executeSQL(sql) < 0) {
-            PluginMain.logger.warning { "File:SQLiteJBDC.kt\tLine:59\n执行SQL插入操作异常" }
+        if (executeUpdateSQL(sql, "File:SQLiteJBDC.kt\tLine:58") < 0) {
+            PluginMain.logger.warning { "$log\nSQL:$sql\n执行SQL插入操作异常" }
         }
     }
 
-
     /**
      * 更改
-     * 将目标表[table]内的所有记录中字段[column]的值等于[value]的记录的字段[key]的值更改为[data]
+     * 将目标表[table]内的所有记录中符合条件[limitWord]的记录更改为[newData]
      *
-     * UPDATE $table SET $Array.key = $Array.data WHERE $column = $value;
+     * UPDATE $table SET $Array.key = $Array.data WHERE $limitWord.A = $limitWord.B;
      **/
-    fun update(table: String, column: String, value: String, key: Array<String>, data: Array<String>) {
+    fun update(
+        table: String,
+        limitWord: Pair<String, String>,
+        newData: Pair<Array<String>, Array<String>>,
+        log: String
+    ) {
         val sql = "UPDATE $table SET " +
-                "${key.joinToString(",", "(", ")")} = " +
-                "${data.joinToString(",", "(", ")")} WHERE " +
-                "$column = $value;"
-        if (executeSQL(sql) < 0) {
-            PluginMain.logger.warning { "File:SQLiteJBDC.kt\tLine:76\n执行SQL更改操作异常" }
-        }
-    }
-
-    /**
-     * 更改
-     * 将目标表[table]内的所有记录中字段[column]的值等于[value]的记录的字段[key]的值更改为[data]
-     *
-     * UPDATE $table SET $key = $data WHERE $column = $value;
-     **/
-    fun update(table: String, column: String, value: Any, key: String, data: Any) {
-        val sql = "UPDATE $table SET $key = $data WHERE $column = $value;"
-        if (executeSQL(sql) < 0) {
-            PluginMain.logger.warning { "File:SQLiteJBDC.kt\tLine:89\n执行SQL更改操作异常" }
+                "${newData.first.joinToString(",", "(", ")")} = " +
+                "${newData.second.joinToString(",", "(", ")")} WHERE " +
+                "${limitWord.first} = ${limitWord.second};"
+        if (executeUpdateSQL(sql, "File:SQLiteJBDC.kt\tLine:74") < 0) {
+            PluginMain.logger.warning { "$log\nSQL:$sql\n执行SQL更改操作异常" }
         }
     }
 
     /**
      * 删除
-     * 删除目标表[table]内所有记录中字段[column]的值等于[value]的记录
+     * 删除目标表[table]内符合条件[limitWord]的记录
      */
-    fun delete(table: String, column: String, value: String) {
-        val sql = "DELETE FROM $table WHERE $column = $value;"
-        if (executeSQL(sql) < 0) {
-            PluginMain.logger.warning { "File:SQLiteJBDC.kt\tLine:100\n执行SQL删除操作异常" }
+    fun delete(table: String, limitWord: Pair<String, String>, log: String) {
+        val sql = "DELETE FROM $table WHERE ${limitWord.first} = ${limitWord.second};"
+        if (executeUpdateSQL(sql, "File:SQLiteJBDC.kt\tLine:93") < 0) {
+            PluginMain.logger.warning { "$log\nSQL:$sql\n执行SQL删除操作异常" }
         }
     }
 
-    fun delete(table: String, column: List<String>, value: List<String>, conjunction: String) {
-        val valueIterator = value.iterator()
-        val determiner: MutableList<String> = ArrayList()
-        column.forEach { determiner.add("$it = ${valueIterator.next()}") }
-        val sql = "DELETE FROM $table WHERE ${determiner.joinToString(" $conjunction ")};"
-        if (executeSQL(sql) < 0) {
-            PluginMain.logger.warning { "File:SQLiteJBDC.kt\tLine:110\n执行SQL删除操作异常" }
-        }
-    }
+//    fun delete(table: String, column: List<String>, value: List<String>, conjunction: String) {
+//        val valueIterator = value.iterator()
+//        val determiner: MutableList<String> = ArrayList()
+//        column.forEach { determiner.add("$it = ${valueIterator.next()}") }
+//        val sql = "DELETE FROM $table WHERE ${determiner.joinToString(" $conjunction ")};"
+//        if (executeSQL(sql) < 0) {
+//            PluginMain.logger.warning { "File:SQLiteJBDC.kt\tLine:110\n执行SQL删除操作异常" }
+//        }
+//    }
 
     /**
      * 单条返回操作
      */
-    fun selectOne(
-        table: String,  // 目标表名
-        column: String,  // 限制字段
-        value: Any,  // 限制值
-        mods: Int = 0
-    ): MutableMap<String?, Any?> {
-        val row: MutableMap<String?, Any?> = mutableMapOf()
-        val sql: String = when (mods) {
-            1 -> "SELECT * FROM '$table' WHERE $column = $value;"
-            2 -> "SELECT * FROM '$table' WHERE $column GLOB '*$value';"
-            3 -> "SELECT * FROM '$table' WHERE $column GLOB '$value*';"
-            4 -> "SELECT * FROM '$table' WHERE $column GLOB '*$value*';"
-            5 -> "SELECT * FROM '$table' WHERE $column != $value;"
-            else -> "SELECT * FROM '$table' WHERE $column = '$value';"
-        }
+    fun selectOne(table: String, limitWord: Triple<String, String, String>, log: String): MutableMap<String, Any?> {
+        val row = mutableMapOf<String, Any?>()
+        if (connection == null) return row
+        val statement = connection.createStatement()
         runCatching {
-            stmt = c?.createStatement()
-            val rs: ResultSet? =
-                stmt?.executeQuery(sql)
-            if (rs != null) {
-                val metadata = rs.metaData
-                val columnCount = metadata.columnCount
-                while (rs.next()) {
-                    for (i in 1..columnCount) {
-                        row[metadata.getColumnName(i)] = rs.getObject(i)
-                    }
-                }
-                rs.close()
-            }
-            stmt?.close()
-        }.onFailure {
-            stmt?.close()
-            PluginMain.logger.warning { "File:SQLiteJBDC.kt\tLine:148\n${it.message}" }
-        }
+            statement.executeQuery("SELECT * FROM $table WHERE ${limitWord.first} ${limitWord.second} ${limitWord.third};")
+                .apply {
+                    if (next()) (1..metaData.columnCount).forEach { row[metaData.getColumnName(it)] = getObject(it) }
+                }.close()
+        }.onFailure { PluginMain.logger.error { "$log\n${it.message}" } }
+        statement.close()
         return row
     }
 
-    fun selectRandom(table: String): MutableMap<String?, Any?> {
-        val row: MutableMap<String?, Any?> = mutableMapOf()
-        val sql = "SELECT * FROM $table ORDER BY RANDOM() LIMIT 1"
-        runCatching {
-            stmt = c?.createStatement()
-            val rs: ResultSet? = stmt?.executeQuery(sql)
-            if (rs != null) {
-                val metadata = rs.metaData
-                val columnCount = metadata.columnCount
-                while (rs.next()) {
-                    for (i in 1..columnCount) {
-                        row[metadata.getColumnName(i)] = rs.getObject(i)
-                    }
-                }
-                rs.close()
-            }
-            stmt?.close()
-        }.onFailure {
-            stmt?.close()
-            PluginMain.logger.warning { "File:SQLiteJBDC.kt\tLine:148\n${it.message}" }
-        }
-        return row
-    }
-
-
     /**
-     * 读取并返回目标表[table]内的所有记录中字段[column]
-     * 等于或包含[value]的所有数据 (不需要额外引号)
-     * [mods]参数决定匹配模式
-     * 0 -> 全等字符串
-     * 1 -> 不做处理
-     * 2 -> 尾部为value的字符串
-     * 3 -> 头部为value的字符串
-     * 4 -> 包含有value的字符串
-     * 5 -> 不等于value，value不做处理
-     */
-    fun select(
-        table: String,  // 目标表名
-        column: String,  // 限制字段
-        value: Any,  // 限制值
-        mods: Int = 0
-    ): MutableList<MutableMap<String?, Any?>> {
-        val resultList: MutableList<MutableMap<String?, Any?>> = ArrayList()
-
-        val sql: String = when (mods) {
-            1 -> "SELECT * FROM $table WHERE $column = $value;"
-            2 -> "SELECT * FROM $table WHERE $column GLOB '*$value';"
-            3 -> "SELECT * FROM $table WHERE $column GLOB '$value*';"
-            4 -> "SELECT * FROM $table WHERE $column GLOB '*$value*';"
-            5 -> "SELECT * FROM $table WHERE $column != $value;"
-            else -> "SELECT * FROM $table WHERE $column = '$value';"
-        }
-        runCatching {
-            stmt = c?.createStatement()
-            val rs: ResultSet? =
-                stmt?.executeQuery(sql)
-            if (rs != null) {
-                val metadata = rs.metaData
-                val columnCount = metadata.columnCount
-                while (rs.next()) {
-                    val row: MutableMap<String?, Any?> = mutableMapOf()
-                    for (i in 1..columnCount) {
-                        row[metadata.getColumnName(i)] = rs.getObject(i)
-                    }
-                    resultList.add(row)
-                }
-                rs.close()
-            }
-            stmt?.close()
-        }.onFailure {
-            stmt?.close()
-            PluginMain.logger.warning { "File:SQLiteJBDC.kt\tLine:199\n${it.message}" }
-        }
-        return resultList
-    }
-
-    /**
-     * 读取并返回目标表[table]内的所有记录中字段[column]
-     * 等于或包含[value]的所有数据
-     *
      * 多个条件之间使用连接词[conjunction]连接
-     * [mods]参数决定匹配模式
      * @param [table] 目标表名
-     * @param [column] 限制字段
-     * @param [value] 限制值(不需要额外引号)
+     * @param [limitWord] [key, infix ,value]
      * @param [conjunction] 连接词
-     * @param [mods] 匹配模式(0:全等字符串,1:不做处理,2:尾部为value的字符串,3:头部为value的字符串,4:包含有value的字符串,5:不等于value且value不做处理)
      */
-    fun select(
-        table: String,  // 目标表名
-        column: List<String>,  // 限制字段
-        value: List<String>,  // 限制值
-        conjunction: String,  // 连接词
-        mods: Int = 0  // 全等匹配
-    ): MutableList<MutableMap<String?, Any?>> {
-        val resultList: MutableList<MutableMap<String?, Any?>> = ArrayList()
-        val valueIterator = value.iterator()
-        val determiner: MutableList<String> = ArrayList()
-        when (mods) {
-            1 -> column.forEach { determiner.add("$it = ${valueIterator.next()}") }
-            2 -> column.forEach { determiner.add("$it GLOB '*${valueIterator.next()}'") }
-            3 -> column.forEach { determiner.add("$it GLOB '${valueIterator.next()}*'") }
-            4 -> column.forEach { determiner.add("$it GLOB '*${valueIterator.next()}*'") }
-            5 -> column.forEach { determiner.add("$it != ${valueIterator.next()}") }
-            else -> column.forEach { determiner.add("$it = '${valueIterator.next()}'") }
-        }
-        val sql = "SELECT * FROM $table WHERE ${determiner.joinToString(" $conjunction ")};"
+    fun selectOne(
+        table: String,
+        limitWord: Triple<Array<String>, Array<String>, Array<String>>,
+        conjunction: String,
+        log: String
+    ): MutableMap<String, Any?> {
+        val limit =
+            List(limitWord.first.size) { "${limitWord.first[it]} ${limitWord.second[it]} ${limitWord.third[it]}" }
+        val row = mutableMapOf<String, Any?>()
+        if (connection == null) return row
+        val statement = connection.createStatement()
         runCatching {
-            stmt = c?.createStatement()
-            val rs: ResultSet? = stmt?.executeQuery(sql)
-            if (rs != null) {
-                val metadata = rs.metaData
-                val columnCount = metadata.columnCount
-                while (rs.next()) {
-                    val row: MutableMap<String?, Any?> = mutableMapOf()
-                    for (i in 1..columnCount) {
-                        row[metadata.getColumnName(i)] = rs.getObject(i)
-                    }
-                    resultList.add(row)
-                }
-                rs.close()
-            }
-            stmt?.close()
-        }.onFailure {
-            stmt?.close()
-            PluginMain.logger.warning { "File:SQLiteJBDC.kt\tLine:252\n${it.message}" }
-        }
-        return resultList
+            statement.executeQuery("SELECT * FROM $table WHERE ${limit.joinToString(" $conjunction ")};").apply {
+                if (next()) (1..metaData.columnCount).forEach { row[metaData.getColumnName(it)] = getObject(it) }
+            }.close()
+        }.onFailure { PluginMain.logger.error { "$log\n${it.message}" } }
+        statement.close()
+        return row
+    }
+
+    fun selectRandom(table: String, log: String): MutableMap<String, Any?> {
+        val row = mutableMapOf<String, Any?>()
+        if (connection == null) return row
+        val statement = connection.createStatement()
+        runCatching {
+            statement.executeQuery("SELECT * FROM $table ORDER BY RANDOM() LIMIT 1").apply {
+                while (next()) (1..metaData.columnCount).forEach { row[metaData.getColumnName(it)] = getObject(it) }
+            }.close()
+        }.onFailure { PluginMain.logger.warning { "$log\n${it.message}" } }
+        statement.close()
+        return row
     }
 
     /**
-     * 执行给定的sql语句
+     * limitWord[key, infix ,value]
      */
-    fun executeStatement(sql: String): MutableList<MutableMap<String?, Any?>> {
-        val resultList: MutableList<MutableMap<String?, Any?>> = ArrayList()
-        kotlin.runCatching {
-            stmt = c?.createStatement()
-            val rs: ResultSet? = stmt?.executeQuery(sql)
-            if (rs != null) {
-                val metadata = rs.metaData
-                val columnCount = metadata.columnCount
-                while (rs.next()) {
-                    val row: MutableMap<String?, Any?> = mutableMapOf()
-                    for (i in 1..columnCount) {
-                        row[metadata.getColumnName(i)] = rs.getObject(i)
-                    }
-                    resultList.add(row)
-                }
-                rs.close()
-            }
-            stmt?.close()
-        }.onFailure {
-            stmt?.close()
-            PluginMain.logger.warning { "File:SQLiteJBDC.kt\tLine:277\n${it.message}" }
-        }
-        return resultList
+    fun select(
+        table: String,
+        limitWord: Triple<String, String, String>,
+        log: String
+    ): MutableList<MutableMap<String, Any?>> {
+        val sql = "SELECT * FROM $table WHERE ${limitWord.first} ${limitWord.second} ${limitWord.third};"
+        return executeQuerySQL(sql, "$log\nSQL:$sql\n执行SQL查询操作异常")
     }
 
+
+    /**
+     * 多个条件之间使用连接词[conjunction]连接
+     * @param [table] 目标表名
+     * @param [limitWord] [key, infix ,value]
+     * @param [conjunction] 连接词
+     */
+    fun select(
+        table: String,
+        limitWord: Triple<Array<String>, Array<String>, Array<String>>,
+        conjunction: String,
+        log: String
+    ): MutableList<MutableMap<String, Any?>> {
+        val limit =
+            List(limitWord.first.size) { "${limitWord.first[it]} ${limitWord.second[it]} ${limitWord.third[it]}" }
+        val sql = "SELECT * FROM $table WHERE ${limit.joinToString(" $conjunction ")};"
+        return executeQuerySQL(sql, "$log\nSQL:$sql\n执行SQL查询操作异常")
+    }
+
+    /**
+     * 执行给定的查询语句
+     */
+    fun executeQuerySQL(sql: String, log: String): MutableList<MutableMap<String, Any?>> {
+        val resultList: MutableList<MutableMap<String, Any?>> = ArrayList()
+        if (connection == null) return resultList
+        val statement = connection.createStatement()
+        runCatching {
+            statement.executeQuery(sql).apply {
+                while (next()) {
+                    val row = mutableMapOf<String, Any?>()
+                    (1..metaData.columnCount).forEach { row[metaData.getColumnName(it)] = getObject(it) }
+                    resultList.add(row)
+                }
+            }.close()
+        }.onFailure { PluginMain.logger.warning { "$log\n${it.message}" } }
+        statement.close()
+        return resultList
+    }
 
     /**
      * 关闭数据库
      */
     fun closeDB() {
-        c?.close()
-    }
-
-    /**
-     * 用于执行非查询语句
-     */
-    private fun executeSQL(sql: String): Int {
-        return runCatching {
-            stmt = c?.createStatement()
-            val r = stmt?.executeUpdate(sql)
-            stmt?.close()
-            c?.commit()
-            r ?: -1
-        }.onFailure {
-            stmt?.close()
-            PluginMain.logger.warning { "File:SQLiteJBDC.kt\tLine:306\n${it.message}" }
-            return -1
-        }.getOrDefault(-1)
+        connection?.close()
     }
 }
