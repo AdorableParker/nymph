@@ -47,7 +47,7 @@ object PluginMain : KotlinPlugin(
     JvmPluginDescription(
         id = "MCP.navigatorTB_Nymph",
         name = "navigatorTB",
-        version = "0.20.0"
+        version = "0.20.1"
     )
 ) {
     // 分词功能
@@ -77,6 +77,7 @@ object PluginMain : KotlinPlugin(
         ActiveGroupList.reload()
         Article.reload()
         PushBoxLevelMap.reload()
+        Class.forName("org.sqlite.JDBC")
 
         if (MyPluginData.initialization) {  // 首次启动初始化数据库
             dataBastInit()
@@ -382,12 +383,12 @@ object PluginMain : KotlinPlugin(
         val groupList = with(
             if (time in MySetting.undisturbed) userDbObject.select(
                 "Policy",
-                Triple(arrayOf("undisturbed", "tellTimeMode"), Array(2) { "=" }, arrayOf("1", "0")),
+                Triple(arrayOf("undisturbed", "tellTimeMode"), Array(2) { "!=" }, arrayOf("1", "0")),
                 "AND",
                 "报时\nFile:PluginMain.kt\tLine:384"
             ) else userDbObject.select(
                 "Policy",
-                Triple("tellTimeMode", "=", "0"),
+                Triple("tellTimeMode", "!=", "0"),
                 "报时\nFile:PluginMain.kt\tLine:389"
             )
         ) { List(this.size) { UserPolicy(this[it]) } }

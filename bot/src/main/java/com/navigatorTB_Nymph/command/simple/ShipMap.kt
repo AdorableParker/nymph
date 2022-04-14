@@ -47,7 +47,7 @@ object ShipMap : SimpleCommand(
     private fun nameToMap(index: String): String {
         val db = SQLiteJDBC(dataDir)
         val result = db.select(
-            "ship_map",
+            "ShipMap",
             Triple(arrayOf("originalName", "alias"), Array(2) { "GLOB" }, Array(2) { "*$index*" }),
             "OR",
             "打捞定位\nFile:ShipMap.kt\tLine:48"

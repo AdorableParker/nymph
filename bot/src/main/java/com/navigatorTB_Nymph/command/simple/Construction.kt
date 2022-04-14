@@ -46,7 +46,7 @@ object Construction : SimpleCommand(
     private fun timeToName(index: String): String {
         val db = SQLiteJDBC(dataDir)
         val result = db.select(
-            "AzurLane_construct_time",
+            "AzurLaneConstructTime",
             Triple("time", "GLOB", "'$index*'"),
             "建造时间\nFile:Construction.kt\tLine:48"
         ).run { List(size) { AssetDataAzurLaneConstructTime(this[it]) } }
@@ -79,8 +79,8 @@ object Construction : SimpleCommand(
     private fun nameToTime(index: String): String {
         val db = SQLiteJDBC(dataDir)
         val result = db.select(
-            "AzurLane_construct_time",
-            Triple(arrayOf("originalName", "alias"), Array(2) { "=" }, Array(2) { "'$index'" }),
+            "AzurLaneConstructTime",
+            Triple(arrayOf("originalName", "alias"), Array(2) { "GLOB" }, Array(2) { "'*$index*'" }),
             "OR",
             "建造时间\nFile:Construction.kt\tLine:81"
         ).run { List(size) { AssetDataAzurLaneConstructTime(this[it]) } }

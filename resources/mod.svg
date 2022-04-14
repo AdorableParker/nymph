@@ -1,0 +1,91 @@
+<svg width="280" height="335" xmlns="http://www.w3.org/2000/svg">
+    <g stroke="#ededed">
+        <rect fill="#ffffff" width="100%" height="100%" id="svg_0"/>
+    </g>
+    <g stroke="#ededed" fill="#ffffff">
+        <rect x="5" y="5" width="50" height="50" id="r_11"/>
+        <rect x="60" y="5" width="50" height="50" id="r_12"/>
+        <rect x="115" y="5" width="50" height="50" id="r_13"/>
+        <rect x="170" y="5" width="50" height="50" id="r_14"/>
+        <rect x="225" y="5" width="50" height="50" id="r_15"/>
+    </g>
+    <g stroke="#ededed" fill="#ffffff">
+        <rect x="5" y="60" width="50" height="50" id="r_21"/>
+        <rect x="60" y="60" width="50" height="50" id="r_22"/>
+        <rect x="115" y="60" width="50" height="50" id="r_23"/>
+        <rect x="170" y="60" width="50" height="50" id="r_24"/>
+        <rect x="225" y="60" width="50" height="50" id="r_25"/>
+    </g>
+    <g stroke="#ededed" fill="#ffffff">
+        <rect x="5" y="115" width="50" height="50" id="r_31"/>
+        <rect x="60" y="115" width="50" height="50" id="r_32"/>
+        <rect x="115" y="115" width="50" height="50" id="r_33"/>
+        <rect x="170" y="115" width="50" height="50" id="r_34"/>
+        <rect x="225" y="115" width="50" height="50" id="r_35"/>
+    </g>
+    <g stroke="#ededed" fill="#ffffff">
+        <rect x="5" y="170" width="50" height="50" id="r_41"/>
+        <rect x="60" y="170" width="50" height="50" id="r_42"/>
+        <rect x="115" y="170" width="50" height="50" id="r_43"/>
+        <rect x="170" y="170" width="50" height="50" id="r_44"/>
+        <rect x="225" y="170" width="50" height="50" id="r_45"/>
+    </g>
+    <g stroke="#ededed" fill="#ffffff">
+        <rect x="5" y="225" width="50" height="50" id="r_51"/>
+        <rect x="60" y="225" width="50" height="50" id="r_52"/>
+        <rect x="115" y="225" width="50" height="50" id="r_53"/>
+        <rect x="170" y="225" width="50" height="50" id="r_54"/>
+        <rect x="225" y="225" width="50" height="50" id="r_55"/>
+    </g>
+    <g stroke="#ededed" fill="#ffffff">
+        <rect x="5" y="280" width="50" height="50" id="r_61"/>
+        <rect x="60" y="280" width="50" height="50" id="r_62"/>
+        <rect x="115" y="280" width="50" height="50" id="r_63"/>
+        <rect x="170" y="280" width="50" height="50" id="r_64"/>
+        <rect x="225" y="280" width="50" height="50" id="r_65"/>
+    </g>
+    <g text-anchor="middle" stroke="#ededed" fill="#ffffff" font-family="Potra">
+        <g>
+            <text id="t_11" x="30" y="47.5" font-size="50"></text>
+            <text id="t_12" x="85" y="47.5" font-size="50"></text>
+            <text id="t_13" x="140" y="47.5" font-size="50"></text>
+            <text id="t_14" x="195" y="47.5" font-size="50"></text>
+            <text id="t_15" x="250" y="47.5" font-size="50"></text>
+        </g>
+        <g>
+            <text id="t_21" x="30" y="103.5" font-size="50"></text>
+            <text id="t_22" x="85" y="103.5" font-size="50"></text>
+            <text id="t_23" x="140" y="103.5" font-size="50"></text>
+            <text id="t_24" x="195" y="103.5" font-size="50"></text>
+            <text id="t_25" x="250" y="103.5" font-size="50"></text>
+        </g>
+        <g>
+            <text id="t_31" x="30" y="157.5" font-size="50"></text>
+            <text id="t_32" x="85" y="157.5" font-size="50"></text>
+            <text id="t_33" x="140" y="157.5" font-size="50"></text>
+            <text id="t_34" x="195" y="157.5" font-size="50"></text>
+            <text id="t_35" x="250" y="157.5" font-size="50"></text>
+        </g>
+        <g>
+            <text id="t_41" x="30" y="213.5" font-size="50"></text>
+            <text id="t_42" x="85" y="213.5" font-size="50"></text>
+            <text id="t_43" x="140" y="213.5" font-size="50"></text>
+            <text id="t_44" x="195" y="213.5" font-size="50"></text>
+            <text id="t_45" x="250" y="213.5" font-size="50"></text>
+        </g>
+        <g>
+            <text id="t_51" x="30" y="267.5" font-size="50"></text>
+            <text id="t_52" x="85" y="267.5" font-size="50"></text>
+            <text id="t_53" x="140" y="267.5" font-size="50"></text>
+            <text id="t_54" x="195" y="267.5" font-size="50"></text>
+            <text id="t_55" x="250" y="267.5" font-size="50"></text>
+        </g>
+        <g>
+            <text id="t_61" x="30" y="323.5" font-size="50"></text>
+            <text id="t_62" x="85" y="323.5" font-size="50"></text>
+            <text id="t_63" x="140" y="323.5" font-size="50"></text>
+            <text id="t_64" x="195" y="323.5" font-size="50"></text>
+            <text id="t_65" x="250" y="323.5" font-size="50"></text>
+        </g>
+    </g>
+</svg>

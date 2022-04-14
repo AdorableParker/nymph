@@ -30,7 +30,7 @@ object Wordle : SimpleCommand(
         }
 
         val dbObject = SQLiteJDBC(PluginMain.resolveDataPath("AssetData.db"))
-        val ctAn = AssetDataWordle(dbObject.selectRandom("wordle", "猜单词\nFile:Wordle.kt\tLine:32")).word
+        val ctAn = AssetDataWordle(dbObject.selectRandom("Wordle", "猜单词\nFile:Wordle.kt\tLine:32")).word
         dbObject.closeDB()
 
         val doc = GuessWord(ctAn)
@@ -51,7 +51,7 @@ object Wordle : SimpleCommand(
                 return
             }
             val dbObj = SQLiteJDBC(PluginMain.resolveDataPath("AssetData.db"))
-            val r = dbObj.selectOne("wordle", Triple("word", "=", "'$inStr'"), "猜单词\nFile:Wordle.kt\tLine:54").isEmpty()
+            val r = dbObj.selectOne("Wordle", Triple("word", "=", "'$inStr'"), "猜单词\nFile:Wordle.kt\tLine:54").isEmpty()
             dbObject.closeDB()
             if (r) {
                 sendMessage("有这样的单词吗?")

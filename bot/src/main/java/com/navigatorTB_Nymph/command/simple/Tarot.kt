@@ -57,7 +57,13 @@ object Tarot : SimpleCommand(
 
         val dbObject = SQLiteJDBC(PluginMain.resolveDataPath("AssetData.db"))
         val tarot =
-            AssetDataTarot(dbObject.selectOne("Tarot", Triple("brand", "=", "'brand'"), "每日塔罗\nFile:Tarot.kt\tLine:59"))
+            AssetDataTarot(
+                dbObject.selectOne(
+                    "Tarot",
+                    Triple("brand", "=", "'$brand'"),
+                    "每日塔罗\nFile:Tarot.kt\tLine:59"
+                )
+            )
         dbObject.closeDB()
         return when ((0..100).random(Random(seeds))) {
             in 0..50 -> mapOf(
