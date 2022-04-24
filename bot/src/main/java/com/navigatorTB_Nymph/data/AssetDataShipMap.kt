@@ -4,7 +4,7 @@ data class AssetDataShipMap(val map: MutableMap<String, Any?>) {
     val originalName: String by map
     val alias: String by map
     val rarity: String by map
-    val special: String by map
+    val special: String? by map
     val chapter1: Int by map
     val chapter2: Int by map
     val chapter3: Int by map

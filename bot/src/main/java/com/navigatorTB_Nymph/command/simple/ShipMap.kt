@@ -48,16 +48,18 @@ object ShipMap : SimpleCommand(
         val db = SQLiteJDBC(dataDir)
         val result = db.select(
             "ShipMap",
-            Triple(arrayOf("originalName", "alias"), Array(2) { "GLOB" }, Array(2) { "*$index*" }),
+            Triple(arrayOf("originalName", "alias"), Array(2) { "GLOB" }, Array(2) { "'*$index*'" }),
             "OR",
             "打捞定位\nFile:ShipMap.kt\tLine:48"
-        ).run { List(size) { AssetDataShipMap(this[it]) } }
-        db.closeDB()
-        if (result.isEmpty()) return "没有或尚未收录名字包含有 $index 的主线图可打捞舰船"
+        ).run {
+            db.closeDB()
+            if (size != 0) List(size) { AssetDataShipMap(this[it]) } else return "没有或尚未收录名字包含有 $index 的可打捞舰船"
+        }
+
         val report = mutableListOf("名字包含有 $index 的可打捞舰船有:")
         result.sortedWith(
             compareBy(
-                { it.special.length },
+                { it.special?.length },
                 { it.rarity.length },
                 { it.originalName.length },
                 { it.alias.length },
@@ -66,7 +68,7 @@ object ShipMap : SimpleCommand(
             )
         ).forEach {
             report.add("船名：${it.originalName}[${it.alias}]-${it.rarity}\t可打捞地点:")
-            if (it.special.isEmpty()) {
+            if (it.special.isNullOrEmpty()) {
                 var i = 1
                 arrayOf(
                     it.chapter1, it.chapter2, it.chapter3, it.chapter4, it.chapter5, it.chapter6, it.chapter7,
@@ -81,7 +83,7 @@ object ShipMap : SimpleCommand(
                         )
                     i++
                 }
-            } else report.add(it.special)
+            } else report.add(it.special!!)
         }
         return report.joinToString("\n")
     }
@@ -91,7 +93,7 @@ object ShipMap : SimpleCommand(
         val db = SQLiteJDBC(dataDir)
         val site = 1 shl coordinate[1].toInt() - 1
         val result = db.executeQuerySQL(
-            "SELECT * FROM ShipMap WHERE chapter$coordinate & $site = $site",
+            "SELECT * FROM ShipMap WHERE chapter${coordinate[0]} & $site = $site",
             "打捞定位\nFile:ShipMap.kt\tLine:93"
         ).run {
             List(size) { AssetDataShipMap(this[it]) }

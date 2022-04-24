@@ -1,11 +1,11 @@
 plugins {
-    id "net.mamoe.mirai-console" version "2.10.0" // mirai-console version
+    id "net.mamoe.mirai-console" version "2.10.1" // mirai-console version
     id "org.jetbrains.kotlin.jvm"
     id "org.jetbrains.kotlin.plugin.serialization" version '1.6.10'
 }
 
 mirai {
-    coreVersion = "2.10.0" // mirai-core version
+    coreVersion = "2.10.1" // mirai-core version
 }
 
 repositories {
@@ -15,10 +15,9 @@ repositories {
 
 dependencies {
 
-//    compileOnly('com.googlecode.sli4j:sli4j-slf4j-simple:2.0')
-    compileOnly('net.mamoe:mirai-core:2.10.0') // mirai-core 的 API
-    compileOnly('net.mamoe:mirai-console:2.10.0') // 后端
-    compileOnly('org.jetbrains.kotlin:kotlin-serialization:1.6.10')
+    compileOnly('net.mamoe:mirai-core:2.10.1') // mirai-core 的 API
+    compileOnly('net.mamoe:mirai-console:2.10.1') // 后端
+    compileOnly('org.jetbrains.kotlin:kotlin-serialization:1.6.20')
     compileOnly("org.jetbrains.kotlin:kotlin-stdlib:1.6.10")
 
 
@@ -30,5 +29,6 @@ dependencies {
     implementation('org.jsoup:jsoup:1.14.3')
     implementation('com.mayabot.mynlp:mynlp-all:3.2.2') // 在有更好的分词库之前保持版本
     implementation('org.xerial:sqlite-jdbc:3.36.0.3')
+//    implementation('com.googlecode.sli4j:sli4j-slf4j-simple:2.0')
 //    compileOnly('net.sourceforge.htmlunit:htmlunit:2.55.0')
 }

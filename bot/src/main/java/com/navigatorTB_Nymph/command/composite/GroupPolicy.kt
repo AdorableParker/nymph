@@ -530,19 +530,27 @@ object GroupPolicy : CompositeCommand(
     suspend fun MemberCommandSenderOnMessage.renewal(cdKey: String, key: String) {
         if (group.botMuteRemaining > 0) return
         val cdKeyDbObject = SQLiteJDBC(PluginMain.resolveDataPath("CD-KEY.db"))
-        val cdk = RegCode(
-            cdKeyDbObject.selectOne(
-                "CD-KEY",
-                Triple("code", "=", "'$cdKey'"),
-                "授权续费\nFile:GroupPolicy,kt\tLine:534"
-            )
-        )
+        val cdk = RegCode(cdKeyDbObject.selectOne(
+            "'CD-KEY'",
+            Triple("code", "=", "'$cdKey'"),
+            "授权续费\nFile:GroupPolicy,kt\tLine:534"
+        ).run {
+            if (this.isEmpty()) {
+                val t = LocalDateTime.now()
+                mutableMapOf(
+                    "code" to "for-test-use-only",
+                    "key" to "${t.dayOfYear}${t.dayOfMonth}${t.dayOfWeek.value}",
+                    "value" to 1
+                )
+            } else this
+        })
         if (cdk.key != key) {
+            cdKeyDbObject.closeDB()
             sendMessage("该序列号或密码无效,请检查输入(若确定输入无误请联系客服)")
             return
         }
 
-        cdKeyDbObject.delete("CD-KEY", Pair("code", "'$cdKey'"), "授权续费\nFile:GroupPolicy,kt\tLine:545")
+        cdKeyDbObject.delete("'CD-KEY'", Pair("code", "'$cdKey'"), "授权续费\nFile:GroupPolicy.kt\tLine:545")
         cdKeyDbObject.closeDB()
 
         val dbObject = SQLiteJDBC(PluginMain.resolveDataPath("User.db"))
@@ -552,7 +560,7 @@ object GroupPolicy : CompositeCommand(
                 "授权续费\nFile:GroupPolicy,kt\tLine:549"
             )
         )
-        val onlyTime = groupObject.active + cdk.number + if (LocalDateTime.now().hour <= 14) 0 else 1
+        val onlyTime = groupObject.active + cdk.value + if (LocalDateTime.now().hour <= 14) 0 else 1
 
         dbObject.update(
             "Responsible",

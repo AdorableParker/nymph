@@ -38,17 +38,17 @@ object AI : CompositeCommand(
         val keyWord = PluginMain.KEYWORD_SUMMARY.keyword(question, 1).let { if (it.size <= 0) question else it[0] }
 //        PluginMain.logger.debug { "*$question*\n$keyWord" }
         val dbObject = SQLiteJDBC(PluginMain.resolveDataPath("AI.db"))
-        val corpus = dbObject.executeQuerySQL(
+        dbObject.executeQuerySQL(
             "SELECT * FROM Corpus WHERE answer = $answer AND question = $question AND keys = $keyWord AND (fromGroup = ${group.id} OR fromGroup = 0);",
             "AI教学\nFile:AI.kt\tLine:41"
         ).run {
-            List(size) { AICorpus(this[it]) }
+            if (isNotEmpty()) {
+                dbObject.closeDB()
+                sendMessage("问题:$question\n回答:$answer\n该条目已存在，条目ID:${AICorpus(this[0]).id}")
+                return
+            }
         }
-        if (corpus.isNotEmpty()) {
-            sendMessage("问题:$question\n回答:$answer\n该条目已存在，条目ID:${corpus[0].id}")
-            dbObject.closeDB()
-            return
-        }
+
         dbObject.insert(
             "Corpus",
             arrayOf("answer", "question", "keys", "fromGroup"),
@@ -182,16 +182,19 @@ object AI : CompositeCommand(
         }
 
         val dbObject = SQLiteJDBC(PluginMain.resolveDataPath("AI.db"))
-        val entry = dbObject.select("Corpus", Triple("id", "=", "$EID"), "AI删除\nFile:AI.kt\tLine:185").run {
-            List(size) { AICorpus(this[it]) }
+        val entry = dbObject.selectOne("Corpus", Triple("id", "=", "$EID"), "AI删除\nFile:AI.kt\tLine:185").run {
+            if (isEmpty()) {
+                dbObject.closeDB()
+                sendMessage("没有该条目")
+                return
+            }
+            AICorpus(this)
         }
-        if (entry.isNotEmpty()) entry.forEach {
-            if (it.fromGroup == group.id || user.id == MySetting.AdminID) {
-                dbObject.delete("Corpus", Pair("id", "$EID"), "AI删除\nFile:AI.kt\tLine:190")
-                sendMessage("问题:${it.question}\n回答:${it.answer}\n条目ID:${it.id}\n条目已删除")
-                return dbObject.closeDB()
-            } else sendMessage("权限不足")
-        } else sendMessage("没有该条目")
+        if (entry.fromGroup == group.id || user.id == MySetting.AdminID) {
+            dbObject.delete("Corpus", Pair("id", "$EID"), "AI删除\nFile:AI.kt\tLine:190")
+            sendMessage("问题:${entry.question}\n回答:${entry.answer}\n条目ID:${entry.id}\n条目已删除")
+            return dbObject.closeDB()
+        } else sendMessage("权限不足")
         dbObject.closeDB()
     }
 

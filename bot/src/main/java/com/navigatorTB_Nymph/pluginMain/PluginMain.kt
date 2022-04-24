@@ -321,7 +321,7 @@ object PluginMain : KotlinPlugin(
         val dbObject = SQLiteJDBC(resolveDataPath("User.db"))
         val policyList = dbObject.select(
             "Policy",
-            Triple("DailyReminderMode", "=", "0"),
+            Triple("DailyReminderMode", "!=", "0"),
             "每日提醒\nFile:PluginMain.kt\tLine:322"
         ).run { List(this.size) { UserPolicy(this[it]) } }
         dbObject.closeDB()

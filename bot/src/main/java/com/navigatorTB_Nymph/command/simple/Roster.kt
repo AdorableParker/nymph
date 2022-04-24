@@ -43,7 +43,7 @@ object Roster : SimpleCommand(
         val dbObject = SQLiteJDBC(dataDir)
         val roster = dbObject.select(
             "Roster",
-            Triple(arrayOf("code", "name"), Array(2) { "GLOB" }, Array(2) { "*$treated*" }),
+            Triple(arrayOf("code", "name"), Array(2) { "GLOB" }, Array(2) { "'*$treated*'" }),
             "OR",
             "船名查询\nFile:Roster.kt\tLine:43"
         ).run { List(size) { AssetDataRoster(this[it]) } }
