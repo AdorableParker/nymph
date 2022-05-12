@@ -27,7 +27,7 @@ object AcgImage : SimpleCommand(
     description = "随机发送acg图片"
 ) {
     @Handler
-    suspend fun MemberCommandSenderOnMessage.main() {
+    suspend fun MemberCommandSenderOnMessage.main(tag: String? = null) {
         UsageStatistics.record(primaryName)
         if (group.botMuteRemaining > 0) return
         if (group.id !in ActiveGroupList.user) {
@@ -77,7 +77,7 @@ object AcgImage : SimpleCommand(
             return
         }
         runCatching {
-            sendMessage(getRandomImg(group))
+            sendMessage(getRandomImg(group, tag))
             dbObject.update(
                 "ACGImg",
                 Pair("groupID", "${group.id}"),
@@ -93,16 +93,19 @@ object AcgImage : SimpleCommand(
         MyPluginData.AcgImageRun.remove(group.id)
     }
 
-
-    private suspend fun getRandomImg(group: Group): Message {
-        val doc = Jsoup.connect("https://api.lolicon.app/setu/v2?r18=0&size=regular&proxy=${MySetting.proxy}")
-            .ignoreContentType(true)
-            .execute().body().toString()
+    private suspend fun getRandomImg(group: Group, tag: String?): Message {
+        val doc =
+            Jsoup.connect("https://api.lolicon.app/setu/v2?r18=0&size=regular&proxy=${MySetting.proxy}${if (tag != null) "&tag=$tag" else ""}")
+                .ignoreContentType(true)
+                .execute().body().toString()
 
         val jsonObj = Parser.default().parse(StringBuilder(doc)) as JsonObject
         val errorInfo = jsonObj.string("error")
         if (!errorInfo.isNullOrEmpty()) return PlainText(errorInfo)
-        val data = jsonObj.array<JsonObject>("data")?.get(0)
+        val data = jsonObj.array<JsonObject>("data")?.run {
+            if (isNotEmpty()) get(0) else null
+        }
+
         val url = data?.obj("urls")?.string("regular") ?: return PlainText("图片资源获取失败")
         return buildMessageChain {
             +"PID:${data.int("pid")}\n"         // 作品ID

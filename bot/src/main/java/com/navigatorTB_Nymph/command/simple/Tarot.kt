@@ -4,6 +4,8 @@ import com.navigatorTB_Nymph.data.AssetDataTarot
 import com.navigatorTB_Nymph.pluginData.ActiveGroupList
 import com.navigatorTB_Nymph.pluginData.UsageStatistics
 import com.navigatorTB_Nymph.pluginMain.PluginMain
+import com.navigatorTB_Nymph.tool.seed.Cycle
+import com.navigatorTB_Nymph.tool.seed.Seed
 import com.navigatorTB_Nymph.tool.sql.SQLiteJDBC
 import net.mamoe.mirai.console.command.CommandManager
 import net.mamoe.mirai.console.command.MemberCommandSenderOnMessage
@@ -11,8 +13,6 @@ import net.mamoe.mirai.console.command.SimpleCommand
 import net.mamoe.mirai.message.data.PlainText
 import net.mamoe.mirai.utils.ExternalResource.Companion.toExternalResource
 import java.io.File
-import java.time.LocalDateTime
-import kotlin.random.Random
 
 object Tarot : SimpleCommand(
     PluginMain, "DailyTarot", "每日塔罗",
@@ -41,11 +41,6 @@ object Tarot : SimpleCommand(
     }
 
     fun divineTarot(uid: Long): Map<String, String> {
-        val today = LocalDateTime.now()
-        var i = 1
-        while (uid / 10 * i <= 0) i *= 10
-        val seeds = (today.year * 1000L + today.dayOfYear) * i + uid
-
         val brand = listOf(
             "The Fool(愚者)",
             "The Magician(魔术师)", "The High Priestess(女祭司)", "The Empress(女王)", "The Emperor(皇帝)", "The Hierophant(教皇)",
@@ -53,7 +48,7 @@ object Tarot : SimpleCommand(
             "Justice(正义)", "The Hanged Man(倒吊人)", "Death(死神)", "Temperance(节制)", "The Devil(恶魔)",
             "The Tower(塔)", "The Star(星星)", "The Moon(月亮)", "The Sun(太阳)", "Judgement(审判)",
             "The World(世界)"
-        ).random(Random(seeds))
+        ).random(Seed.getSeed(uid, Cycle.Day))
 
         val dbObject = SQLiteJDBC(PluginMain.resolveDataPath("AssetData.db"))
         val tarot =
@@ -65,7 +60,7 @@ object Tarot : SimpleCommand(
                 )
             )
         dbObject.closeDB()
-        return when ((0..100).random(Random(seeds))) {
+        return when ((0..100).random(Seed.getSeed(uid, Cycle.Day))) {
             in 0..50 -> mapOf(
                 "side" to "判定！顺位-",
                 "Brand" to brand,

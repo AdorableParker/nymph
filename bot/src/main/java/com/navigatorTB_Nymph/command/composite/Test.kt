@@ -53,7 +53,12 @@ object Test : CompositeCommand(
             return
         }
         if (user.id == MySetting.AdminID) {
-            sendMessage("OK")
+            val cache = group.members.toMutableList()
+            cache.sortByDescending { it.lastSpeakTimestamp }
+            (if (cache.size >= 10) cache.subList(0, 10) else cache).forEach {
+                PluginMain.logger.info { "${it.nameCard}\t${it.lastSpeakTimestamp}" }
+            }
+
         } else sendMessage("权限不足")
     }
 }

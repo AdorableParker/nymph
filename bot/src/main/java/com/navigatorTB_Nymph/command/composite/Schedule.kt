@@ -4,6 +4,7 @@ package com.navigatorTB_Nymph.command.composite
 import com.navigatorTB_Nymph.data.Interval
 import com.navigatorTB_Nymph.pluginData.ActiveGroupList
 import com.navigatorTB_Nymph.pluginMain.PluginMain
+import com.navigatorTB_Nymph.tool.cronJob.CronJob
 import net.mamoe.mirai.console.command.CompositeCommand
 import net.mamoe.mirai.console.command.MemberCommandSenderOnMessage
 import net.mamoe.mirai.message.data.At
@@ -38,17 +39,17 @@ object Schedule : CompositeCommand(
         }
 
         when (content) {
-            "舰娘生日", "历史今天" -> PluginMain.CRON.addJob(startTime, Interval(0, 0, 0)) {
+            "舰娘生日", "历史今天" -> CronJob.addJob(startTime, Interval(0, 0, 0)) {
                 if (group.botMuteRemaining > 0) return@addJob
                 sendMessage(At(user))
                 birthday()
             }
-            "DailyTarot", "每日塔罗" -> PluginMain.CRON.addJob(startTime, Interval(0, 0, 0)) {
+            "DailyTarot", "每日塔罗" -> CronJob.addJob(startTime, Interval(0, 0, 0)) {
                 if (group.botMuteRemaining > 0) return@addJob
                 sendMessage(At(user))
                 tarot()
             }
-            else -> PluginMain.CRON.addJob(startTime, Interval(0, 0, 0)) {
+            else -> CronJob.addJob(startTime, Interval(0, 0, 0)) {
                 if (group.botMuteRemaining > 0) return@addJob
                 sendMessage(At(user) + PlainText(content))
             }
@@ -63,6 +64,6 @@ object Schedule : CompositeCommand(
             sendMessage("本群授权已到期,请续费后使用")
             return
         }
-        sendMessage(PluginMain.CRON.query(startTime))
+        sendMessage(CronJob.query(startTime))
     }
 }

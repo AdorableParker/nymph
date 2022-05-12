@@ -68,22 +68,21 @@ object ShipMap : SimpleCommand(
             )
         ).forEach {
             report.add("船名：${it.originalName}[${it.alias}]-${it.rarity}\t可打捞地点:")
-            if (it.special.isNullOrEmpty()) {
-                var i = 1
-                arrayOf(
-                    it.chapter1, it.chapter2, it.chapter3, it.chapter4, it.chapter5, it.chapter6, it.chapter7,
-                    it.chapter8, it.chapter9, it.chapter10, it.chapter11, it.chapter12, it.chapter13, it.chapter14
-                ).forEach { chapter ->
-                    if (chapter != 0)
-                        report.add(
-                            (if (chapter and 1 == 1) "$i-1\t" else "") +
-                                    (if (chapter and 2 == 2) "$i-2\t" else "") +
-                                    (if (chapter and 4 == 4) "$i-3\t" else "") +
-                                    if (chapter and 8 == 8) "$i-4\t" else ""
-                        )
-                    i++
-                }
-            } else report.add(it.special!!)
+            var i = 1
+            arrayOf(
+                it.chapter1, it.chapter2, it.chapter3, it.chapter4, it.chapter5, it.chapter6, it.chapter7,
+                it.chapter8, it.chapter9, it.chapter10, it.chapter11, it.chapter12, it.chapter13, it.chapter14
+            ).forEach { chapter ->
+                if (chapter != 0)
+                    report.add(
+                        (if (chapter and 1 == 1) "$i-1\t" else "") +
+                                (if (chapter and 2 == 2) "$i-2\t" else "") +
+                                (if (chapter and 4 == 4) "$i-3\t" else "") +
+                                if (chapter and 8 == 8) "$i-4\t" else ""
+                    )
+                i++
+            }
+            if (it.special.isNullOrEmpty().not()) report.add(it.special!!)
         }
         return report.joinToString("\n")
     }
