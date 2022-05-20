@@ -4,7 +4,7 @@ import com.navigatorTB_Nymph.pluginMain.PluginMain
 import com.navigatorTB_Nymph.tool.svg.BuildSVGTool
 import org.apache.batik.anim.dom.SVGDOMImplementation
 
-class Minesweeper() : BuildSVGTool(PluginMain.resolveDataPath("minesweeper.svg").toString()) {
+class Minesweeper() : BuildSVGTool(PluginMain.resolveDataPath("SVG_Template/minesweeper.svg").toString()) {
 
     private lateinit var mapAttribute: MinesweeperMapProperties         // 地图参数
     private val userMap by lazy { Array(mapAttribute.size) { true } }

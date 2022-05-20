@@ -11,7 +11,7 @@ class SQLiteJDBC(DbPath: Path) {
     private val connection: Connection? = runCatching {
         DriverManager.getConnection("jdbc:sqlite:$DbPath")
     }.onFailure {
-        PluginMain.logger.error { "申请数据库失败,异常信息:${it.message}" }
+        PluginMain.logger.error { "申请数据库失败,异常信息:\n${it.message}" }
     }.getOrNull()
 
     /**

@@ -4,7 +4,7 @@ import com.navigatorTB_Nymph.pluginMain.PluginMain
 import com.navigatorTB_Nymph.tool.svg.BuildSVGTool
 import org.apache.batik.anim.dom.SVGDOMImplementation
 
-class SignInSVG : BuildSVGTool(PluginMain.resolveDataPath("signIn.svg").toString()) {
+class SignInSVG : BuildSVGTool(PluginMain.resolveDataPath("SVG_Template/signIn.svg").toString()) {
     fun runBeta(
         oneWord: Pair<String, String>,
         tarot: Map<String, String>,

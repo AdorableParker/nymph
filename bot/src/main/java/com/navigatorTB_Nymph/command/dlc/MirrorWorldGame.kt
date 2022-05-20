@@ -1,6 +1,7 @@
 package com.navigatorTB_Nymph.command.dlc
 
 import com.navigatorTB_Nymph.data.AssetDataAzurLaneConstructTime
+import com.navigatorTB_Nymph.game.simulateCardDraw.AzleBuild
 import com.navigatorTB_Nymph.pluginConfig.MySetting
 import com.navigatorTB_Nymph.pluginData.ActiveGroupList
 import com.navigatorTB_Nymph.pluginMain.PluginMain
@@ -10,6 +11,8 @@ import net.mamoe.mirai.console.command.*
 import net.mamoe.mirai.console.command.CommandManager.INSTANCE.register
 import net.mamoe.mirai.console.command.CommandManager.INSTANCE.unregister
 import net.mamoe.mirai.contact.User
+import net.mamoe.mirai.message.data.PlainText
+import net.mamoe.mirai.utils.ExternalResource.Companion.uploadAsImage
 
 object MirrorWorldGame {
 
@@ -358,70 +361,78 @@ object MirrorWorldGame {
             """.trimIndent()
 
         @Handler
-        suspend fun MemberCommandSenderOnMessage.main(mode: String) {
+        suspend fun MemberCommandSenderOnMessage.main(mode: String, cunt: Int) {
             if (group.botMuteRemaining > 0) return
             if (group.id !in ActiveGroupList.user) {
                 sendMessage("本群授权已到期,请续费后使用")
+                return
+            }
+            if (cunt !in 1..10) {
+                sendMessage("建造次数应为 [1, 10] 区间内")
                 return
             }
 
             val message = if (PluginMain.DLC_MirrorWorld) {
                 when (mode) {
                     "限" -> {
-                        val r1 = MirrorWorld(this).heavyPool()
-                        r1.ifBlank { limit() }
+                        val r1 = MirrorWorld(this).heavyPool(cunt)
+                        if (r1.isBlank()) limit(cunt).draw().uploadAsImage(group) else PlainText(r1)
                     }
                     "轻" -> {
-                        val r1 = MirrorWorld(this).lightPool()
-                        r1.ifBlank { build(20) }
+                        val r1 = MirrorWorld(this).lightPool(cunt)
+                        if (r1.isBlank()) build(20, cunt).draw().uploadAsImage(group) else PlainText(r1)
                     }
                     "重" -> {
-                        val r1 = MirrorWorld(this).heavyPool()
-                        r1.ifBlank { build(30) }
+                        val r1 = MirrorWorld(this).heavyPool(cunt)
+                        if (r1.isBlank()) build(30, cunt).draw().uploadAsImage(group) else PlainText(r1)
                     }
                     "特" -> {
-                        val r1 = MirrorWorld(this).heavyPool()
-                        r1.ifBlank { build(50) }
+                        val r1 = MirrorWorld(this).heavyPool(cunt)
+                        if (r1.isBlank()) build(50, cunt).draw().uploadAsImage(group) else PlainText(r1)
                     }
-                    else -> "未知模式"
+                    else -> PlainText("未知模式")
                 }
-            } else "缺少依赖DLC"
+            } else PlainText("缺少依赖DLC")
             sendMessage(message)
         }
 
 
-        private fun limit(): String {
-            return when ((0..1000).random()) {
-                in 0..25 -> {
-                    val objDB = SQLiteJDBC(PluginMain.resolveDataPath("AssetData.db"))
-                    val s = objDB.executeQuerySQL(
-                        "SELECT * FROM AzurLane_construct_time WHERE LimitedTime = 1.0;",
-                        "模拟建造\nFile:MirrorWorldGame.kt\tLine:396"
-                    ).random().run { AssetDataAzurLaneConstructTime(this) }
-                    objDB.closeDB()
-                    "本次结果：\n船名：${s.originalName}[${s.alias}]\t建造时间：${s.time}"
+        private fun limit(cunt: Int): AzleBuild {
+            val objDB = SQLiteJDBC(PluginMain.resolveDataPath("AssetData.db"))
+            val rL = List(cunt) {
+                val sql = when ((1..1000).random()) {
+                    in 1..20 -> "SELECT * FROM AzurLane_construct_time WHERE LimitedTime = 1.0;"
+                    in 21..89 -> "SELECT * FROM AzurLane_construct_time WHERE LimitedTime = 0.0 AND nums % 10 == 0;"
+                    in 90..206 -> "SELECT * FROM AzurLane_construct_time WHERE LimitedTime = 0.0 AND (nums - 1) % 10 == 0;"
+                    in 207..706 -> "SELECT * FROM AzurLane_construct_time WHERE LimitedTime = 0.0 AND (nums - 2) % 10 == 0;"
+                    else -> "SELECT * FROM AzurLane_construct_time WHERE LimitedTime = 0.0 AND (nums - 3) % 10 == 0;"
                 }
-                in 10..79 -> "本次结果：超稀有"
-                in 80..199 -> "本次结果：精锐"
-                in 200..459 -> "本次结果：稀有"
-                else -> "本次结果：普通"
+                objDB.executeQuerySQL(sql, "模拟建造\nFile:MirrorWorldGame.kt\tLine:418").random().run {
+                    AssetDataAzurLaneConstructTime(this)
+                }
             }
+            objDB.closeDB()
+            return AzleBuild(cunt).drawCard(rL)
         }
 
-        private fun build(mode: Int): String {
-            val level = when ((1..100).random()) {
-                in 1..7 -> 0
-                in 8..19 -> 1
-                in 20..45 -> 2
-                else -> 3
-            }
+        private fun build(mode: Int, cunt: Int): AzleBuild {
             val objDB = SQLiteJDBC(PluginMain.resolveDataPath("AssetData.db"))
-            val l = objDB.executeQuerySQL(
-                "SELECT * FROM AzurLane_construct_time WHERE LimitedTime = 0.0 AND (nums - $level) % $mode == 0;",
-                "模拟建造\nFile:MirrorWorldGame.kt\tLine:418"
-            ).random().run { AssetDataAzurLaneConstructTime(this) }
+            val rL = List(cunt) {
+                val level = when ((1..100).random()) {
+                    in 1..7 -> 0
+                    in 8..19 -> 1
+                    in 20..45 -> 2
+                    else -> 3
+                }
+                objDB.executeQuerySQL(
+                    "SELECT * FROM AzurLane_construct_time WHERE LimitedTime = 0.0 AND (nums - $level) % $mode == 0;",
+                    "模拟建造\nFile:MirrorWorldGame.kt\tLine:418"
+                ).random().run { AssetDataAzurLaneConstructTime(this) }
+            }
             objDB.closeDB()
-            return "本次结果：\n船名：${l.originalName}[${l.alias}]\t建造时间：${l.time}"
+
+            return AzleBuild(cunt).drawCard(rL)
+//            return "本次结果：\n船名：${l.originalName}[${l.alias}]\t建造时间：${l.time}"
         }
     }
 }

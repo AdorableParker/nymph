@@ -6,9 +6,14 @@ import com.navigatorTB_Nymph.pluginConfig.MySetting.SauceNAOKey
 import com.navigatorTB_Nymph.pluginData.ActiveGroupList
 import com.navigatorTB_Nymph.pluginData.UsageStatistics
 import com.navigatorTB_Nymph.pluginMain.PluginMain
+import kotlinx.coroutines.withTimeoutOrNull
 import net.mamoe.mirai.console.command.CommandManager
 import net.mamoe.mirai.console.command.MemberCommandSenderOnMessage
 import net.mamoe.mirai.console.command.SimpleCommand
+import net.mamoe.mirai.event.EventPriority
+import net.mamoe.mirai.event.GlobalEventChannel
+import net.mamoe.mirai.event.events.GroupMessageEvent
+import net.mamoe.mirai.event.syncFromEvent
 import net.mamoe.mirai.message.data.Image
 import net.mamoe.mirai.message.data.Image.Key.queryUrl
 import net.mamoe.mirai.utils.info
@@ -117,6 +122,23 @@ object SauceNAO : SimpleCommand(
         } else {
             sendMessage("应该不会运行到这里，如果看见这句话请联系管理员")
         }
+    }
+
+    @Handler
+    suspend fun MemberCommandSenderOnMessage.main() {
+        if (group.botMuteRemaining > 0) return
+        if (group.id !in ActiveGroupList.user) {
+            sendMessage("本群授权已到期,请续费后使用")
+            return
+        }
+        val image = withTimeoutOrNull(60_000) {
+            GlobalEventChannel.syncFromEvent<GroupMessageEvent, Image>(EventPriority.MONITOR) {
+                if (user == it.sender) it.message[Image] else null
+            }
+        }
+
+        if (image != null) main(image) else sendMessage("运行超时,搜图失败")
+
     }
 
     private fun getJSON(img: String): String? {

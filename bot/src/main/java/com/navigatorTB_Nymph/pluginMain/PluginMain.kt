@@ -46,7 +46,7 @@ import java.time.LocalDateTime
 
 object PluginMain : KotlinPlugin(
     JvmPluginDescription(
-        id = "MCP.navigatorTB_Nymph", name = "navigatorTB", version = "0.20.1"
+        id = "MCP.navigatorTB_Nymph", name = "navigatorTB", version = "0.21.0"
     )
 ) {
     // 分词功能
@@ -98,13 +98,13 @@ object PluginMain : KotlinPlugin(
         Wordle.register()           // 猜单词
         PushBoxGame.register()      // 推箱子
         GroupWife.register()        // 群老婆
+        ASoulArticle.register()     // 小作文
         RollDice.register()         // 简易骰娘
         AutoBanned.register()       // 自助禁言
         Duel.register()             // 禁言决斗
         TraceMoe.register()         // 以图搜番
         AcgImage.register()         // 随机图片
         Construction.register()     // 建造时间
-        ASoulArticle.register()     // 小作文
         ShipMap.register()          // 打捞地图
         SendDynamic.register()      // 动态查询
         WikiAzurLane.register()     // 碧蓝Wiki
@@ -407,8 +407,8 @@ object PluginMain : KotlinPlugin(
         logger.info { "执行任务：动态推送" }
         val time = LocalDateTime.now().hour
         for (list in MyPluginData.timeStampOfDynamic) {
-            val dynamic = SendDynamic.getDynamic(list.key, 0, flag = true)
-            if (dynamic.timestamp == 0L) continue
+            val dynamicInfo = SendDynamic.getDynamic(list.key, 0, flag = true)
+            if (dynamicInfo.timestamp == 0L) continue
             val dbObject = SQLiteJDBC(resolveDataPath("User.db"))
             val groupList = MyPluginData.nameOfDynamic[list.key]?.let {
                 with(
@@ -431,7 +431,9 @@ object PluginMain : KotlinPlugin(
                     if ((g != null) && (g.botMuteRemaining <= 0)) gList.add(g)
                 }
             }
-            val forwardMessage = dynamic.message2jpg().uploadAsImage(gList.random())
+            val dynamic = Dynamic(dynamicInfo)
+            dynamic.layoutDynamic()
+            val forwardMessage = dynamic.draw().uploadAsImage(gList.random())
             gList.forEach { runCatching { it.sendMessage(forwardMessage) }.onFailure { err -> logger.warning { "File:PluginMain.kt\tLine:453\nGroup:${it.id}\n${err.message}" } } }
         }
     }

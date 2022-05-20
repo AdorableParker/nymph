@@ -1,4 +1,23 @@
-<svg width="280" height="335" xmlns="http://www.w3.org/2000/svg">
-    <rect width="100%" height="100%" fill="#000"/>
-    <path d="M5 5 C4,5,7"/>
+<svg xmlns:xlink="http://www.w3.org/1999/xlink" id="root" width="1080" height="600" xmlns="http://www.w3.org/2000/svg">
+    <rect width="100%" height="100%" fill="#fff"/>
+    <image id="face" x="5" y="5" width="50" height="50"
+           xlink:href="face.png"
+           style="mask: url(#faceMask)"/>
+    <text id="name" x="68" y="28" fill="#fb7299" font-size="16">这里本应有名字
+        <tspan id="time" x="68" dy="20" fill="#99a2aa" font-size="13">2022-5-16 17:05</tspan>
+    </text>
+    <defs>
+        <mask id="faceMask" x="0" y="0">
+            <circle cx="30" cy="30" r="25" fill="#fff"/>
+        </mask>
+
+
+    </defs>
+    <g fill="#FFF" font-size="14">
+        <text id="content" x="68" y="55" fill="#000">
+        </text>
+    </g>
+    <g id="imageList">
+    </g>
 </svg>
+

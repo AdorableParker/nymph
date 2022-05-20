@@ -32,7 +32,7 @@ object SignIn : SimpleCommand(
             group.sendImage(
                 SignInSVG().runBeta(
                     oneWord, tarot, 365 - LocalDateTime.now().dayOfYear,
-                    MirrorWorld(this).pay((1..20).random())
+                    MirrorWorld(this).pay((1..20).random(), (0..2).random())
                 ).draw()
             )
         } else {

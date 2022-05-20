@@ -1,0 +1,54 @@
+<svg xmlns:xlink="http://www.w3.org/1999/xlink" id="root" width="1158" height="540" xmlns="http://www.w3.org/2000/svg">
+    <image id="azleback" width="1158" height="540"
+           xlink:href="D:\Program Files (x86)\MiraiProject\nymph\resources\azleback.jpg"/>
+    <defs>
+        <mask id="cardMask">
+            <g fill="#fff">
+                <rect id="rect_1" height="160" width="113" x="239" y="102" rx="5"/>
+                <rect id="rect_2" height="160" width="113" x="369" y="102" rx="5"/>
+                <rect id="rect_3" height="160" width="113" x="499" y="102" rx="5"/>
+                <rect id="rect_4" height="160" width="113" x="629" y="102" rx="5"/>
+                <rect id="rect_5" height="160" width="113" x="759" y="102" rx="5"/>
+                <rect id="rect_6" height="160" width="113" x="289" y="277" rx="5"/>
+                <rect id="rect_7" height="160" width="113" x="419" y="277" rx="5"/>
+                <rect id="rect_8" height="160" width="113" x="549" y="277" rx="5"/>
+                <rect id="rect_9" height="160" width="113" x="679" y="277" rx="5"/>
+                <rect id="rect_10" height="160" width="113" x="809" y="277" rx="5"/>
+            </g>
+        </mask>
+    </defs>
+    <!-- <g fill="#000" text-anchor="middle">
+            <text id="text_1"  x="335" y="185">name</text>
+            <text id="text_2"  x="465" y="185">name</text>
+            <text id="text_3"  x="595" y="185">name</text>
+            <text id="text_4"  x="725" y="185">name</text>
+            <text id="text_5"  x="855" y="185">name</text>
+            <text id="text_6"  x="385" y="360">name</text>
+            <text id="text_7"  x="515" y="360">name</text>
+            <text id="text_8"  x="645" y="360">name</text>
+            <text id="text_9"  x="775" y="360">name</text>
+            <text id="text_10"  x="905" y="360">name</text>
+        </g> -->
+    <g style="mask: url(#cardMask)">
+        <image id="card_0" height="160" width="120" x="235" y="102"
+               xlink:href="C:\Users\jetpi\Pictures\素材\images\玛莉萝丝.png"/>
+        <image id="card_1" height="160" width="120" x="365" y="102"
+               xlink:href="C:\Users\jetpi\Pictures\素材\images\穗香.png"/>
+        <image id="card_2" height="160" width="120" x="495" y="102"
+               xlink:href="C:\Users\jetpi\Pictures\素材\images\贝尔法斯特.png"/>
+        <image id="card_3" height="160" width="120" x="625" y="102"
+               xlink:href="C:\Users\jetpi\Pictures\素材\images\厌战.png"/>
+        <image id="card_4" height="160" width="120" x="755" y="102"
+               xlink:href="C:\Users\jetpi\Pictures\素材\images\穗香.png"/>
+        <image id="card_5" height="160" width="120" x="285" y="277"
+               xlink:href="C:\Users\jetpi\Pictures\素材\images\穗香.png"/>
+        <image id="card_6" height="160" width="120" x="415" y="277"
+               xlink:href="C:\Users\jetpi\Pictures\素材\images\玛莉萝丝.png"/>
+        <image id="card_7" height="160" width="120" x="545" y="277"
+               xlink:href="C:\Users\jetpi\Pictures\素材\images\贝尔法斯特.png"/>
+        <image id="card_8" height="160" width="120" x="675" y="277"
+               xlink:href="C:\Users\jetpi\Pictures\素材\images\玛莉萝丝.png"/>
+        <image id="card_9" height="160" width="120" x="805" y="277"
+               xlink:href="C:\Users\jetpi\Pictures\素材\images\企业.png"/>
+    </g>
+</svg>
