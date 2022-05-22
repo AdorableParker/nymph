@@ -11,26 +11,27 @@
 PRG="$0"
 # Need this for relative symlinks.
 while [ -h "$PRG" ] ; do
-    ls=`ls -ld "$PRG"`
-    link=`expr "$ls" : '.*-> \(.*\)$'`
+    ls=$(ls -ld "$PRG")
+    link=$(expr "$ls" : '.*-> \(.*\)$')
     if expr "$link" : '/.*' > /dev/null; then
         PRG="$link"
     else
         PRG=`dirname "$PRG"`"/$link"
     fi
 done
+# shellcheck disable=SC2006
 SAVED="`pwd`"
-cd "`dirname \"$PRG\"`/" >/dev/null
-APP_HOME="`pwd -P`"
-cd "$SAVED" >/dev/null
+cd "$(dirname \""$PRG"\")/" >/dev/null || exit
+APP_HOME="$(pwd -P)"
+cd "$SAVED" >/dev/null || exit
 
 APP_NAME="Gradle"
-APP_BASE_NAME=`basename "$0"`
+APP_BASE_NAME=$(basename "$0")
 
-# Add default JVM options here. You can also use JAVA_OPTS and GRADLE_OPTS to pass JVM options to this script.
+# 在此处添加默认 JVM 选项。 您还可以使用 JAVA_OPTS 和 GRADLE_OPTS 将 JVM 选项传递给此脚本.
 DEFAULT_JVM_OPTS=""
 
-# Use the maximum available, or set MAX_FD != -1 to use that value.
+# 使用可用的最大值，或设置 MAX_FD != -1 以使用该值。
 MAX_FD="maximum"
 
 warn () {
@@ -75,32 +76,32 @@ if [ -n "$JAVA_HOME" ] ; then
         JAVACMD="$JAVA_HOME/bin/java"
     fi
     if [ ! -x "$JAVACMD" ] ; then
-        die "ERROR: JAVA_HOME is set to an invalid directory: $JAVA_HOME
+        die "错误：JAVA_HOME 设置为无效目录： $JAVA_HOME
 
-Please set the JAVA_HOME variable in your environment to match the
-location of your Java installation."
+请在您的环境中设置 JAVA_HOME 变量以匹配
+Java 安装的位置。"
     fi
 else
     JAVACMD="java"
-    which java >/dev/null 2>&1 || die "ERROR: JAVA_HOME is not set and no 'java' command could be found in your PATH.
+    which java >/dev/null 2>&1 || die "错误：未设置 JAVA_HOME 并且在您的 PATH 中找不到“java”命令.
 
-Please set the JAVA_HOME variable in your environment to match the
-location of your Java installation."
+请在您的环境中设置 JAVA_HOME 变量以匹配
+Java 安装位置."
 fi
 
 # Increase the maximum file descriptors if we can.
 if [ "$cygwin" = "false" -a "$darwin" = "false" -a "$nonstop" = "false" ] ; then
-    MAX_FD_LIMIT=`ulimit -H -n`
+    MAX_FD_LIMIT=$(ulimit -H -n)
     if [ $? -eq 0 ] ; then
         if [ "$MAX_FD" = "maximum" -o "$MAX_FD" = "max" ] ; then
             MAX_FD="$MAX_FD_LIMIT"
         fi
         ulimit -n $MAX_FD
         if [ $? -ne 0 ] ; then
-            warn "Could not set maximum file descriptor limit: $MAX_FD"
+            warn "无法设置最大文件描述符限制： $MAX_FD"
         fi
     else
-        warn "Could not query maximum file descriptor limit: $MAX_FD_LIMIT"
+        warn "无法查询最大文件描述符限制：$MAX_FD_LIMIT"
     fi
 fi
 
@@ -111,12 +112,12 @@ fi
 
 # For Cygwin, switch paths to Windows format before running java
 if $cygwin ; then
-    APP_HOME=`cygpath --path --mixed "$APP_HOME"`
-    CLASSPATH=`cygpath --path --mixed "$CLASSPATH"`
-    JAVACMD=`cygpath --unix "$JAVACMD"`
+    APP_HOME=$(cygpath --path --mixed "$APP_HOME")
+    CLASSPATH=$(cygpath --path --mixed "$CLASSPATH")
+    JAVACMD=$(cygpath --unix "$JAVACMD")
 
     # We build the pattern for arguments to be converted via cygpath
-    ROOTDIRSRAW=`find -L / -maxdepth 1 -mindepth 1 -type d 2>/dev/null`
+    ROOTDIRSRAW=$(find -L / -maxdepth 1 -mindepth 1 -type d 2>/dev/null)
     SEP=""
     for dir in $ROOTDIRSRAW ; do
         ROOTDIRS="$ROOTDIRS$SEP$dir"
@@ -130,8 +131,8 @@ if $cygwin ; then
     # Now convert the arguments - kludge to limit ourselves to /bin/sh
     i=0
     for arg in "$@" ; do
-        CHECK=`echo "$arg"|egrep -c "$OURCYGPATTERN" -`
-        CHECK2=`echo "$arg"|egrep -c "^-"`                                 ### Determine if an option
+        CHECK=$(echo "$arg"|egrep -c "$OURCYGPATTERN" -)
+        CHECK2=$(echo "$arg"|egrep -c "^-")                                 ### Determine if an option
 
         if [ $CHECK -ne 0 ] && [ $CHECK2 -eq 0 ] ; then                    ### Added a condition
             eval `echo args$i`=`cygpath --path --ignore --mixed "$arg"`
@@ -166,7 +167,7 @@ eval set -- $DEFAULT_JVM_OPTS $JAVA_OPTS $GRADLE_OPTS "\"-Dorg.gradle.appname=$A
 
 # by default we should be in the correct project dir, but when run from Finder on Mac, the cwd is wrong
 if [ "$(uname)" = "Darwin" ] && [ "$HOME" = "$PWD" ]; then
-  cd "$(dirname "$0")"
+  cd "$(dirname "$0")" || exit
 fi
 
 exec "$JAVACMD" "$@"
