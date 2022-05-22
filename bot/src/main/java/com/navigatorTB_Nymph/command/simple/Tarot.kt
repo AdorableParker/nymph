@@ -31,7 +31,7 @@ object Tarot : SimpleCommand(
 
         val r = divineTarot(user.id)
         r["ImgPath"]?.let { path ->
-            File(PluginMain.resolveDataPath(path).toString()).toExternalResource().use {
+            File(PluginMain.resolveDataPath("SVG_Template/$path").toString()).toExternalResource().use {
                 sendMessage(
                     PlainText("${r["side"]}${r["Brand"]}\n牌面含义关键词:${r["word"]}") + group.uploadImage(it)
                 )

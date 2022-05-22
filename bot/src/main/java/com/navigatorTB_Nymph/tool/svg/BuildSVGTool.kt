@@ -18,7 +18,6 @@ open class BuildSVGTool(mod: String) {
         return SAXSVGDocumentFactory(parser).createDocument(mod)
     }
 
-
     fun draw(): ByteArrayInputStream {
         val input = TranscoderInput(doc)
         val outputStream = ByteArrayOutputStream()
@@ -28,5 +27,4 @@ open class BuildSVGTool(mod: String) {
         outputStream.close()
         return ByteArrayInputStream(outputStream.toByteArray())
     }
-
 }

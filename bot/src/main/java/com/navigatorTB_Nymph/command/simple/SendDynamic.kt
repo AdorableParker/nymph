@@ -2,9 +2,9 @@ package com.navigatorTB_Nymph.command.simple
 
 import com.beust.klaxon.JsonObject
 import com.beust.klaxon.Parser
-import com.navigatorTB_Nymph.data.Dynamic
 import com.navigatorTB_Nymph.data.DynamicInfo
 import com.navigatorTB_Nymph.data.Picture
+import com.navigatorTB_Nymph.miscellaneous.Dynamic
 import com.navigatorTB_Nymph.pluginConfig.MySetting.DynamicNameList
 import com.navigatorTB_Nymph.pluginData.ActiveGroupList
 import com.navigatorTB_Nymph.pluginData.MyPluginData

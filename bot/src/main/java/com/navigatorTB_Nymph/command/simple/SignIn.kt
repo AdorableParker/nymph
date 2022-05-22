@@ -1,11 +1,11 @@
 package com.navigatorTB_Nymph.command.simple
 
+import com.navigatorTB_Nymph.command.dlc.mirrorWorld.GameMain
 import com.navigatorTB_Nymph.command.simple.OneWord.hitokoto
 import com.navigatorTB_Nymph.command.simple.Tarot.divineTarot
 import com.navigatorTB_Nymph.game.signIn.SignInSVG
 import com.navigatorTB_Nymph.pluginData.ActiveGroupList
 import com.navigatorTB_Nymph.pluginMain.PluginMain
-import com.nymph_TB_DLC.MirrorWorld
 import net.mamoe.mirai.console.command.CommandManager
 import net.mamoe.mirai.console.command.MemberCommandSenderOnMessage
 import net.mamoe.mirai.console.command.SimpleCommand
@@ -32,7 +32,7 @@ object SignIn : SimpleCommand(
             group.sendImage(
                 SignInSVG().runBeta(
                     oneWord, tarot, 365 - LocalDateTime.now().dayOfYear,
-                    MirrorWorld(this).pay((1..20).random(), (0..2).random())
+                    GameMain(this).pay((1..20).random(), (0..2).random())
                 ).draw()
             )
         } else {

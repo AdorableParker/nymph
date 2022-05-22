@@ -1,23 +1,26 @@
-<svg xmlns:xlink="http://www.w3.org/1999/xlink" id="root" width="1080" height="600" xmlns="http://www.w3.org/2000/svg">
-    <rect width="100%" height="100%" fill="#fff"/>
-    <image id="face" x="5" y="5" width="50" height="50"
-           xlink:href="face.png"
-           style="mask: url(#faceMask)"/>
-    <text id="name" x="68" y="28" fill="#fb7299" font-size="16">这里本应有名字
-        <tspan id="time" x="68" dy="20" fill="#99a2aa" font-size="13">2022-5-16 17:05</tspan>
-    </text>
+<svg xmlns:xlink="http://www.w3.org/1999/xlink" id="root" width="830"
+     height="600"
+     xmlns="http://www.w3.org/2000/svg"
+>
+    <rect x="0" y="0" width="100%" height="100%" fill="#d1e9fb"/>
     <defs>
         <mask id="faceMask" x="0" y="0">
             <circle cx="30" cy="30" r="25" fill="#fff"/>
         </mask>
-
-
     </defs>
-    <g fill="#FFF" font-size="14">
-        <text id="content" x="68" y="55" fill="#000">
+    <image id="face" x="5" y="5" width="50" height="50"
+           xlink:href="face.png"
+           style="mask: url(#faceMask)"/>
+    <rect id="backdrop" x="65" y="5" width="700" height="21" rx="4" fill="#fff"/>
+    <!-- height = 21*n + 50 -->
+    <g font-family="EqualWidth500">
+        <text x="68" y="28" fill="#fb7299" font-size="16">
+            <tspan id="name">这里本应有名字</tspan>
+            <tspan id="time" x="68" dy="20" fill="#99a2aa" font-size="13">2022-5-16 17:05</tspan>
+        </text>
+        <text id="content" x="68" y="50" font-size="14" fill="#222222">
         </text>
     </g>
     <g id="imageList">
     </g>
 </svg>
-

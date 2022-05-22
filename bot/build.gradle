@@ -1,7 +1,7 @@
 plugins {
     id "net.mamoe.mirai-console" version "2.11.0" // mirai-console version
     id "org.jetbrains.kotlin.jvm"
-    id "org.jetbrains.kotlin.plugin.serialization" version '1.6.10'
+    id 'org.jetbrains.kotlin.plugin.serialization' version '1.6.10'
 }
 
 mirai {
@@ -25,13 +25,12 @@ dependencies {
 
     implementation('org.apache.xmlgraphics:batik-all:1.14')
     implementation('org.apache.xmlgraphics:batik-swing:1.14')
-    implementation("org.apache.logging.log4j:log4j-core:2.17.2")
+
+//    implementation("org.apache.logging.log4j:log4j-core:2.17.2")
 
     implementation('com.beust:klaxon:5.5')
     implementation('org.jsoup:jsoup:1.14.3')
     implementation('com.mayabot.mynlp:mynlp-all:3.2.2') // 在有更好的分词库之前保持版本
     implementation('org.xerial:sqlite-jdbc:3.36.0.3')
-
-//    implementation('com.googlecode.sli4j:sli4j-slf4j-simple:2.0')
 //    compileOnly('net.sourceforge.htmlunit:htmlunit:2.55.0')
 }

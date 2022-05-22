@@ -96,9 +96,9 @@ object Music : SimpleCommand(
         val songList = jsonObj.obj("data")?.obj("song")?.array<JsonObject>("list")
         if (songList.isNullOrEmpty()) return PlainText("搜索结果列表为空")
 
-        for(song in songList){
+        for (song in songList) {
             val musicURL = queryRealUrl(song.string("songmid").toString())    // 获取歌曲URL
-            if (isExistent(musicURL)){
+            if (isExistent(musicURL)) {
                 return MusicInfo(
                     MusicKind.QQMusic,
                     song.string("songname").toString(),
