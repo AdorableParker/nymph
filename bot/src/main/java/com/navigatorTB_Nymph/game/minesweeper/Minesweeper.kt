@@ -4,8 +4,7 @@ import com.navigatorTB_Nymph.pluginMain.PluginMain
 import com.navigatorTB_Nymph.tool.svg.BuildSVGTool
 import org.apache.batik.anim.dom.SVGDOMImplementation
 
-class Minesweeper() : BuildSVGTool(PluginMain.resolveDataPath("SVG_Template/minesweeper.svg").toString()) {
-
+class Minesweeper() : BuildSVGTool(PluginMain.resolveDataPath("SVG_Template/minesweeper.svg")) {
     private lateinit var mapAttribute: MinesweeperMapProperties         // 地图参数
     private val userMap by lazy { Array(mapAttribute.size) { true } }
     private val minesMap by lazy { mineLayer(mapAttribute) }
@@ -104,14 +103,14 @@ class Minesweeper() : BuildSVGTool(PluginMain.resolveDataPath("SVG_Template/mine
             }
             9 -> { //雷
                 val u = doc.createElementNS(SVGDOMImplementation.SVG_NAMESPACE_URI, "use")
-                u.setAttributeNS("http://www.w3.org/1999/xlink", "href", "#mines")
+                u.setAttributeNS(namespaceURI, "href", "#mines")
                 u.setAttribute("x", "${5 + 55 * x}")
                 u.setAttribute("y", "${5 + 55 * y}")
                 doc.getElementById("board").appendChild(u)
             }
             10 -> { // 插旗
                 val u = doc.createElementNS(SVGDOMImplementation.SVG_NAMESPACE_URI, "use")
-                u.setAttributeNS("http://www.w3.org/1999/xlink", "href", "#flag")
+                u.setAttributeNS(namespaceURI, "href", "#flag")
                 u.setAttribute("x", "${5 + 55 * x}")
                 u.setAttribute("y", "${5 + 55 * y}")
                 u.setAttribute("id", "f_${x}_$y")

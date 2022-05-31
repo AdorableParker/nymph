@@ -7,8 +7,7 @@ import com.navigatorTB_Nymph.tool.svg.BuildSVGTool
 import org.apache.batik.anim.dom.SVGDOMImplementation
 
 class PushBox(private val level: Int) :
-    BuildSVGTool(PluginMain.resolveDataPath("SVG_Template/pushBox.svg").toString()) {
-
+    BuildSVGTool(PluginMain.resolveDataPath("SVG_Template/pushBox.svg")) {
     private lateinit var reachableLocation: MutableSet<Int>
 
     private var manPosition = 0
@@ -175,6 +174,7 @@ class PushBox(private val level: Int) :
         generateMap()
         upDataReachableLocation()
     }
+
 
 //    fun debug() {
 //        reachableLocation.forEach {

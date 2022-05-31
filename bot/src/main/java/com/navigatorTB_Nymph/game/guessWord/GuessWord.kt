@@ -3,8 +3,7 @@ package com.navigatorTB_Nymph.game.guessWord
 import com.navigatorTB_Nymph.pluginMain.PluginMain
 import com.navigatorTB_Nymph.tool.svg.BuildSVGTool
 
-class GuessWord(private val ctAn: String) :
-    BuildSVGTool(PluginMain.resolveDataPath("SVG_Template/wordle.svg").toString()) {
+class GuessWord(private val ctAn: String) : BuildSVGTool(PluginMain.resolveDataPath("SVG_Template/wordle.svg")) {
     fun runBeta(line: Int, inStr: String): Boolean {
         var v = 0
         for (i in 0..4) {

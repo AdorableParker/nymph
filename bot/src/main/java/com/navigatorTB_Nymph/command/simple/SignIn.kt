@@ -28,15 +28,16 @@ object SignIn : SimpleCommand(
         val oneWord = hitokoto(18)
         val tarot = divineTarot(user.id)
 
-        if (PluginMain.DLC_MirrorWorld) {
-            group.sendImage(
-                SignInSVG().runBeta(
-                    oneWord, tarot, 365 - LocalDateTime.now().dayOfYear,
-                    GameMain(this).pay((1..20).random(), (0..2).random())
-                ).draw()
-            )
-        } else {
-            group.sendImage(SignInSVG().runBeta(oneWord, tarot, 365 - LocalDateTime.now().dayOfYear).draw())
-        }
+        group.sendImage(
+            SignInSVG().runBeta(
+                oneWord,
+                tarot,
+                365 - LocalDateTime.now().dayOfYear,
+                GameMain(this).pay(
+                    (1..20).random(),
+                    (0..3).random()
+                )
+            ).draw()
+        )
     }
 }

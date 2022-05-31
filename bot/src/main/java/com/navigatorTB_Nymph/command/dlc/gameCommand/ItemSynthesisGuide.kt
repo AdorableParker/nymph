@@ -19,23 +19,17 @@ object ItemSynthesisGuide : SimpleCommand(
             sendMessage("本群授权已到期,请续费后使用")
             return
         }
+        sendMessage(GameMain(this).alchemyGuide())
 
-        if (PluginMain.DLC_MirrorWorld)
-            sendMessage(GameMain(this).alchemyGuide())
-        else sendMessage("缺少依赖DLC")
     }
 
     @Handler
     suspend fun GroupTempCommandSenderOnMessage.main() {
-        if (PluginMain.DLC_MirrorWorld)
-            sendMessage(GameMain(this).alchemyGuide())
-        else sendMessage("缺少依赖DLC")
+        sendMessage(GameMain(this).alchemyGuide())
     }
 
     @Handler
     suspend fun FriendCommandSenderOnMessage.main() {
-        if (PluginMain.DLC_MirrorWorld)
-            sendMessage(GameMain(this).alchemyGuide())
-        else sendMessage("缺少依赖DLC")
+        sendMessage(GameMain(this).alchemyGuide())
     }
 }

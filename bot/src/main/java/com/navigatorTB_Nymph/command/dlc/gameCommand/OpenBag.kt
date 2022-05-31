@@ -19,9 +19,8 @@ object OpenBag : SimpleCommand(
             return
         }
 
-        if (PluginMain.DLC_MirrorWorld) {
-            sendMessage(GameMain(this).openBag())
-        } else sendMessage("缺少依赖DLC")
+        sendMessage(GameMain(this).openBag())
+
     }
 }
 

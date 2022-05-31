@@ -26,77 +26,80 @@ object SimulateConstruction : SimpleCommand(
         """.trimIndent()
 
     @Handler
-    suspend fun MemberCommandSenderOnMessage.main(mode: String, cunt: Int) {
+    suspend fun MemberCommandSenderOnMessage.main(mode: String, count: Int) {
         if (group.botMuteRemaining > 0) return
         if (group.id !in ActiveGroupList.user) {
             sendMessage("本群授权已到期,请续费后使用")
             return
         }
-        if (cunt !in 1..10) {
+        if (count !in 1..10) {
             sendMessage("建造次数应为 [1, 10] 区间内")
             return
         }
 
-        val message = if (PluginMain.DLC_MirrorWorld) {
-            when (mode) {
-                "限" -> {
-                    val r1 = GameMain(this).heavyPool(cunt)
-                    if (r1.isBlank()) limit(cunt).draw().uploadAsImage(group) else PlainText(r1)
-                }
-                "轻" -> {
-                    val r1 = GameMain(this).lightPool(cunt)
-                    if (r1.isBlank()) build(20, cunt).draw().uploadAsImage(group) else PlainText(r1)
-                }
-                "重" -> {
-                    val r1 = GameMain(this).heavyPool(cunt)
-                    if (r1.isBlank()) build(30, cunt).draw().uploadAsImage(group) else PlainText(r1)
-                }
-                "特" -> {
-                    val r1 = GameMain(this).heavyPool(cunt)
-                    if (r1.isBlank()) build(50, cunt).draw().uploadAsImage(group) else PlainText(r1)
-                }
-                else -> PlainText("未知模式")
+        when (mode) {
+            "轻" -> {
+                val r1 = GameMain(this).lightPool(count)
+                if (r1.isBlank()) build(1000, count).draw().uploadAsImage(group) else PlainText(r1)
             }
-        } else PlainText("缺少依赖DLC")
-        sendMessage(message)
+            "重" -> {
+                val r1 = GameMain(this).heavyPool(count)
+                if (r1.isBlank()) build(100, count).draw().uploadAsImage(group) else PlainText(r1)
+            }
+            "特" -> {
+                val r1 = GameMain(this).heavyPool(count)
+                if (r1.isBlank()) build(10, count).draw().uploadAsImage(group) else PlainText(r1)
+            }
+            "限" -> {
+                val r1 = GameMain(this).heavyPool(count)
+                if (r1.isBlank()) limit(count).draw().uploadAsImage(group) else PlainText(r1)
+            }
+            else -> PlainText("未知模式")
+        }.let { sendMessage(it) }
     }
 
-
-    private fun limit(cunt: Int): AzleBuild {
+    /*
+        switch_1 = {"轻型舰": 1000, "重型舰": 100, "特型舰": 10, "限定舰": 1}
+        switch_2 = ("传奇", "超稀有", "精锐", "稀有", "普通","无")
+     */
+    private fun limit(count: Int): AzleBuild {
         val objDB = SQLiteJDBC(PluginMain.resolveDataPath("AssetData.db"))
-        val rL = List(cunt) {
-            val sql = when ((1..1000).random()) {
-                in 1..20 -> "SELECT * FROM AzurLaneConstructTime WHERE LimitedTime = 1.0;"
-                in 21..89 -> "SELECT * FROM AzurLaneConstructTime WHERE LimitedTime = 0.0 AND type % 10 == 0;"
-                in 90..206 -> "SELECT * FROM AzurLaneConstructTime WHERE LimitedTime = 0.0 AND (type - 1) % 10 == 0;"
-                in 207..706 -> "SELECT * FROM AzurLaneConstructTime WHERE LimitedTime = 0.0 AND (type - 2) % 10 == 0;"
-                else -> "SELECT * FROM AzurLaneConstructTime WHERE LimitedTime = 0.0 AND (type - 3) % 10 == 0;"
+        val rL = List(count) {
+            val level = when ((1..1000).random()) {
+                in 1..12 -> 0
+                in 13..82 -> 1
+                in 83..202 -> 2
+                in 203..712 -> 3
+                else -> 4
             }
-            objDB.executeQuerySQL(sql, "模拟建造\nFile:MirrorWorldGame.kt\tLine:418").random().run {
+            objDB.executeQuerySQL(
+                "SELECT * FROM AzurLaneConstructTime WHERE type % 10 == $level;",
+                "模拟建造\nFile:MirrorWorldGame.kt\tLine:418"
+            ).random().run {
                 AssetDataAzurLaneConstructTime(this)
             }
         }
         objDB.closeDB()
-        return AzleBuild(cunt).drawCard(rL)
+        return AzleBuild(count).drawCard(rL)
     }
 
-    private fun build(mode: Int, cunt: Int): AzleBuild {
+    private fun build(mode: Int, count: Int): AzleBuild {
         val objDB = SQLiteJDBC(PluginMain.resolveDataPath("AssetData.db"))
-        val rL = List(cunt) {
-            val level = when ((1..100).random()) {
-                in 1..7 -> 0
-                in 8..19 -> 1
-                in 20..45 -> 2
-                else -> 3
+        val rL = List(count) {
+            val level = when ((1..1000).random()) {
+                in 1..7 -> 1
+                in 8..19 -> 2
+                in 20..45 -> 3
+                else -> 4
             }
             objDB.executeQuerySQL(
-                "SELECT * FROM AzurLaneConstructTime WHERE LimitedTime = 0.0 AND (type - $level) % $mode == 0;",
+                "SELECT * FROM AzurLaneConstructTime WHERE limitedTime = 0 AND type / $mode % 10 == $level;",
                 "模拟建造\nFile:MirrorWorldGame.kt\tLine:418"
             ).random().run { AssetDataAzurLaneConstructTime(this) }
         }
         objDB.closeDB()
 
-        return AzleBuild(cunt).drawCard(rL)
+        return AzleBuild(count).drawCard(rL)
 //            return "本次结果：\n船名：${l.originalName}[${l.alias}]\t建造时间：${l.time}"
     }
 }

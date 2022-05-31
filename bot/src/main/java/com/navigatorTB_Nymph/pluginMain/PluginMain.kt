@@ -65,8 +65,6 @@ object PluginMain : KotlinPlugin(
     val TIC_TAC_TOE_GAME = mutableMapOf<Long, TicTacToe>()
     val BOTH_SIDES_DUEL = mutableMapOf<Member, Gun>()
 
-    var DLC_MirrorWorld = false
-
     @OptIn(MiraiExperimentalApi::class)
     override fun onEnable() {
         MySetting.reload()

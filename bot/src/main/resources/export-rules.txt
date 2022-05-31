@@ -1,8 +1,3 @@
-# 导出类
-#
-#exports com.nymph_TB_DLC.DLC
-exports com.nymph_TB_DLC.MirrorWorld
-
 # 将整个插件放入保护域中
 # 除了此规则之前显式 export 的类, 其他插件将不允许直接使用被保护的插件的任何类
 # 别名: protect-all, protect-system

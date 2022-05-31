@@ -4,12 +4,12 @@ import com.navigatorTB_Nymph.pluginMain.PluginMain
 import com.navigatorTB_Nymph.tool.svg.BuildSVGTool
 import org.apache.batik.anim.dom.SVGDOMImplementation
 
-class SignInSVG : BuildSVGTool(PluginMain.resolveDataPath("SVG_Template/signIn.svg").toString()) {
+class SignInSVG : BuildSVGTool(PluginMain.resolveDataPath("SVG_Template/signIn.svg")) {
     fun runBeta(
         oneWord: Pair<String, String>,
         tarot: Map<String, String>,
         countdown: Int,
-        sprint: String? = null
+        sprint: String?
     ): SignInSVG {
         val themeColor = when (tarot["Brand"]) {
             "The Hanged Man(倒吊人)" -> "#69B960"
@@ -29,7 +29,7 @@ class SignInSVG : BuildSVGTool(PluginMain.resolveDataPath("SVG_Template/signIn.s
 
         doc.getElementById("main").setAttribute("fill", themeColor)
         doc.getElementById("brand").textContent = tarot["Brand"]
-        doc.getElementById("tarot").setAttributeNS("http://www.w3.org/1999/xlink", "href", tarot["ImgPath"])
+        doc.getElementById("tarot").setAttributeNS(namespaceURI, "href", tarot["ImgPath"])
         for ((i, str) in tarot["word"]!!.split("、").withIndex()) {
             val text = doc.createElementNS(SVGDOMImplementation.SVG_NAMESPACE_URI, "text")
             text.textContent = str

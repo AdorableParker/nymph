@@ -20,9 +20,6 @@ object GarbageCollection : SimpleCommand(
             sendMessage("本群授权已到期,请续费后使用")
             return
         }
-
-        if (PluginMain.DLC_MirrorWorld) {
-            sendMessage(GameMain(this).garbageCollection(itemDemand))
-        } else sendMessage("缺少依赖DLC")
+        sendMessage(GameMain(this).garbageCollection(itemDemand))
     }
 }

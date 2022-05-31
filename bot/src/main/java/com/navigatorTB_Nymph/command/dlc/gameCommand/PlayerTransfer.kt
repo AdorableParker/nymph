@@ -19,8 +19,8 @@ object PlayerTransfer : SimpleCommand(
             return
         }
 
-        if (PluginMain.DLC_MirrorWorld) {
-            GameMain(this).transfer(user.id, amount)
-        } else sendMessage("缺少依赖DLC")
+
+        GameMain(this).transfer(user.id, amount)
+
     }
 }

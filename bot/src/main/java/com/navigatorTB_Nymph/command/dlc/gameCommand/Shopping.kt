@@ -18,8 +18,8 @@ object Shopping : SimpleCommand(
             return
         }
 
-        if (PluginMain.DLC_MirrorWorld) {
-            sendMessage(GameMain(this).enterStore())
-        } else sendMessage("缺少依赖DLC")
+
+        sendMessage(GameMain(this).enterStore())
+
     }
 }

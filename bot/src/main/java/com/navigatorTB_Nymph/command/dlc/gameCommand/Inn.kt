@@ -18,10 +18,8 @@ object Inn : SimpleCommand(
             return
         }
 
-        if (PluginMain.DLC_MirrorWorld) {
-            GameMain(this).treatment()?.let { it ->
-                sendMessage(it)
-            } ?: sendMessage("请先建立角色")
-        } else sendMessage("缺少依赖DLC")
+        GameMain(this).treatment()?.let { it ->
+            sendMessage(it)
+        } ?: sendMessage("请先建立角色")
     }
 }

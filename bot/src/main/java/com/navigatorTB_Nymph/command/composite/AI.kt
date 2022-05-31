@@ -13,7 +13,7 @@ import net.mamoe.mirai.utils.ExternalResource.Companion.toExternalResource
 import java.io.File
 
 object AI : CompositeCommand(
-    PluginMain, "AI", description = "AI功能"
+    PluginMain, "AI", description = "AI功能",
 ) {
 
     @SubCommand("教学")

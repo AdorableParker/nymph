@@ -19,8 +19,8 @@ object PvPBattle : SimpleCommand(
             return
         }
 
-        if (PluginMain.DLC_MirrorWorld) {
-            GameMain(this).pvp(user)
-        } else sendMessage("缺少依赖DLC")
+
+        GameMain(this).pvp(user)
+
     }
 }

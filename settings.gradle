@@ -1,3 +1,2 @@
 include ':bot'
-include ':app'
 rootProject.name = "MAPluginTemplate"

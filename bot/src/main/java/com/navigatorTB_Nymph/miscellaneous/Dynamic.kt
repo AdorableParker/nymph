@@ -8,10 +8,7 @@ import org.apache.batik.anim.dom.SVGDOMImplementation
 import java.text.SimpleDateFormat
 import java.util.*
 
-class Dynamic(info: DynamicInfo) : BuildSVGTool(
-    PluginMain.resolveDataPath("SVG_Template/dynamic.svg").toString()
-) {
-
+class Dynamic(info: DynamicInfo) : BuildSVGTool(PluginMain.resolveDataPath("SVG_Template/dynamic.svg")) {
     private val time = SimpleDateFormat("yyyy-MM-dd a hh:mm E", Locale.CHINA).format(info.timestamp)
     private val name = info.name
     private val face = info.face
@@ -56,7 +53,7 @@ class Dynamic(info: DynamicInfo) : BuildSVGTool(
         doc.getElementById("time").textContent = time
         if (name.isNullOrEmpty().not()) doc.getElementById("name").textContent = name
         if (face.isNullOrEmpty().not()) doc.getElementById("face")
-            .setAttributeNS("http://www.w3.org/1999/xlink", "href", face)
+            .setAttributeNS(namespaceURI, "href", face)
         doc.getElementById("backdrop").setAttribute("height", "${textHeight + 50}")
         pictureList.forEach { if (it != null) addImage(it) }
         doc.getElementById("root").setAttribute("height", "${imageY + 5}")
@@ -90,7 +87,7 @@ class Dynamic(info: DynamicInfo) : BuildSVGTool(
             image.setAttribute("height", "${picture.imgHeight}")
             picture.imgHeight
         }
-        image.setAttributeNS("http://www.w3.org/1999/xlink", "href", picture.imgSrc)
+        image.setAttributeNS(namespaceURI, "href", picture.imgSrc)
         doc.getElementById("imageList").appendChild(image)
     }
 }

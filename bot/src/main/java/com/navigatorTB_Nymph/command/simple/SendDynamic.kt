@@ -86,7 +86,7 @@ object SendDynamic : SimpleCommand(
                 val origin = Parser.default().parse(StringBuilder(card.string("origin"))) as JsonObject
                 val originDynamic = analysis(timestamp, origType, origin)
                 DynamicInfo(
-                    name = card.obj("user")?.string("name"),
+                    name = card.obj("user")?.string("uname"),
                     face = card.obj("user")?.string("face"),
                     timestamp = timestamp,
                     text = "转发并评论：\n${card.obj("item")?.string("content")}\n\n${originDynamic.text}",
@@ -146,7 +146,7 @@ object SendDynamic : SimpleCommand(
                     face = card.obj("author")?.string("face"),
                     timestamp = timestamp,
                     text = "专栏标题:$title\n专栏摘要：\n$summary…",
-                    pictureList = if (imgSrc != null) listOf(Picture(394, 700, card.string("pic")!!)) else listOf()
+                    pictureList = if (imgSrc != null) listOf(Picture(394, 700, imgSrc)) else listOf()
                 )
             }
             // 卡片

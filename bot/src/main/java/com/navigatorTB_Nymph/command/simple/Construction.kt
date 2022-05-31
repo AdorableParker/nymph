@@ -66,7 +66,7 @@ object Construction : SimpleCommand(
                 "船名：${it.originalName}[${it.alias}]\t${
                     when (it.limitedTime) {
                         1 -> "限时"
-                        2 -> "不可建造"
+                        2 -> "建造绝版"
                         else -> "常驻"
                     }
                 }"
@@ -103,7 +103,7 @@ object Construction : SimpleCommand(
                 "船名：${it.originalName}[${it.alias}]\t建造时间：${it.time}\t${
                     when (it.limitedTime) {
                         1 -> "限时"
-                        2 -> "不可建造"
+                        2 -> "建造绝版"
                         else -> "常驻"
                     }
                 }"

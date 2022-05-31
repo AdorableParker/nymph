@@ -8,14 +8,17 @@ import org.apache.batik.util.XMLResourceDescriptor
 import org.w3c.dom.Document
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
+import java.nio.file.Path
 
-open class BuildSVGTool(mod: String) {
 
-    val doc = svgInit(mod)
+open class BuildSVGTool() {
 
-    private fun svgInit(mod: String): Document {
+    val namespaceURI = "http://www.w3.org/1999/xlink"
+    lateinit var doc: Document
+
+    constructor(file: Path) : this() {
         val parser = XMLResourceDescriptor.getXMLParserClassName()
-        return SAXSVGDocumentFactory(parser).createDocument(mod)
+        doc = SAXSVGDocumentFactory(parser).createDocument("$file")
     }
 
     fun draw(): ByteArrayInputStream {

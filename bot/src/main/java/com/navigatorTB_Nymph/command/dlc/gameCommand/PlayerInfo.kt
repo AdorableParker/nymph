@@ -19,8 +19,8 @@ object PlayerInfo : SimpleCommand(
             return
         }
 
-        if (PluginMain.DLC_MirrorWorld) {
-            sendMessage(GameMain(this).gamerInfo())
-        } else sendMessage("缺少依赖DLC")
+
+        sendMessage(GameMain(this).gamerInfo())
+
     }
 }

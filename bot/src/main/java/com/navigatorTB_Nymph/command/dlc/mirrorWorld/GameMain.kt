@@ -613,14 +613,14 @@ class GameMain(private val messageObject: CommandSender) {
             "生性药水 <\n" +
             "月见花 < 黄铁矿 < 以太(生)"
 
-    fun lightPool(cunt: Int): String {
+    fun lightPool(count: Int): String {
         val userRole = MirrorWorldUser.userRole[uid] ?: return "你的角色未创建完成，请建立角色后操作"
-        return userRole.putUp(true, cunt)
+        return userRole.putUp(true, count)
     }
 
-    fun heavyPool(cunt: Int): String {
+    fun heavyPool(count: Int): String {
         val userRole = MirrorWorldUser.userRole[uid] ?: return "你的角色未创建完成，请建立角色后操作"
-        return userRole.putUp(false, cunt)
+        return userRole.putUp(false, count)
     }
 
     /** 炼金术 */

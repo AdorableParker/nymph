@@ -18,8 +18,8 @@ object UseItems : SimpleCommand(
             return
         }
 
-        if (PluginMain.DLC_MirrorWorld) {
-            sendMessage(GameMain(this).useItems(itemName, amount))
-        } else sendMessage("缺少依赖DLC")
+
+        sendMessage(GameMain(this).useItems(itemName, amount))
+
     }
 }

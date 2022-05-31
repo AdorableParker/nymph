@@ -18,9 +18,9 @@ class Shop(private val user: GameRole) {
         var purchase = demand
         var price = 0
 
-        while (productList.isNotEmpty()) {
+        for (shelf in productList) {
 //            val (seller, unitPrice, inventory) = productList[0]
-            val shelf = productList[0]
+            if (shelf.unitPrice == 0) return "该物品暂时无货"
             var available = user.showGold() / shelf.unitPrice                         // 剩余预算能买的数量
             if (available <= 0) break                                           // 一个都买不起
             if (available > shelf.quantity) available = shelf.quantity                    // 能买的大于库存
@@ -58,6 +58,7 @@ class Shop(private val user: GameRole) {
                 }
             }
         }
+
         bill.append("---------\n共计花费货款${price}枚金币")
         user.receiveItem(shelfName, demand - purchase)                        // 要买的 减 没买的
         return bill.toString()
@@ -76,8 +77,8 @@ class Shop(private val user: GameRole) {
         val k = productList.find { it.unitPrice == unitPrice }
         if (k == null) productList.add(Shelf(uid, unitPrice, inventory))                // 无同人同价位 上架
         else productList.add(Shelf(uid, unitPrice, inventory + k.quantity))     // 有同人同价位 补货
-        productList.sortBy { it.unitPrice }                                             // 整理货架
         FleaMarket.shelfData[shelfName] = productList                                   // 更新到商店
+        productList.sortByDescending { it.unitPrice }                                   // 整理货架
         return "挂售成功,物品已上架"
     }
 }

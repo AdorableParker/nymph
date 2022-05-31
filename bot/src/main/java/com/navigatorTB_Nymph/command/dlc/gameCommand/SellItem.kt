@@ -21,8 +21,8 @@ object SellItem : SimpleCommand(
             return
         }
 
-        if (PluginMain.DLC_MirrorWorld) {
-            sendMessage(GameMain(this).sell(itemName, unitPrice, itemDemand))
-        } else sendMessage("缺少依赖DLC")
+
+        sendMessage(GameMain(this).sell(itemName, unitPrice, itemDemand))
+
     }
 }

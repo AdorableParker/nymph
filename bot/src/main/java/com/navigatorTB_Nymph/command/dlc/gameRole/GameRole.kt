@@ -64,8 +64,8 @@ sealed class GameRole {
         cube += amount
     }
 
-    fun putUp(flag: Boolean, cunt: Int): String {
-        val (cubeValue, goalValue) = if (flag) Pair(1 * cunt, 50 * cunt) else Pair(2 * cunt, 150 * cunt)
+    fun putUp(flag: Boolean, count: Int): String {
+        val (cubeValue, goalValue) = if (flag) Pair(1 * count, 50 * count) else Pair(2 * count, 150 * count)
         return if (cube >= cubeValue && gold >= goalValue) {
             cube -= cubeValue
             gold -= goalValue

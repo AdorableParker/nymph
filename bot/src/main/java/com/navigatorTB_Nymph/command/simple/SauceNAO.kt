@@ -131,13 +131,14 @@ object SauceNAO : SimpleCommand(
             sendMessage("本群授权已到期,请续费后使用")
             return
         }
+        sendMessage("请在60秒内提供要搜的图...")
         val image = withTimeoutOrNull(60_000) {
             GlobalEventChannel.syncFromEvent<GroupMessageEvent, Image>(EventPriority.MONITOR) {
                 if (user == it.sender) it.message[Image] else null
             }
         }
 
-        if (image != null) main(image) else sendMessage("运行超时,搜图失败")
+        if (image != null) main(image) else sendMessage("长时间未收到图片,搜图失败")
 
     }
 

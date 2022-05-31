@@ -18,8 +18,7 @@ object PlayerBuild : SimpleCommand(
             return
         }
 
-        if (PluginMain.DLC_MirrorWorld) {
-            GameMain(this).characterCreation()
-        } else sendMessage("缺少依赖DLC")
+        GameMain(this).characterCreation()
+
     }
 }
