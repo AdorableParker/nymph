@@ -1,5 +1,6 @@
 package com.navigatorTB_Nymph.command.simple
 
+import com.navigatorTB_Nymph.data.GroupUser
 import com.navigatorTB_Nymph.pluginData.ActiveGroupList
 import com.navigatorTB_Nymph.pluginData.UsageStatistics
 import com.navigatorTB_Nymph.pluginMain.PluginMain
@@ -14,14 +15,6 @@ import net.mamoe.mirai.message.data.MessageChainBuilder
 import net.mamoe.mirai.utils.ExternalResource.Companion.uploadAsImage
 import java.net.URL
 import java.time.LocalDateTime
-
-data class GroupUser(
-    val id: Long,
-    val avatarUrl: String,
-    val nameCardOrNick: String
-) {
-    constructor(it: Member) : this(it.id, it.avatarUrl, it.nameCardOrNick)
-}
 
 
 object GroupWife : SimpleCommand(
@@ -45,6 +38,11 @@ object GroupWife : SimpleCommand(
         }
 
         if (LocalDateTime.now().dayOfYear != groupWifeUpdate) cleanList()
+
+        if (user.id in byNtrMap) {
+            sendMessage("你醒啦,你的老婆被骗走了哦")
+            return
+        }
 
         val wifeList = wifeGroupMap.getOrPut(group.id) { mutableListOf() }
         val u = GroupUser(user)

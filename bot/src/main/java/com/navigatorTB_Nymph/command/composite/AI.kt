@@ -1,9 +1,11 @@
 package com.navigatorTB_Nymph.command.composite
 
 import com.navigatorTB_Nymph.data.AICorpus
+import com.navigatorTB_Nymph.data.QAPair
 import com.navigatorTB_Nymph.data.UserPolicy
 import com.navigatorTB_Nymph.pluginConfig.MySetting
 import com.navigatorTB_Nymph.pluginData.ActiveGroupList
+import com.navigatorTB_Nymph.pluginData.AiTemplate
 import com.navigatorTB_Nymph.pluginMain.PluginMain
 import com.navigatorTB_Nymph.tool.sql.SQLiteJDBC
 import net.mamoe.mirai.console.command.CompositeCommand
@@ -17,7 +19,7 @@ object AI : CompositeCommand(
 ) {
 
     @SubCommand("教学")
-    suspend fun MemberCommandSenderOnMessage.main(question: String, answer: String) {
+    suspend fun MemberCommandSenderOnMessage.teaching(question: String, answer: String) {
         if (group.botMuteRemaining > 0) return
         if (group.id !in ActiveGroupList.user) {
             sendMessage("本群授权已到期,请续费后使用")
@@ -39,7 +41,7 @@ object AI : CompositeCommand(
 //        PluginMain.logger.debug { "*$question*\n$keyWord" }
         val dbObject = SQLiteJDBC(PluginMain.resolveDataPath("AI.db"))
         dbObject.executeQuerySQL(
-            "SELECT * FROM Corpus WHERE answer = $answer AND question = $question AND keys = $keyWord AND (fromGroup = ${group.id} OR fromGroup = 0);",
+            "SELECT * FROM Corpus WHERE answer = '$answer' AND question = '$question' AND keys = '$keyWord' AND (fromGroup = ${group.id} OR fromGroup = 0);",
             "AI教学\nFile:AI.kt\tLine:41"
         ).run {
             if (isNotEmpty()) {
@@ -60,7 +62,7 @@ object AI : CompositeCommand(
                 "Corpus", Triple(
                     arrayOf("answer", "question", "keys", "fromGroup"),
                     Array(4) { "=" },
-                    arrayOf(answer, question, keyWord, "${group.id}")
+                    arrayOf("'$answer'", "'$question'", "'$keyWord'", "${group.id}"),
                 ), "AND", "AI教学\nFile:AI.kt\tLine:59"
             )
         )
@@ -75,8 +77,24 @@ object AI : CompositeCommand(
         sendMessage("问题:$question\n回答:$answer\n条目已添加，条目ID:${entry.id}")
     }
 
+    @SubCommand("模板教学")
+    suspend fun MemberCommandSenderOnMessage.templateTeaching(question: String, answer: String) {
+        if (group.botMuteRemaining > 0) return
+        if (group.id !in ActiveGroupList.user) {
+            sendMessage("本群授权已到期,请续费后使用")
+            return
+        }
+        val templateIdentifierQ = "\\[]".toRegex()
+        val templateIdentifierA = "\\[(.*?)]".toRegex()
+        val patternQ = ("^${templateIdentifierQ.replace(question, "(.+)")}$")
+        val patternA = templateIdentifierA.replace(answer, "\\$$1")
+
+        AiTemplate.QASheet.getOrPut(group.id) { mutableSetOf() }.add(QAPair(patternQ, patternA))
+        sendMessage("模板已添加")
+    }
+
     @SubCommand("查询")
-    suspend fun MemberCommandSenderOnMessage.main(key: String) {
+    suspend fun MemberCommandSenderOnMessage.query(key: String) {
         if (group.botMuteRemaining > 0) return
         if (group.id !in ActiveGroupList.user) {
             sendMessage("本群授权已到期,请续费后使用")
@@ -120,8 +138,29 @@ object AI : CompositeCommand(
         sendMessage(r)
     }
 
+    @SubCommand("模板查询")
+    suspend fun MemberCommandSenderOnMessage.templateQuery() {
+        if (group.botMuteRemaining > 0) return
+        if (group.id !in ActiveGroupList.user) {
+            sendMessage("本群授权已到期,请续费后使用")
+            return
+        }
+        val qaSet = AiTemplate.QASheet[group.id]
+        if (qaSet.isNullOrEmpty()) {
+            sendMessage("本群尚无问答模板")
+            return
+        }
+        val r = StringBuffer()
+        qaSet.forEach {
+            val outQ = it.question.replace("(.+)", "[]").trim('^', '$')
+            val outA = "\\$(\\d+)".toRegex().replace(it.answer, "[$1]")
+            r.append("问:${outQ}\t答:${outA}\n")
+        }
+        sendMessage(r.toString())
+    }
+
     @SubCommand("统计")
-    suspend fun MemberCommandSenderOnMessage.main() {
+    suspend fun MemberCommandSenderOnMessage.statistics() {
         if (group.botMuteRemaining > 0) return
         if (group.id !in ActiveGroupList.user) {
             sendMessage("本群授权已到期,请续费后使用")
@@ -174,7 +213,7 @@ object AI : CompositeCommand(
     }
 
     @SubCommand("删除")
-    suspend fun MemberCommandSenderOnMessage.main(EID: Int) {
+    suspend fun MemberCommandSenderOnMessage.delete(EID: Int) {
         if (group.botMuteRemaining > 0) return
         if (group.id !in ActiveGroupList.user) {
             sendMessage("本群授权已到期,请续费后使用")
@@ -199,6 +238,16 @@ object AI : CompositeCommand(
     }
 
     suspend fun dialogue(subject: Group, content: String, atMe: Boolean = false) {
+        if (3 >= (1..10).random()) {
+            val sheet = AiTemplate.QASheet.getOrPut(subject.id) { mutableSetOf() }
+            for (qaPair in sheet) {
+                if (qaPair.question.toRegex().containsMatchIn(content)) {
+                    subject.sendMessage(qaPair.question.toRegex().replace(content, qaPair.answer))
+                    return
+                }
+            }
+        }
+
         val keyWord = PluginMain.KEYWORD_SUMMARY.keyword(content, 1).let { if (it.size <= 0) content else it[0] }
         val wordList = PluginMain.LEXER.scan(content).toList()
 
@@ -235,5 +284,7 @@ object AI : CompositeCommand(
             return
         }
         if (atMe) subject.sendMessage("( -`_´- ) (似乎并没有听懂... ")
+
+
     }
 }

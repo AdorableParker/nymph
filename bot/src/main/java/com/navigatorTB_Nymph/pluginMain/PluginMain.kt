@@ -5,13 +5,16 @@ import com.mayabot.nlp.segment.Lexers
 import com.navigatorTB_Nymph.command.composite.*
 import com.navigatorTB_Nymph.command.dlc.gameCommand.*
 import com.navigatorTB_Nymph.command.simple.*
-import com.navigatorTB_Nymph.data.*
+import com.navigatorTB_Nymph.data.UserPolicy
+import com.navigatorTB_Nymph.data.UserResponsible
+import com.navigatorTB_Nymph.defaultJob.DailyReminder
+import com.navigatorTB_Nymph.defaultJob.DynamicPush
+import com.navigatorTB_Nymph.defaultJob.TellTime
 import com.navigatorTB_Nymph.game.crowdVerdict.VoteUser
 import com.navigatorTB_Nymph.game.duel.Gun
 import com.navigatorTB_Nymph.game.minesweeper.Minesweeper
 import com.navigatorTB_Nymph.game.pushBox.PushBox
 import com.navigatorTB_Nymph.game.ticTacToe.TicTacToe
-import com.navigatorTB_Nymph.miscellaneous.Dynamic
 import com.navigatorTB_Nymph.pluginConfig.CharacterLineDictionary
 import com.navigatorTB_Nymph.pluginConfig.MirrorWorldConfig
 import com.navigatorTB_Nymph.pluginConfig.MySetting
@@ -21,12 +24,10 @@ import com.navigatorTB_Nymph.tool.cronJob.CronJob
 import com.navigatorTB_Nymph.tool.sql.SQLiteJDBC
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
-import net.mamoe.mirai.Bot
 import net.mamoe.mirai.console.command.CommandManager.INSTANCE.register
 import net.mamoe.mirai.console.command.CommandManager.INSTANCE.unregister
 import net.mamoe.mirai.console.plugin.jvm.JvmPluginDescription
 import net.mamoe.mirai.console.plugin.jvm.KotlinPlugin
-import net.mamoe.mirai.contact.Contact
 import net.mamoe.mirai.contact.Member
 import net.mamoe.mirai.contact.nameCardOrNick
 import net.mamoe.mirai.event.Event
@@ -35,13 +36,9 @@ import net.mamoe.mirai.event.events.*
 import net.mamoe.mirai.event.globalEventChannel
 import net.mamoe.mirai.event.subscribeGroupMessages
 import net.mamoe.mirai.message.data.*
-import net.mamoe.mirai.utils.ExternalResource.Companion.toExternalResource
-import net.mamoe.mirai.utils.ExternalResource.Companion.uploadAsImage
 import net.mamoe.mirai.utils.MiraiExperimentalApi
 import net.mamoe.mirai.utils.debug
 import net.mamoe.mirai.utils.info
-import net.mamoe.mirai.utils.warning
-import java.io.File
 import java.time.LocalDateTime
 
 
@@ -74,6 +71,7 @@ object PluginMain : KotlinPlugin(
         UsageStatistics.reload()
         ActiveGroupList.reload()
         Article.reload()
+        AiTemplate.reload()
         PushBoxLevelMap.reload()
         MirrorWorldUser.reload()
         MirrorWorldAssets.reload()
@@ -142,23 +140,23 @@ object PluginMain : KotlinPlugin(
         this.globalEventChannel().subscribeAlways<Event> {
             when (this) {
                 is MemberJoinEvent.Invite -> {
-                    if (groupId in ActiveGroupList.user && memberJoinEvent(groupId) == 1)
+                    if (groupId in ActiveGroupList.user && memberJoinEvent(groupId) == 1 && group.botMuteRemaining <= 0)
                         group.sendMessage("${invitor.nameCardOrNick}邀请${member.nameCardOrNick}大佬加入群聊")
                 }          // 邀请加入播报
                 is MemberJoinEvent.Active -> {
-                    if (groupId in ActiveGroupList.user && memberJoinEvent(groupId) == 1)
+                    if (groupId in ActiveGroupList.user && memberJoinEvent(groupId) == 1 && group.botMuteRemaining <= 0)
                         group.sendMessage("欢迎大佬${member.nameCardOrNick}加入群聊")
                 }          // 主动加入播报
                 is MemberJoinEvent.Retrieve -> {
-                    if (groupId in ActiveGroupList.user && memberJoinEvent(groupId) == 1)
+                    if (groupId in ActiveGroupList.user && memberJoinEvent(groupId) == 1 && group.botMuteRemaining <= 0)
                         group.sendMessage("欢迎群主${member.nameCardOrNick}回归")
                 }        // 恢复加入播报
                 is MemberLeaveEvent.Kick -> {
-                    if (groupId in ActiveGroupList.user && memberLeave(groupId) == 1)
+                    if (groupId in ActiveGroupList.user && memberLeave(groupId) == 1 && group.botMuteRemaining <= 0)
                         group.sendMessage("哇啊,${member.nameCardOrNick}(${member.id})被${(operator ?: bot).nameCardOrNick}鲨掉惹")
                 }           // 成员移出播报
                 is MemberLeaveEvent.Quit -> {
-                    if (groupId in ActiveGroupList.user && memberLeave(groupId) == 1)
+                    if (groupId in ActiveGroupList.user && memberLeave(groupId) == 1 && group.botMuteRemaining <= 0)
                         group.sendMessage("哇啊,${member.nameCardOrNick}(${member.id})自己跑掉惹")
                 }           // 成员退群播报
                 is BotInvitedJoinGroupRequestEvent -> {
@@ -182,9 +180,9 @@ object PluginMain : KotlinPlugin(
                     addGroupInfo(groupId)
                     bot.getFriend(MySetting.AdminID)?.sendMessage("GroupName:${group.name}\nGroupID：${groupId}\nPASS")
                 }               // 加群后添加信息
-                is MemberJoinRequestEvent -> {
-                    group?.sendMessage("$fromNick($fromId)申请加入本群")
-                }          // 他人入群申请
+//                is MemberJoinRequestEvent -> {
+//                      group.sendMessage("$fromNick($fromId)申请加入本群")
+//                }          // 他人入群申请
             }
         }
 
@@ -321,14 +319,11 @@ object PluginMain : KotlinPlugin(
 
     private fun residentTask() {
         val t = LocalDateTime.now() //序列号
-        val n1 = CronJob.getNext(
-            t.dayOfYear * 10000 + t.hour * 100 + t.minute, t.year, Interval(0, 0, 10 - t.minute % 10)
-        ) // 下一个10分
+        CronJob.addJob(t.dayOfYear * 10000 + t.hour * 100 + t.minute / 10 * 10 + 10, DynamicPush)
         //            val n2 = t.dayOfYear * 10000 + t.hour * 100 // 现在整点
+        CronJob.addJob(t.dayOfYear * 10000 + t.hour * 100 + 100, TellTime)
         //            val n3 = t.dayOfYear * 10000 + 20 * 100     // 今天20点
-        CronJob.addJob(n1, Interval(0, 0, 3)) { dynamicPush() }
-        CronJob.addJob(t.dayOfYear * 10000 + t.hour * 100, Interval(0, 1, 0)) { tellTime() }
-        CronJob.addJob(t.dayOfYear * 10000 + 20 * 100, Interval(1, 0, 3)) { dailyReminder() }
+        CronJob.addJob((t.dayOfYear + 1) * 10000 + 20 * 100, DailyReminder)
     }
 
     private var signInRank: Int = 1
@@ -375,140 +370,6 @@ object PluginMain : KotlinPlugin(
                 }
             }
             else -> "不是...你看看几点了,哼!"
-        }
-    }
-
-    /* 每日提醒 */
-    private suspend inline fun dailyReminder() {
-        logger.info { "执行任务：每日提醒" }
-        val dbObject = SQLiteJDBC(resolveDataPath("User.db"))
-        val policyList = dbObject.select(
-            "Policy", Triple("DailyReminderMode", "!=", "0"), "每日提醒\nFile:PluginMain.kt\tLine:322"
-        ).run { List(this.size) { UserPolicy(this[it]) } }
-        dbObject.closeDB()
-        val script = mapOf(
-            1 to arrayOf(
-                "Ciallo～(∠・ω< )⌒★今天是周一哦,今天开放的是「战术研修」「商船护送」，困难也记得打呢。",
-                "Ciallo～(∠・ω< )⌒★今天是周二哦,今天开放的是「战术研修」「海域突进」，困难也记得打呢。",
-                "Ciallo～(∠・ω< )⌒★今天是周三哦,今天开放的是「战术研修」「斩首行动」，困难也记得打呢。",
-                "Ciallo～(∠・ω< )⌒★今天是周四哦,今天开放的是「战术研修」「商船护送」，困难也记得打呢。",
-                "Ciallo～(∠・ω< )⌒★今天是周五哦,今天开放的是「战术研修」「海域突进」，困难也记得打呢。",
-                "Ciallo～(∠・ω< )⌒★今天是周六哦,今天开放的是「战术研修」「斩首行动」，困难也记得打呢。",
-                "Ciallo～(∠・ω< )⌒★今天是周日哦,每日全部模式开放，每周两次的破交作战记得打哦，困难模式也别忘了。"
-            ), 2 to arrayOf(
-                "Ciallo～(∠・ω< )⌒★晚上好,Master,今天是周一, 今天周回本开放「弓阶修炼场」,「收集火种(枪杀)」。",
-                "Ciallo～(∠・ω< )⌒★晚上好,Master,今天是周二, 今天周回本开放「枪阶修炼场」,「收集火种(剑骑)」。",
-                "Ciallo～(∠・ω< )⌒★晚上好,Master,今天是周三, 今天周回本开放「狂阶修炼场」,「收集火种(弓术)」。",
-                "Ciallo～(∠・ω< )⌒★晚上好,Master,今天是周四, 今天周回本开放「骑阶修炼场」,「收集火种(枪杀)」。",
-                "Ciallo～(∠・ω< )⌒★晚上好,Master,今天是周五, 今天周回本开放「术阶修炼场」,「收集火种(剑骑)」。",
-                "Ciallo～(∠・ω< )⌒★晚上好,Master,今天是周六, 今天周回本开放「杀阶修炼场」,「收集火种(弓术)」。",
-                "Ciallo～(∠・ω< )⌒★晚上好,Master,今天是周日, 今天周回本开放「剑阶修炼场」,「收集火种(All)」。"
-            )
-        )
-        for (groupPolicy in policyList) {
-            if (groupPolicy.groupID !in ActiveGroupList.user) continue // 激活到期则跳过
-
-            val group = Bot.getInstance(MySetting.BotID).getGroup(groupPolicy.groupID)
-            if (group == null || group.botMuteRemaining > 0) {
-                continue
-            }
-            when (groupPolicy.dailyReminderMode) {
-                1 -> script[1]?.get(LocalDateTime.now().dayOfWeek.value - 1)?.let { group.sendMessage(it) }
-                2 -> script[2]?.get(LocalDateTime.now().dayOfWeek.value - 1)?.let { group.sendMessage(it) }
-                3 -> {
-                    script[1]?.get(LocalDateTime.now().dayOfWeek.value - 1)?.let { group.sendMessage(it) }
-                    script[2]?.get(LocalDateTime.now().dayOfWeek.value - 1)?.let { group.sendMessage(it) }
-                }
-                else -> logger.warning { "File:PluginMain.kt\tLine:362\n未知的模式" }
-            }
-        }
-    }
-
-    /* 报时 */
-    private suspend inline fun tellTime() {
-        logger.info { "执行任务：整点报时" }
-        val time = LocalDateTime.now().hour
-
-        if (time == 0) ActiveGroupList.activationStatusUpdate() // 更新激活状态
-
-        val dbObject = SQLiteJDBC(resolveDataPath("AssetData.db"))
-        val scriptList = dbObject.select(
-            "Script", Triple("hour", "=", "$time"), "报时\nFile:PluginMain.kt\tLine:375"
-        ).run { List(this.size) { AssetDataScript(this[it]) } }
-        dbObject.closeDB()
-
-        val userDbObject = SQLiteJDBC(resolveDataPath("User.db"))
-        val groupList = with(
-            if (time in MySetting.undisturbed) userDbObject.select(
-                "Policy",
-                Triple(arrayOf("undisturbed", "tellTimeMode"), Array(2) { "!=" }, arrayOf("1", "0")),
-                "AND",
-                "报时\nFile:PluginMain.kt\tLine:384"
-            ) else userDbObject.select(
-                "Policy", Triple("tellTimeMode", "!=", "0"), "报时\nFile:PluginMain.kt\tLine:389"
-            )
-        ) { List(this.size) { UserPolicy(this[it]) } }
-        userDbObject.closeDB()
-        val script = mutableMapOf<Int, List<AssetDataScript>>()
-
-        for (groupPolicy in groupList) {
-            if (groupPolicy.groupID !in ActiveGroupList.user) continue // 激活到期则跳过
-            val group = Bot.getInstance(MySetting.BotID).getGroup(groupPolicy.groupID)
-            if (group == null || group.botMuteRemaining > 0) continue
-            if (groupPolicy.tellTimeMode == -1) {
-                group.sendMessage("现在${time}点咯")
-                continue
-            }
-
-            if (script.containsKey(groupPolicy.tellTimeMode).not()) {
-                script[groupPolicy.tellTimeMode] = scriptList.filter { it.mode == groupPolicy.tellTimeMode }
-            }
-
-            val outScript = script[groupPolicy.tellTimeMode]?.random()?.content
-
-            if (groupPolicy.tellTimeMode % 2 == 0) {
-                val path = resolveDataPath("./报时语音/$outScript")
-                val audio = File("$path").toExternalResource().use { group.uploadAudio(it) }
-                audio.let { group.sendMessage(it) }
-            } else {
-                outScript?.let { group.sendMessage(it) }
-            }
-        }
-    }
-
-    /* 动态推送 */
-    private suspend inline fun dynamicPush() {
-        logger.info { "执行任务：动态推送" }
-        val time = LocalDateTime.now().hour
-        for (list in MyPluginData.timeStampOfDynamic) {
-            val dynamicInfo = SendDynamic.getDynamic(list.key, 0, flag = true)
-            if (dynamicInfo.timestamp == 0L) continue
-            val dbObject = SQLiteJDBC(resolveDataPath("User.db"))
-            val groupList = MyPluginData.nameOfDynamic[list.key]?.let {
-                with(
-                    if (time in MySetting.undisturbed) dbObject.executeQuerySQL(
-                        "SELECT * FROM Policy JOIN SubscribeInfo USING (groupID) WHERE Policy.undisturbed = false AND SubscribeInfo.${it} = true;",
-                        "动态推送\nFile:PluginMain.kt\tLine:433"
-                    )
-                    else dbObject.select("SubscribeInfo", Triple(it, "=", "1"), "动态推送\nFile:PluginMain.kt\tLine:437")
-                ) { List(this.size) { index -> UserSubscribeInfo(this[index]) } }
-            }
-            dbObject.closeDB()
-
-            if (groupList.isNullOrEmpty()) continue
-
-            val bot = Bot.getInstance(MySetting.BotID)
-            val gList = mutableListOf<Contact>()
-            groupList.forEach {
-                if (it.groupID in ActiveGroupList.user) { // 激活到期则跳过
-                    val g = bot.getGroup(it.groupID)
-                    if ((g != null) && (g.botMuteRemaining <= 0)) gList.add(g)
-                }
-            }
-            val dynamic = Dynamic(dynamicInfo)
-            dynamic.layoutDynamic()
-            val forwardMessage = dynamic.draw().uploadAsImage(gList.random())
-            gList.forEach { runCatching { it.sendMessage(forwardMessage) }.onFailure { err -> logger.warning { "File:PluginMain.kt\tLine:453\nGroup:${it.id}\n${err.message}" } } }
         }
     }
 
