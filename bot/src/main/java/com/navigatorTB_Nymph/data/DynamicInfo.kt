@@ -1,6 +1,6 @@
 package com.navigatorTB_Nymph.data
 
-data class DynamicInfo(
+class DynamicInfo(
     val timestamp: Long,
     val name: String?,
     val face: String?,

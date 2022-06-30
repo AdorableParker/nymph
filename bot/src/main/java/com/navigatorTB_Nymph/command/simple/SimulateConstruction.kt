@@ -1,14 +1,16 @@
-package com.navigatorTB_Nymph.command.dlc.gameCommand
+package com.navigatorTB_Nymph.command.simple
 
-import com.navigatorTB_Nymph.command.dlc.mirrorWorld.GameMain
 import com.navigatorTB_Nymph.data.AssetDataAzurLaneConstructTime
+import com.navigatorTB_Nymph.data.Role
 import com.navigatorTB_Nymph.game.simulateCardDraw.AzleBuild
 import com.navigatorTB_Nymph.pluginData.ActiveGroupList
+import com.navigatorTB_Nymph.pluginData.MirrorWorldUser
 import com.navigatorTB_Nymph.pluginMain.PluginMain
 import com.navigatorTB_Nymph.tool.sql.SQLiteJDBC
 import net.mamoe.mirai.console.command.CommandManager
 import net.mamoe.mirai.console.command.MemberCommandSenderOnMessage
 import net.mamoe.mirai.console.command.SimpleCommand
+import net.mamoe.mirai.contact.nameCardOrNick
 import net.mamoe.mirai.message.data.PlainText
 import net.mamoe.mirai.utils.ExternalResource.Companion.uploadAsImage
 
@@ -36,22 +38,22 @@ object SimulateConstruction : SimpleCommand(
             sendMessage("建造次数应为 [1, 10] 区间内")
             return
         }
-
+        val role = MirrorWorldUser.userData.getOrPut(user.id) { Role(user.nameCardOrNick) }
         when (mode) {
             "轻" -> {
-                val r1 = GameMain(this).lightPool(count)
+                val r1 = role.putUp(true, count)
                 if (r1.isBlank()) build(1000, count).draw().uploadAsImage(group) else PlainText(r1)
             }
             "重" -> {
-                val r1 = GameMain(this).heavyPool(count)
+                val r1 = role.putUp(false, count)
                 if (r1.isBlank()) build(100, count).draw().uploadAsImage(group) else PlainText(r1)
             }
             "特" -> {
-                val r1 = GameMain(this).heavyPool(count)
+                val r1 = role.putUp(false, count)
                 if (r1.isBlank()) build(10, count).draw().uploadAsImage(group) else PlainText(r1)
             }
             "限" -> {
-                val r1 = GameMain(this).heavyPool(count)
+                val r1 = role.putUp(false, count)
                 if (r1.isBlank()) limit(count).draw().uploadAsImage(group) else PlainText(r1)
             }
             else -> PlainText("未知模式")

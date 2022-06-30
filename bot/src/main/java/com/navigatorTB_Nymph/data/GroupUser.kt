@@ -3,7 +3,7 @@ package com.navigatorTB_Nymph.data
 import net.mamoe.mirai.contact.Member
 import net.mamoe.mirai.contact.nameCardOrNick
 
-data class GroupUser(
+class GroupUser(
     val id: Long,
     val avatarUrl: String,
     val nameCardOrNick: String

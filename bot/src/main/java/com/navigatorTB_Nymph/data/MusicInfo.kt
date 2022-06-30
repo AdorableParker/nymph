@@ -3,7 +3,7 @@ package com.navigatorTB_Nymph.data
 import net.mamoe.mirai.message.data.MusicKind
 import net.mamoe.mirai.message.data.MusicShare
 
-data class MusicInfo(val type: MusicKind, val songName: String, val musicURL: String, val jumpUrl: String) {
+class MusicInfo(val type: MusicKind, val songName: String, val musicURL: String, val jumpUrl: String) {
     fun constructorMusicCard(pictureUrl: String) = MusicShare(
         type,
         songName,

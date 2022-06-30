@@ -1,11 +1,11 @@
 plugins {
-    id "net.mamoe.mirai-console" version "2.11.0" // mirai-console version
+    id "net.mamoe.mirai-console" version "2.11.1" // mirai-console version
     id "org.jetbrains.kotlin.jvm"
     id 'org.jetbrains.kotlin.plugin.serialization' version '1.6.21'
 }
 
 mirai {
-    coreVersion = "2.11.0" // mirai-core version
+    coreVersion = "2.11.1" // mirai-core version
 }
 
 repositories {
@@ -15,10 +15,10 @@ repositories {
 
 dependencies {
 
-    compileOnly('net.mamoe:mirai-core:2.11.0') // mirai-core 的 API
-    compileOnly('net.mamoe:mirai-console:2.11.0') // 后端
-    compileOnly('org.jetbrains.kotlin:kotlin-serialization:1.6.21')
-    compileOnly('org.jetbrains.kotlin:kotlin-stdlib:1.6.21')
+    compileOnly('net.mamoe:mirai-core:2.11.1') // mirai-core 的 API
+    compileOnly('net.mamoe:mirai-console:2.11.1') // 后端
+    compileOnly('org.jetbrains.kotlin:kotlin-serialization:1.7.0')
+    compileOnly('org.jetbrains.kotlin:kotlin-stdlib:1.7.0')
 
 
 //    api('net.mamoe:mirai-logging-log4j2:2.11.0')

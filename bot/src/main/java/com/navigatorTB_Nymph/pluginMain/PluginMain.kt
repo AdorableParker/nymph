@@ -3,7 +3,6 @@ package com.navigatorTB_Nymph.pluginMain
 import com.mayabot.nlp.module.summary.KeywordSummary
 import com.mayabot.nlp.segment.Lexers
 import com.navigatorTB_Nymph.command.composite.*
-import com.navigatorTB_Nymph.command.dlc.gameCommand.*
 import com.navigatorTB_Nymph.command.simple.*
 import com.navigatorTB_Nymph.data.UserPolicy
 import com.navigatorTB_Nymph.data.UserResponsible
@@ -37,14 +36,13 @@ import net.mamoe.mirai.event.globalEventChannel
 import net.mamoe.mirai.event.subscribeGroupMessages
 import net.mamoe.mirai.message.data.*
 import net.mamoe.mirai.utils.MiraiExperimentalApi
-import net.mamoe.mirai.utils.debug
 import net.mamoe.mirai.utils.info
 import java.time.LocalDateTime
 
 
 object PluginMain : KotlinPlugin(
     JvmPluginDescription(
-        id = "MCP.navigatorTB_Nymph", name = "navigatorTB", version = "0.21.7"
+        id = "MCP.navigatorTB_Nymph", name = "navigatorTB", version = "0.22.0"
     )
 ) {
     // 分词功能
@@ -76,7 +74,6 @@ object PluginMain : KotlinPlugin(
         MirrorWorldUser.reload()
         MirrorWorldAssets.reload()
         Alchemy.reload()
-        FleaMarket.reload()
         CharacterLineDictionary.reload()
 
         Class.forName("org.sqlite.JDBC")
@@ -88,9 +85,7 @@ object PluginMain : KotlinPlugin(
             MyPluginData.AcgImageRun.clear()
         }
 
-        Tarot.register()            // 塔罗
         SignIn.register()           // 签到
-        OneWord.register()          // 一言
         CrowdVerdict.register()     // 众裁
         SauceNAO.register()         // 搜图
         MinesweeperGame.register()  // 扫雷
@@ -119,20 +114,8 @@ object PluginMain : KotlinPlugin(
         AI.register()               // 图灵数据库增删改查
 
         PlayerInfo.register()
-        PlayerBuild.register()
-        PvPBattle.register()
-        PlayerTransfer.register()
-        GMtoBestow.register()
-        GMStrip.register()
-        Inn.register()
-        PvEBattle.register()
-        Shopping.register()
-        BuyItem.register()
-        SellItem.register()
-        ItemSynthesis.register()
-        OpenBag.register()
-        UseItems.register()
-        ItemSynthesisGuide.register()
+
+
         SimulateConstruction.register()
 
         MyHelp.register()           // 帮助功能
@@ -221,25 +204,18 @@ object PluginMain : KotlinPlugin(
                     "Policy", Triple("groupID", "=", "${group.id}"), "聊天触发:\nFile:PluginMain.Kt\tLine:276"
                 ).run { UserPolicy(this) }
                 dbObject.closeDB()
-                runCatching {
-                    val v1 = (1..100).random()
-                    val v2 = if (policy.acgImgAllowed == 1) (1..100).random() else 0
-                    if (v1 <= policy.triggerProbability)
-                        AI.dialogue(subject, message.content.trim())
-                    else when (message.content) {
-                        "早安" -> goodDay(true, sender.id)
-                        "晚安" -> goodDay(false, sender.id)
-                        else -> null
-                    }?.let { group.sendMessage(it) }
-                    if (v1 <= 99) return@invoke
-                    val supply = when (v2) {
-                        in 1..7 -> 3
-                        in 8..19 -> 2
-                        in 20..46 -> 1
-                        else -> 0
-                    }
-                    if (supply > 0) subject.sendMessage(AcgImage.getReplenishment(subject.id, supply))
-                }.onFailure { logger.debug { "问题复现：${group.id}" } }
+                val v1 = (1..100).random()
+                val v2 = if (policy.acgImgAllowed == 1) (1..100).random() else 0
+                if (v1 <= policy.triggerProbability)
+                    AI.dialogue(subject, message.content.trim())
+                if (v1 <= 99) return@invoke
+                val supply = when (v2) {
+                    in 1..7 -> 3
+                    in 8..19 -> 2
+                    in 20..46 -> 1
+                    else -> 0
+                }
+                if (supply > 0) subject.sendMessage(AcgImage.getReplenishment(subject.id, supply))
             }
         }
         // 常驻任务
@@ -326,53 +302,6 @@ object PluginMain : KotlinPlugin(
         CronJob.addJob((t.dayOfYear + 1) * 10000 + 20 * 100, DailyReminder)
     }
 
-    private var signInRank: Int = 1
-    private var signInDay: Boolean = true
-
-    /* 日安签到 */
-    private fun goodDay(flag: Boolean, uid: Long): String? {
-        val user = MirrorWorldUser.userData[uid] ?: return null
-        return when (LocalDateTime.now().hour) {
-            in arrayOf(5, 6, 7, 8, 9) -> {
-                if (!flag) "现在还是白天哦,睡觉还太早了"
-                else {
-                    if (!signInDay) {
-                        signInDay = true
-                        signInRank = 1
-                    }
-                    val oldTime = user.nichianTime
-                    user.nichianTime =
-                        LocalDateTime.now().dayOfYear * 86400 + LocalDateTime.now().hour * 3600 + LocalDateTime.now().minute * 60 + LocalDateTime.now().second
-                    val subTime = user.nichianTime - oldTime
-                    when {
-                        subTime >= 86400 -> "早安成功!你是今天第${signInRank++} 个起床的"
-                        subTime <= 7200 -> "又早安,你难道去睡回笼觉了"
-                        else -> "早安成功！你的睡眠时长为${subTime / 3600}小时${subTime % 3600 / 60}分${subTime % 60}秒, 你是今天第${signInRank++} 个起床的"
-                    }
-                }
-            }
-            in arrayOf(0, 1, 2, 3, 20, 21, 22, 23) -> {
-                if (flag) "早个啥?哼唧!我都准备洗洗睡了!"
-                else {
-                    if (signInDay) {
-                        signInDay = false
-                        signInRank = 1
-                    }
-                    val oldTime = user.nichianTime
-                    user.nichianTime =
-                        LocalDateTime.now().dayOfYear * 86400 + LocalDateTime.now().hour * 3600 + LocalDateTime.now().minute * 60 + LocalDateTime.now().second
-                    val subTime = user.nichianTime - oldTime
-                    when {
-                        subTime >= 86400 -> "晚安成功!你是今天第${signInRank++} 个睡觉的"
-                        subTime <= 39600 -> "你怎么还没睡"
-                        else -> "晚安成功!你的清醒时长为${subTime / 3600}小时${subTime % 3600 / 60}分${subTime % 60}秒, 你是今天第${signInRank++} 个睡觉的"
-                    }
-                }
-            }
-            else -> "不是...你看看几点了,哼!"
-        }
-    }
-
     private fun dataBastInit() {
         SQLiteJDBC(resolveDataPath("User.db")).apply {
             createTable(
@@ -441,9 +370,8 @@ object PluginMain : KotlinPlugin(
 
     override fun onDisable() {
 //        PluginMain.launch{ announcement("正在关闭") } // 关闭太快发不出来
-        Tarot.unregister()              // 塔罗
+
         SignIn.unregister()             // 签到
-        OneWord.unregister()            // 一言
         CrowdVerdict.unregister()       // 众裁
         SauceNAO.unregister()           // 搜图
         Test.unregister()               // 测试
@@ -472,20 +400,7 @@ object PluginMain : KotlinPlugin(
         CalculationExp.unregister()     // 经验计算器
         AI.unregister()                 // 图灵数据库增删改查
         PlayerInfo.unregister()
-        PlayerBuild.unregister()
-        PvPBattle.unregister()
-        PlayerTransfer.unregister()
-        GMtoBestow.unregister()
-        GMStrip.unregister()
-        Inn.unregister()
-        PvEBattle.unregister()
-        Shopping.unregister()
-        BuyItem.unregister()
-        SellItem.unregister()
-        ItemSynthesis.unregister()
-        OpenBag.unregister()
-        UseItems.unregister()
-        ItemSynthesisGuide.unregister()
+
         SimulateConstruction.unregister()
 
         PluginMain.cancel()

@@ -1,15 +1,18 @@
-package com.navigatorTB_Nymph.command.dlc.gameCommand
+package com.navigatorTB_Nymph.command.simple
 
-import com.navigatorTB_Nymph.command.dlc.mirrorWorld.GameMain
+import com.navigatorTB_Nymph.data.Role
 import com.navigatorTB_Nymph.pluginData.ActiveGroupList
+import com.navigatorTB_Nymph.pluginData.MirrorWorldUser
 import com.navigatorTB_Nymph.pluginMain.PluginMain
 import net.mamoe.mirai.console.command.MemberCommandSenderOnMessage
 import net.mamoe.mirai.console.command.SimpleCommand
+import net.mamoe.mirai.contact.nameCardOrNick
 
-object Inn : SimpleCommand(
-    PluginMain, "Inn", "旅店休息",
-    description = "恢复所有生命值和法力值"
+object PlayerInfo : SimpleCommand(
+    PluginMain, "PlayerInfo", "我的信息",
+    description = "用户信息"
 ) {
+
     @Handler
     suspend fun MemberCommandSenderOnMessage.main() {
         if (group.botMuteRemaining > 0) return
@@ -18,8 +21,6 @@ object Inn : SimpleCommand(
             return
         }
 
-        GameMain(this).treatment()?.let { it ->
-            sendMessage(it)
-        } ?: sendMessage("请先建立角色")
+        sendMessage(MirrorWorldUser.userData.getOrPut(user.id) { Role(user.nameCardOrNick) }.info())
     }
 }

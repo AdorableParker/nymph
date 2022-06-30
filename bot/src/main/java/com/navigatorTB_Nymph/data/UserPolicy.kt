@@ -1,6 +1,6 @@
 package com.navigatorTB_Nymph.data
 
-data class UserPolicy(val map: MutableMap<String, Any?>) {
+class UserPolicy(val map: MutableMap<String, Any?>) {
     val groupID: Long by map
     val tellTimeMode: Int by map
     val dailyReminderMode: Int by map

@@ -9,13 +9,15 @@ import kotlinx.coroutines.withContext
 import net.mamoe.mirai.console.command.CommandManager
 import net.mamoe.mirai.console.command.MemberCommandSenderOnMessage
 import net.mamoe.mirai.console.command.SimpleCommand
+import net.mamoe.mirai.contact.Group
 import net.mamoe.mirai.contact.Member
+import net.mamoe.mirai.contact.NormalMember
 import net.mamoe.mirai.contact.nameCardOrNick
+import net.mamoe.mirai.message.data.MessageChain
 import net.mamoe.mirai.message.data.MessageChainBuilder
 import net.mamoe.mirai.utils.ExternalResource.Companion.uploadAsImage
 import java.net.URL
 import java.time.LocalDateTime
-
 
 object GroupWife : SimpleCommand(
     PluginMain, "GroupWife", "今日老婆",
@@ -24,6 +26,7 @@ object GroupWife : SimpleCommand(
     override val usage: String = "${CommandManager.commandPrefix}今日老婆"
 
     private val wifeGroupMap = mutableMapOf<Long, MutableList<GroupUser>>()
+    private val solitaryMap = mutableMapOf<Long, MutableList<Long>>()
     private val ntrMap = mutableMapOf<Long, MutableList<Long>>()
     private val byNtrMap = mutableMapOf<Long, MutableList<Long>>()
     private var groupWifeUpdate = 0
@@ -39,40 +42,35 @@ object GroupWife : SimpleCommand(
 
         if (LocalDateTime.now().dayOfYear != groupWifeUpdate) cleanList()
 
+
         if (user.id in byNtrMap) {
             sendMessage("你醒啦,你的老婆被骗走了哦")
             return
         }
 
-        val wifeList = wifeGroupMap.getOrPut(group.id) { mutableListOf() }
-        val u = GroupUser(user)
-        val index = wifeList.indexOf(u)
-        val wife = when (index % 2) {
-            -1 -> {
-                val cache = group.members.filter {
-                    GroupUser(it) !in wifeList
-                }.sortedByDescending { it.lastSpeakTimestamp }
-                val r = (if (cache.size >= 10) cache.subList(0, 10) else cache).random().let {
-                    GroupUser(it.id, it.avatarUrl, it.nameCardOrNick)
-                }
-                wifeList.add(r)
-                wifeList.add(u)
-                r
-            }
-            1 -> wifeList[index - 1]
-            else -> wifeList[index + 1]
-        }
+        val groupWifeList = wifeGroupMap.getOrPut(group.id) { mutableListOf() }
+        val solitaryList = solitaryMap.getOrPut(group.id) { mutableListOf() }
 
-        val chain = MessageChainBuilder()
-        chain.add("今天你的群老婆是")
-        chain.add(
-            (withContext(Dispatchers.IO) {
-                URL(wife.avatarUrl).openConnection().getInputStream()
-            }).uploadAsImage(group)
-        )
-        chain.add("${wife.nameCardOrNick}(${wife.id})哒")
-        sendMessage(chain.build())
+        val index = groupWifeList.indexOfFirst { it.id == user.id }
+
+        when (index % 2) {
+            -1 -> { //没找到
+                val wifeList = List(groupWifeList.size) { i -> groupWifeList[i].id }
+                val cache = group.members.filter {
+                    it.id !in wifeList && it.id !in solitaryList
+                }.sortedByDescending(NormalMember::lastSpeakTimestamp)
+                val wife = (if (cache.size >= 10) cache.subList(0, 10) else cache).random()
+                if (wife.id == user.id) {
+                    sendMessage("今天你没有老婆哒")
+                    solitaryList.add(user.id)
+                    return
+                } else sendMessage(getChain(group, groupWifeList.addPair(user, wife)))
+            }
+            1 -> sendMessage(getChain(group, groupWifeList[index - 1]))
+            else -> sendMessage(getChain(group, groupWifeList[index + 1]))
+        }
     }
+
 
     @Handler
     suspend fun MemberCommandSenderOnMessage.main(beau: Member) {
@@ -83,77 +81,78 @@ object GroupWife : SimpleCommand(
             return
         }
         if (LocalDateTime.now().dayOfYear != groupWifeUpdate) cleanList()
-        if (beau == bot) {
-            sendMessage("笨蛋！不准娶我 哼唧！")
-            return
-        }
-        if (user == beau) {
-            sendMessage("你牛你自己?")
-            return
-        }
+
         val ntrList = ntrMap.getOrPut(group.id) { mutableListOf() }
         if (user.id in ntrList) {
             sendMessage("今天你已经牛过了")
             return
         }
+        val solitaryList = solitaryMap.getOrPut(group.id) { mutableListOf() }
         val wifeList = wifeGroupMap.getOrPut(group.id) { mutableListOf() }
-        val a = GroupUser(user)
-        val indexA = wifeList.indexOf(a)
-        if (indexA == -1) {
-            main()
-            return
+
+        when {
+            user.id == beau.id -> sendMessage("你娶你自己?")
+            user.id in List(wifeList.size) { wifeList[it].id } -> sendMessage("喂,你家里还有个吃白饭的呢")
+            user.id !in solitaryList -> main()
+            beau.id == bot.id -> sendMessage("笨蛋！不准娶我！哼唧！")
+            beau.id in solitaryList -> sendMessage("你无法牛一个没有老婆的人")
+            else -> sendMessage(doNTR(group, user, beau, ntrList, wifeList, solitaryList))
         }
-        val aWifeIndex = when (indexA % 2) {
-            1 -> indexA - 1
-            else -> indexA + 1
-        }
-        val aWife = wifeList[aWifeIndex]
-        val b = GroupUser(beau)
-        if (aWife == b) {
-            sendMessage("笨蛋~本来就是你的老婆")
-            return
-        }
-        if (aWife != a) {
-            sendMessage("喂,你家里还有个吃白饭的呢")
-            return
-        }
-        val indexB = wifeList.indexOf(b)
-        val bWifeIndex = when (indexB % 2) {
-            -1 -> -1
-            1 -> indexB - 1
-            else -> indexB + 1
-        }
-        if (bWifeIndex == -1 || wifeList[bWifeIndex] == b) {
-            sendMessage("你无法牛一个没有老婆的人")
-            return
-        }
+    }
+
+    private suspend fun doNTR(
+        group: Group,
+        user: Member,
+        beau: Member,
+        ntrList: MutableList<Long>,
+        groupWifeList: MutableList<GroupUser>,
+        solitaryList: MutableList<Long>
+    ): MessageChain {
         ntrList.add(user.id)
         val chain = MessageChainBuilder()
         if (1 == (1..5).random()) {
-            byNtrMap.getOrPut(group.id) { mutableListOf() }.add(wifeList[bWifeIndex].id)
-            wifeList[aWifeIndex] = b
-            wifeList.removeAt(indexB)
-            wifeList.removeAt(bWifeIndex)
-
+            groupWifeList.delPair(user, beau)
+            groupWifeList.addPair(user, beau)
+            solitaryList.remove(user.id)
             chain.add("你成功的把")
             chain.add(
                 (withContext(Dispatchers.IO) {
-                    URL(b.avatarUrl).openConnection().getInputStream()
+                    URL(beau.avatarUrl).openConnection().getInputStream()
                 }).uploadAsImage(group)
             )
-            chain.add("${b.nameCardOrNick}(${b.id})骗到了手,现在是你的老婆")
+            chain.add("${beau.nameCardOrNick}(${beau.id})骗到了手,现在是你的老婆")
         } else {
             chain.add("你试图把")
             chain.add(
                 (withContext(Dispatchers.IO) {
-                    URL(b.avatarUrl).openConnection().getInputStream()
+                    URL(beau.avatarUrl).openConnection().getInputStream()
                 }).uploadAsImage(group)
             )
-            chain.add("${b.nameCardOrNick}(${b.id})骗做老婆,但是失败了,你还是没有老婆")
+            chain.add("${beau.nameCardOrNick}(${beau.id})骗做老婆,但是失败了,你还是没有老婆")
         }
-        sendMessage(chain.build())
+        return chain.build()
     }
 
+    private suspend fun getChain(group: Group, wife: GroupUser): MessageChain {
+        val chain = MessageChainBuilder()
+        chain.add("今天你的群老婆是")
+        chain.add(
+            (withContext(Dispatchers.IO) {
+                URL(wife.avatarUrl).openConnection().getInputStream()
+            }).uploadAsImage(group)
+        )
+        chain.add("${wife.nameCardOrNick}(${wife.id})哒")
+        return chain.build()
+    }
+
+    private fun MutableList<GroupUser>.addPair(user: Member, beau: Member): GroupUser {
+        add(GroupUser(user))
+        return GroupUser(beau).also(::add)
+    }
+
+    private fun MutableList<GroupUser>.delPair(user: Member, beau: Member) {
+        removeIf { it.id == user.id || it.id == beau.id }
+    }
 
     private fun cleanList() {
         groupWifeUpdate = LocalDateTime.now().dayOfYear
