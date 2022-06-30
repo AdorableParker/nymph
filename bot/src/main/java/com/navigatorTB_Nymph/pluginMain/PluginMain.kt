@@ -44,7 +44,7 @@ import java.time.LocalDateTime
 
 object PluginMain : KotlinPlugin(
     JvmPluginDescription(
-        id = "MCP.navigatorTB_Nymph", name = "navigatorTB", version = "0.21.0"
+        id = "MCP.navigatorTB_Nymph", name = "navigatorTB", version = "0.21.7"
     )
 ) {
     // 分词功能
