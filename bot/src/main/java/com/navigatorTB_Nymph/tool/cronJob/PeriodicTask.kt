@@ -20,6 +20,6 @@ abstract class PeriodicTask(val name: String, val synopsis: String?, val interva
         }
 
         val newDay = d % if (nowTime.year % 4 == 0 && nowTime.year % 100 != 0 || nowTime.year % 400 == 0) 367 else 366
-        return (if (newDay == 0) newDay + 1 else newDay) * 10000 + h * 100 + m
+        return (if (newDay == 0) 1 else newDay) * 10000 + h * 100 + m
     }
 }
