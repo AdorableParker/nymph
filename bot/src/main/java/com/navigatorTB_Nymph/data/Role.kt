@@ -7,10 +7,12 @@ import kotlinx.serialization.Serializable
 class Role(val name: String) {
     private var gold = 0                                               //金币
     private var cube = 0                                               //魔方数量
-    private var favorability = 0.0                                     //好感度
+    private var favorability = 200                                     //好感度
+
+    fun getFavorability() = favorability
 
     /** 获取角色信息 */
-    fun info() = "$name\n|金币:${gold}枚\n|魔方:${cube}个|好感度:{$favorability}"
+    fun info() = "$name\n|金币:${gold}枚\n|魔方:${cube}个|好感度:$favorability‰"
 
     fun checkInReward(): String {
         val g = (100..2000).random()
@@ -21,7 +23,7 @@ class Role(val name: String) {
         }
         gold.plus(g)
         cube.plus(c)
-        return "获得{$g}物资和{$c}个魔方"
+        return "获得${g}物资和${c}个魔方"
     }
 
     fun putUp(light: Boolean, count: Int): String {
@@ -33,16 +35,20 @@ class Role(val name: String) {
         } else "魔方或物资不足"
     }
 
-    fun touch() {
-        favorability.plus(TB.touch())
+    fun nudge() {
+        favorability += TB.nudge()
     }
 
     fun chat() {
-        favorability.plus(TB.chat())
+        favorability += TB.chat()
     }
 
     fun play() {
-        favorability.plus(TB.play())
+        favorability += TB.play()
+    }
+
+    fun abuse() {
+        favorability += TB.abuse()
     }
 }
 

@@ -1,5 +1,8 @@
 package com.navigatorTB_Nymph.tool.svg
 
+import com.navigatorTB_Nymph.pluginConfig.MySetting
+import com.navigatorTB_Nymph.pluginMain.PluginMain
+import net.mamoe.mirai.utils.debug
 import org.apache.batik.anim.dom.SAXSVGDocumentFactory
 import org.apache.batik.transcoder.TranscoderInput
 import org.apache.batik.transcoder.TranscoderOutput
@@ -18,7 +21,9 @@ open class BuildSVGTool() {
 
     constructor(file: Path) : this() {
         val parser = XMLResourceDescriptor.getXMLParserClassName()
-        doc = SAXSVGDocumentFactory(parser).createDocument("$file")
+        val f = if (MySetting.testMod) "file:/$file" else "$file"
+        PluginMain.logger.debug { f }
+        doc = SAXSVGDocumentFactory(parser).createDocument(f)
     }
 
     fun draw(): ByteArrayInputStream {

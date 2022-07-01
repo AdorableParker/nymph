@@ -28,7 +28,6 @@ dependencies {
     implementation('org.apache.xmlgraphics:batik-swing:1.14')
 
 //    implementation("org.apache.logging.log4j:log4j-core:2.17.2")
-
     implementation('com.beust:klaxon:5.5')
     implementation('org.jsoup:jsoup:1.14.3')
     implementation('com.mayabot.mynlp:mynlp-all:3.2.2') // 在有更好的分词库之前保持版本

@@ -6,8 +6,14 @@ import net.mamoe.mirai.console.data.value
 
 object MySetting : AutoSavePluginConfig("TB_Setting") {
 
+    @ValueDescription("测试模式")
+    val testMod: Boolean by value(false)
+
     @ValueDescription("名字")
     val name by value("领航员-TB")
+
+    @ValueDescription("昵称")
+    val nickname by value("TB")
 
     @ValueDescription("Bot 账号")
     val BotID by value(123456L)

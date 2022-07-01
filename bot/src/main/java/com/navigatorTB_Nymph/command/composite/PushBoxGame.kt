@@ -1,13 +1,16 @@
 package com.navigatorTB_Nymph.command.composite
 
+import com.navigatorTB_Nymph.data.Role
 import com.navigatorTB_Nymph.game.pushBox.Direction.*
 import com.navigatorTB_Nymph.game.pushBox.PushBox
 import com.navigatorTB_Nymph.pluginData.ActiveGroupList
+import com.navigatorTB_Nymph.pluginData.MirrorWorldUser
 import com.navigatorTB_Nymph.pluginData.PushBoxLevelMap
 import com.navigatorTB_Nymph.pluginMain.PluginMain
 import net.mamoe.mirai.console.command.CompositeCommand
 import net.mamoe.mirai.console.command.MemberCommandSenderOnMessage
 import net.mamoe.mirai.contact.Contact.Companion.sendImage
+import net.mamoe.mirai.contact.nameCardOrNick
 
 object PushBoxGame : CompositeCommand(
     PluginMain, "PushBoxGame", "推箱子",
@@ -73,6 +76,7 @@ object PushBoxGame : CompositeCommand(
                     subject.sendImage(pushBox.draw())
                     PluginMain.PUSH_BOX.remove(group.id)
                     PushBoxLevelMap.upLevel(group.id)
+                    MirrorWorldUser.userData.getOrPut(user.id) { Role(user.nameCardOrNick) }.play()
                 }
             }
         } else {

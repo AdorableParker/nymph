@@ -1,11 +1,14 @@
 package com.navigatorTB_Nymph.command.composite
 
+import com.navigatorTB_Nymph.data.Role
 import com.navigatorTB_Nymph.game.ticTacToe.TicTacToe
 import com.navigatorTB_Nymph.pluginData.ActiveGroupList
+import com.navigatorTB_Nymph.pluginData.MirrorWorldUser
 import com.navigatorTB_Nymph.pluginMain.PluginMain
 import net.mamoe.mirai.console.command.CompositeCommand
 import net.mamoe.mirai.console.command.MemberCommandSenderOnMessage
 import net.mamoe.mirai.contact.Contact.Companion.sendImage
+import net.mamoe.mirai.contact.nameCardOrNick
 
 object TicTacToeGame : CompositeCommand(
     PluginMain, "TicTacToe", "井字棋",
@@ -43,6 +46,7 @@ object TicTacToeGame : CompositeCommand(
                     group.sendImage(ticTacToe.getImage())
                     PluginMain.TIC_TAC_TOE_GAME.remove(group.id)
                     sendMessage("本局游戏结束")
+                    MirrorWorldUser.userData.getOrPut(user.id) { Role(user.nameCardOrNick) }.play()
                     return
                 }
                 5 -> sendMessage("只能在空白位置落子")
@@ -51,6 +55,7 @@ object TicTacToeGame : CompositeCommand(
                 group.sendImage(ticTacToe.getImage())
                 PluginMain.TIC_TAC_TOE_GAME.remove(group.id)
                 sendMessage("本局游戏结束")
+                MirrorWorldUser.userData.getOrPut(user.id) { Role(user.nameCardOrNick) }.play()
                 return
             }
             group.sendImage(ticTacToe.getImage())

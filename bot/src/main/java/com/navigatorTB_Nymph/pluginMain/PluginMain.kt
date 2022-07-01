@@ -4,6 +4,7 @@ import com.mayabot.nlp.module.summary.KeywordSummary
 import com.mayabot.nlp.segment.Lexers
 import com.navigatorTB_Nymph.command.composite.*
 import com.navigatorTB_Nymph.command.simple.*
+import com.navigatorTB_Nymph.data.Role
 import com.navigatorTB_Nymph.data.UserPolicy
 import com.navigatorTB_Nymph.data.UserResponsible
 import com.navigatorTB_Nymph.defaultJob.DailyReminder
@@ -14,8 +15,6 @@ import com.navigatorTB_Nymph.game.duel.Gun
 import com.navigatorTB_Nymph.game.minesweeper.Minesweeper
 import com.navigatorTB_Nymph.game.pushBox.PushBox
 import com.navigatorTB_Nymph.game.ticTacToe.TicTacToe
-import com.navigatorTB_Nymph.pluginConfig.CharacterLineDictionary
-import com.navigatorTB_Nymph.pluginConfig.MirrorWorldConfig
 import com.navigatorTB_Nymph.pluginConfig.MySetting
 import com.navigatorTB_Nymph.pluginConfig.MySetting.prohibitedWord
 import com.navigatorTB_Nymph.pluginData.*
@@ -27,6 +26,7 @@ import net.mamoe.mirai.console.command.CommandManager.INSTANCE.register
 import net.mamoe.mirai.console.command.CommandManager.INSTANCE.unregister
 import net.mamoe.mirai.console.plugin.jvm.JvmPluginDescription
 import net.mamoe.mirai.console.plugin.jvm.KotlinPlugin
+import net.mamoe.mirai.contact.AnonymousMember
 import net.mamoe.mirai.contact.Member
 import net.mamoe.mirai.contact.nameCardOrNick
 import net.mamoe.mirai.event.Event
@@ -63,7 +63,6 @@ object PluginMain : KotlinPlugin(
     @OptIn(MiraiExperimentalApi::class)
     override fun onEnable() {
         MySetting.reload()
-        MirrorWorldConfig.reload()
 
         MyPluginData.reload()
         UsageStatistics.reload()
@@ -72,9 +71,6 @@ object PluginMain : KotlinPlugin(
         AiTemplate.reload()
         PushBoxLevelMap.reload()
         MirrorWorldUser.reload()
-        MirrorWorldAssets.reload()
-        Alchemy.reload()
-        CharacterLineDictionary.reload()
 
         Class.forName("org.sqlite.JDBC")
 
@@ -112,11 +108,9 @@ object PluginMain : KotlinPlugin(
         Birthday.register()         // 舰船下水日
         Roster.register()           // 碧蓝和谐名
         AI.register()               // 图灵数据库增删改查
-
-        PlayerInfo.register()
-
-
-        SimulateConstruction.register()
+        PlayerInfo.register()       // 玩家信息
+        CultivationSystem.register()// 养成系统
+        SimulateConstruction.register()// 模拟建造
 
         MyHelp.register()           // 帮助功能
 
@@ -146,7 +140,9 @@ object PluginMain : KotlinPlugin(
                     accept()
                     ActiveGroupList.user.add(groupId)
                 } // 入群审核
-                is NudgeEvent -> nudge()                    // 戳一戳
+                is NudgeEvent -> {
+                    nudge()
+                }                    // 戳一戳
                 is BotLeaveEvent.Kick -> {
                     cleanGroupInfo(group.id)
                     bot.getFriend(MySetting.AdminID)?.sendMessage("被移出群:${group.name}\nGroupID：${group.id}")
@@ -192,10 +188,14 @@ object PluginMain : KotlinPlugin(
                                 "￣へ￣"
                             ).random()
                         )
+                        if (sender !is AnonymousMember)
+                            MirrorWorldUser.userData.getOrPut(sender.id) { Role(sender.nameCardOrNick) }.abuse()
                         return@atBot
                     }
                 }
                 AI.dialogue(subject, filterMessageChain.content.trim(), true)
+                if (sender !is AnonymousMember)
+                    MirrorWorldUser.userData.getOrPut(sender.id) { Role(sender.nameCardOrNick) }.chat()
             }
             atBot().not().invoke {
                 if (group.botMuteRemaining > 0 || group.id !in ActiveGroupList.user) return@invoke
@@ -271,7 +271,12 @@ object PluginMain : KotlinPlugin(
                     from.nudge().sendTo(subject)
                     subject.sendMessage("戳回去")
                 }
-            }.onFailure { logger.info { "File:PluginMain.kt\tLine:241\n发送消息失败，在该群被禁言" } }
+            }.onFailure {
+                logger.info { "File:PluginMain.kt\tLine:241\n发送消息失败，在该群被禁言" }
+            }.onSuccess {
+                MirrorWorldUser.userData.getOrPut(from.id) { Role(from.nameCardOrNick) }.nudge()
+            }
+
         }
     }
 
@@ -399,9 +404,9 @@ object PluginMain : KotlinPlugin(
         Birthday.unregister()           // 舰船下水日
         CalculationExp.unregister()     // 经验计算器
         AI.unregister()                 // 图灵数据库增删改查
-        PlayerInfo.unregister()
-
-        SimulateConstruction.unregister()
+        PlayerInfo.unregister()         // 玩家信息
+        CultivationSystem.register()    // 养成系统
+        SimulateConstruction.unregister()// 模拟建造
 
         PluginMain.cancel()
     }
