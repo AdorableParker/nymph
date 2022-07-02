@@ -9,7 +9,7 @@ class SignInSVG : BuildSVGTool(PluginMain.resolveDataPath("SVG_Template/signIn.s
         oneWord: Pair<String, String>,
         tarot: Map<String, String>,
         countdown: Int,
-        sprint: String?
+        sprint: String
     ): SignInSVG {
         val themeColor = when (tarot["Brand"]) {
             "The Hanged Man(倒吊人)" -> "#69B960"
@@ -40,8 +40,7 @@ class SignInSVG : BuildSVGTool(PluginMain.resolveDataPath("SVG_Template/signIn.s
         doc.getElementById("hitokoto").textContent = oneWord.first
         doc.getElementById("from").textContent = oneWord.second
         doc.getElementById("countdown").textContent = countdown.toString()
-
-        sprint?.let { doc.getElementById("add").textContent = it }
+        doc.getElementById("add").textContent = sprint
 
         return this
     }
