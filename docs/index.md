@@ -31,7 +31,7 @@
 * [X] ~~一言~~ ![`已废弃`](https://img.shields.io/badge/被废弃-inactive)
 * [X] ~~每日塔罗~~ ![`已废弃`](https://img.shields.io/badge/被废弃-inactive)
 * [X] 签到 ![`已完成`](https://img.shields.io/badge/已完成-green)
-
+* [X] 群老婆 ![`已完成`](https://img.shields.io/badge/已完成-green)
 
 
 <!--
